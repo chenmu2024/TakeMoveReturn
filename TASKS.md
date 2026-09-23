@@ -20,6 +20,7 @@
 - SEO source upgraded with canonical URL, keyword cluster, metric source/scope/date, intent, priority, page type, and index status fields.
 - SEO audit command added to check canonical-page metadata field presence and duplicate page ownership.
 - Phase 2-4 industry, comparison, and guide routes added with explicit global-metric and US-verification gates.
+- Expansion industry candidates added for remodeling, concrete, civil engineering, restoration, HVAC, and roofing with `not_verified` metrics and noindex gates.
 - Roadmap route template expanded with field pain, construction scenario, workflow, comparison boundary, FAQ, and related-page sections.
 
 ## Tests run
@@ -43,8 +44,9 @@
 - Cloudflare Worker deployed at `https://takemovereturn.zhongqiaosheng.workers.dev` (version `c5d7b87c-bff6-413f-a9a8-cba812e6c930`).
 - Production URL smoke check: HTTP 200, expected title, and TakeMoveReturn brand present.
 - Roadmap route checks: industry, guide, and comparison pages returned HTTP 200 with FAQ/workflow content and `noindex, nofollow` robots.
-- Current SEO route count: 20 canonical routes; SEO audit passed.
 - Current typecheck, Next.js production build, and OpenNext Cloudflare bundle: passed (Windows compatibility warning remains).
+- Current SEO route count: 26 canonical routes; SEO audit passed after adding the expansion industry candidates.
+- Latest Cloudflare Worker deployment: version `9a25ae26-d787-44ea-ac9f-5397dd03dbf6`.
 
 ## Current task
 
