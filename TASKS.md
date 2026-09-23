@@ -46,7 +46,8 @@
 - Roadmap route checks: industry, guide, and comparison pages returned HTTP 200 with FAQ/workflow content and `noindex, nofollow` robots.
 - Current typecheck, Next.js production build, and OpenNext Cloudflare bundle: passed (Windows compatibility warning remains).
 - Current SEO route count: 26 canonical routes; SEO audit passed after adding the expansion industry candidates.
-- Latest Cloudflare Worker deployment: version `9a25ae26-d787-44ea-ac9f-5397dd03dbf6`.
+- Latest Cloudflare Worker deployment: version `99a11e12-eecc-4290-83b1-dee5dbb774ba`.
+- GitHub sync for commits after `6c04f56` is pending because the GitHub connection was unavailable during this run; local commits are preserved.
 
 ## Current task
 
