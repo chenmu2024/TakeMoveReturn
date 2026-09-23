@@ -36,6 +36,8 @@
 - Browser checks: home desktop, home 390px mobile, and pricing desktop: passed.
 - Design comparison: `design-qa.md` final result passed.
 - OpenNext Cloudflare Worker bundle: passed (Windows compatibility warning remains).
+- GitHub: pushed commit `3e8bbfe` to `https://github.com/chenmu2024/TakeMoveReturn` on `main`.
+- Cloudflare deploy preflight: passed; production deploy reached R2 cache provisioning.
 
 ## Current task
 
@@ -55,8 +57,9 @@
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: Stripe products and webhook secret.
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: Resend API key.
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: Cloudflare Worker/R2/Queue provisioning access.
+- BLOCKED_BY_EXTERNAL_CREDENTIALS: Cloudflare R2 is not enabled for account `7502cacf27d1e963c71badc4f539090b`; deployment cannot provision `takemovereturn-opennext-cache` until R2 is enabled in the dashboard.
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: production domain and legal entity information.
 
 ## Next exact task
 
-- Implement the authenticated company onboarding and first-tool workflow after Supabase credentials are available.
+- Enable Cloudflare R2, then rerun `npm run cf:deploy` and verify the returned Worker URL.
