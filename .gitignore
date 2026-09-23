@@ -1,2 +1,8 @@
 .package-stage-*/
 *.zip
+node_modules/
+.next/
+.open-next/
+tsconfig.tsbuildinfo
+.dev.vars
+.env.local
