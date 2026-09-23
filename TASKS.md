@@ -19,6 +19,8 @@
 - Selected product-first UI direction implemented for the home, features, pricing, shared marketing shell, and core SEO landing pages.
 - SEO source upgraded with canonical URL, keyword cluster, metric source/scope/date, intent, priority, page type, and index status fields.
 - SEO audit command added to check canonical-page metadata field presence and duplicate page ownership.
+- Phase 2-4 industry, comparison, and guide routes added with explicit global-metric and US-verification gates.
+- Roadmap route template expanded with field pain, construction scenario, workflow, comparison boundary, FAQ, and related-page sections.
 
 ## Tests run
 
@@ -40,6 +42,9 @@
 - GitHub: pushed the deployment-tracker commits through `ab38c53` to `main`.
 - Cloudflare Worker deployed at `https://takemovereturn.zhongqiaosheng.workers.dev` (version `c5d7b87c-bff6-413f-a9a8-cba812e6c930`).
 - Production URL smoke check: HTTP 200, expected title, and TakeMoveReturn brand present.
+- Roadmap route checks: industry, guide, and comparison pages returned HTTP 200 with FAQ/workflow content and `noindex, nofollow` robots.
+- Current SEO route count: 20 canonical routes; SEO audit passed.
+- Current typecheck, Next.js production build, and OpenNext Cloudflare bundle: passed (Windows compatibility warning remains).
 
 ## Current task
 
@@ -47,11 +52,11 @@
 
 ## Remaining
 
-- Expand the attached Phase 2-4 industry, best, and guide keyword map; then add Supabase integration tests.
+- Verify US search demand and competitor facts before changing roadmap routes from noindex to indexable.
 - Supabase migrations, Auth, and RLS.
 - Secure shared-device/PIN/QR workflow.
 - Tool, worker, location, transaction, damage, maintenance, import, R2, and queue services.
-- Billing, privacy, help center, SEO system, tests, CI, and Cloudflare deployment.
+- Billing, privacy, help center, SEO system, tests, CI, and production domain/legal review.
 
 ## Blockers
 
