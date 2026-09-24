@@ -1,6 +1,9 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { IconArrowRight, IconHistory, IconQrcode, IconTool, IconTruckDelivery } from "@tabler/icons-react";
 import { InlineCta, MarketingFooter, MarketingHeader, ProductWorkspace, WorkflowSteps } from "../../components/marketing";
+
+export const metadata: Metadata = { title: "Construction Tool Tracking Features | TakeMoveReturn", description: "See the QR, TAKE, MOVE, RETURN, history, and field workflow features built for small construction crews.", alternates: { canonical: "/features" }, openGraph: { title: "Construction Tool Tracking Features | TakeMoveReturn", description: "See the QR, TAKE, MOVE, RETURN, history, and field workflow features built for small construction crews.", type: "website" } };
 
 const features = [{ icon: IconQrcode, title: "QR labels that work in a browser", text: "Scan a tool label from a phone browser. Field work does not need a native app." }, { icon: IconTool, title: "TAKE, MOVE, RETURN", text: "Record the handoff that matters, then see the current holder and location." }, { icon: IconHistory, title: "Reliable history", text: "Movement, damage, maintenance, and corrections belong in the tool record." }, { icon: IconTruckDelivery, title: "Made for construction flow", text: "Follow reusable tools between workers, trucks, warehouses, and job sites." }];
 

@@ -3,10 +3,12 @@ import { IconArrowRight, IconFileSpreadsheet, IconQrcode, IconScan, IconTool } f
 import { plans } from "../config/plans";
 import { seoPageByPath } from "../data/seo-keywords";
 import { InlineCta, MarketingFooter, MarketingHeader, ProductWorkspace, ProofStrip, WorkflowSteps } from "../components/marketing";
+import { HomeSeoSchema } from "../components/seo-schema";
 
 export default function Home() {
   const page = seoPageByPath.get("/");
   return <main className="marketing-page">
+    <HomeSeoSchema />
     <MarketingHeader />
     <section className="hero hero-centered">
       <p className="eyebrow">QR TOOL TRACKING FOR CONSTRUCTION CREWS</p>

@@ -22,6 +22,8 @@
 - Phase 2-4 industry, comparison, and guide routes added with explicit global-metric and US-verification gates.
 - Expansion industry candidates added for remodeling, concrete, civil engineering, restoration, HVAC, and roofing with `not_verified` metrics and noindex gates.
 - Roadmap route template expanded with field pain, construction scenario, workflow, comparison boundary, FAQ, and related-page sections.
+- Public metadata and schema layer added: Open Graph, Twitter cards, canonical URLs, Organization, WebSite, SoftwareApplication, BreadcrumbList, Article, and FAQPage JSON-LD where applicable.
+- Cloudflare `NEXT_PUBLIC_SITE_URL` binding configured so production canonical URLs use the deployed Worker instead of localhost.
 
 ## Tests run
 
@@ -46,7 +48,8 @@
 - Roadmap route checks: industry, guide, and comparison pages returned HTTP 200 with FAQ/workflow content and `noindex, nofollow` robots.
 - Current typecheck, Next.js production build, and OpenNext Cloudflare bundle: passed (Windows compatibility warning remains).
 - Current SEO route count: 26 canonical routes; SEO audit passed after adding the expansion industry candidates.
-- Latest Cloudflare Worker deployment: version `99a11e12-eecc-4290-83b1-dee5dbb774ba`.
+- Latest Cloudflare Worker deployment: version `11f6968b-3d05-4a3b-9e35-fdd0febed60b`.
+- Runtime SEO checks: homepage, Help, industry, and guide pages returned HTTP 200 with expected canonical, Open Graph, JSON-LD, and robots output.
 - GitHub sync for commits after `6c04f56` is pending because the GitHub connection was unavailable during this run; local commits are preserved.
 
 ## Current task
