@@ -26,6 +26,22 @@ const detailCopy = [
 
 const defaultRelatedPaths = ["/features", "/pricing", "/construction-equipment-tracking-software"];
 
+const helpTopics = [
+  { title: "Start with the workflow", text: "Understand the product boundary and the TAKE, MOVE, RETURN flow before you label a tool.", href: "/features", label: "Read the feature guide" },
+  { title: "QR labels and checkout", text: "See how a phone browser can connect a reusable tool to its current holder, location, and return record.", href: "/equipment-checkout", label: "Review checkout" },
+  { title: "Tool and equipment scope", text: "Keep reusable tools and equipment separate from consumable materials, warehouse SKUs, and fleet telemetry.", href: "/construction-equipment-tracking-software", label: "Review tracking scope" },
+  { title: "Plans and capacity", text: "Compare active-tool limits, admins, storage, annual billing, and unlimited field workers.", href: "/pricing", label: "Compare plans" },
+  { title: "Privacy and data rights", text: "Review the current privacy and data-processing drafts before a production launch.", href: "/privacy", label: "Read privacy" },
+  { title: "Import planning", text: "Plan a spreadsheet-to-tool-list migration, then confirm production import availability once the workspace services are configured.", href: "/construction-asset-tracking-software", label: "Plan the migration" },
+];
+
+const helpFaqs = [
+  { question: "Does TakeMoveReturn require a native app?", answer: "The field workflow is designed for a phone browser. A native app is not required for the QR-based product direction." },
+  { question: "Does it provide GPS or live fleet tracking?", answer: "No. TakeMoveReturn records authenticated custody and location events for reusable tools; it is not a GPS, telematics, or fleet platform." },
+  { question: "What belongs in a tool record?", answer: "A reusable tool or piece of equipment, its QR label, current holder, location, condition, and movement history. Consumable materials belong in a separate inventory process." },
+  { question: "Is the production support channel live?", answer: "The public support address is only shown after the support environment variable is configured. The current page does not invent a contact address." },
+];
+
 function relatedLabel(path: string) {
   const value = path.replace(/^\//, "").replaceAll("/", " · ").replaceAll("-", " ");
   return value.replace(/(^| · )(\w)/g, (_, prefix: string, letter: string) => `${prefix}${letter.toUpperCase()}`);
@@ -96,6 +112,15 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
             <nav className="related-links" aria-label="Related TakeMoveReturn pages"><p className="eyebrow">KEEP EXPLORING</p><h2>Go deeper on the workflow.</h2><div>{relatedPaths.map((relatedPath) => <Link key={relatedPath} href={relatedPath}>{relatedLabel(relatedPath)} <IconArrowRight size={16} aria-hidden="true" /></Link>)}</div></nav>
             <InlineCta title="Give every tool a clearer next move." />
           </>
+        ) : key === "help" ? (
+          <>
+            <section className="help-intro"><p className="eyebrow">GETTING STARTED</p><h2>Find the right next step for your crew.</h2><p>Use these guides to understand the product workflow, the data it is designed to hold, and the decisions that still need production configuration.</p></section>
+            <section className="help-grid" aria-label="Help topics">{helpTopics.map((topic) => <article className="help-card" key={topic.title}><p className="eyebrow">GUIDE</p><h2>{topic.title}</h2><p>{topic.text}</p><Link className="text-link" href={topic.href}>{topic.label} <IconArrowRight size={16} aria-hidden="true" /></Link></article>)}</section>
+            <section className="help-faq" aria-labelledby="help-faq-title"><p className="eyebrow">COMMON QUESTIONS</p><h2 id="help-faq-title">What the product does — and does not do.</h2><div className="faq-list">{helpFaqs.map((faq) => <details key={faq.question}><summary>{faq.question}</summary><p>{faq.answer}</p></details>)}</div></section>
+            <InlineCta title="Need a workspace-specific answer?" />
+          </>
+        ) : key === "help/contact" ? (
+          <section className="help-contact"><p className="eyebrow">SUPPORT</p><h2>Contact Support</h2><p>For workspace-specific help, use the configured support channel below. A public address is never guessed or hard-coded.</p>{siteConfig.supportEmail ? <a className="button" href={`mailto:${siteConfig.supportEmail}`}>Email support <IconArrowRight size={18} aria-hidden="true" /></a> : <div className="contact-note"><strong>Support channel not configured yet.</strong><p>Set <code>SUPPORT_EMAIL</code> before production publication, then this page will show the verified support address.</p></div>}<Link className="text-link" href="/help">Back to Help Center <IconArrowRight size={16} aria-hidden="true" /></Link></section>
         ) : (
           <section className="plain-content"><h2>Built around TAKE, MOVE, and RETURN</h2><p>TakeMoveReturn helps small construction crews keep tool records clear, practical, and easy to use in the field.</p>{["privacy", "terms", "dpa", "subprocessors"].includes(key) && <p><strong>LEGAL REVIEW REQUIRED BEFORE PRODUCTION.</strong></p>}</section>
         )}

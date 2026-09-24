@@ -24,6 +24,7 @@
 - Roadmap route template expanded with field pain, construction scenario, workflow, comparison boundary, FAQ, and related-page sections.
 - Public metadata and schema layer added: Open Graph, Twitter cards, canonical URLs, Organization, WebSite, SoftwareApplication, BreadcrumbList, Article, and FAQPage JSON-LD where applicable.
 - Cloudflare `NEXT_PUBLIC_SITE_URL` binding configured so production canonical URLs use the deployed Worker instead of localhost.
+- Help Center and Contact Support pages expanded with real navigation, product-boundary FAQs, and an explicit support-configuration state.
 
 ## Tests run
 
@@ -48,8 +49,9 @@
 - Roadmap route checks: industry, guide, and comparison pages returned HTTP 200 with FAQ/workflow content and `noindex, nofollow` robots.
 - Current typecheck, Next.js production build, and OpenNext Cloudflare bundle: passed (Windows compatibility warning remains).
 - Current SEO route count: 26 canonical routes; SEO audit passed after adding the expansion industry candidates.
-- Latest Cloudflare Worker deployment: version `11f6968b-3d05-4a3b-9e35-fdd0febed60b`.
+- Latest Cloudflare Worker deployment: version `02d2d7a7-396c-4ff6-ae53-372d0806a4b4`.
 - Runtime SEO checks: homepage, Help, industry, and guide pages returned HTTP 200 with expected canonical, Open Graph, JSON-LD, and robots output.
+- Runtime Help Center checks: `/help` and `/help/contact` returned HTTP 200 with expected navigation, FAQ, canonical, and support-state output.
 
 ## Current task
 
