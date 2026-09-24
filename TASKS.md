@@ -47,6 +47,7 @@
 - OpenNext Cloudflare Worker bundle: passed (Windows compatibility warning remains).
 - GitHub: pushed commit `3e8bbfe` to `https://github.com/chenmu2024/TakeMoveReturn` on `main`.
 - GitHub: pushed the deployment-tracker commits through `ab38c53` to `main`.
+- GitHub: pushed the auth and site-entry polish commit `86ba736` to `main`.
 - Cloudflare Worker deployed at `https://takemovereturn.zhongqiaosheng.workers.dev` (version `c5d7b87c-bff6-413f-a9a8-cba812e6c930`).
 - Production URL smoke check: HTTP 200, expected title, and TakeMoveReturn brand present.
 - Roadmap route checks: industry, guide, and comparison pages returned HTTP 200 with FAQ/workflow content and `noindex, nofollow` robots.
@@ -58,6 +59,8 @@
 - Workspace runtime checks: all 12 `/app/*` routes returned HTTP 200 with `noindex, nofollow` and the secure-data connection banner.
 - Latest Cloudflare Worker deployment: version `082514e9-95f6-4af6-867a-702e8f98bc5e`.
 - Auth runtime checks: `/auth/login`, `/auth/signup`, `/auth/forgot-password`, and `/auth/callback` returned HTTP 200 with `noindex, nofollow` and the secure-connection state.
+- Latest Cloudflare Worker deployment: version `a568ee62-b7e1-4954-9bd6-309230edf780`.
+- Latest production smoke check: home, `/app`, all auth states, favicon, and a missing route returned the expected response; missing route returned branded HTTP 404.
 
 ## Current task
 
