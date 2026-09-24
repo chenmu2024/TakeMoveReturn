@@ -1,11 +1,11 @@
-# Fieldmark
+# TakeMoveReturn
 
-Static product preview for a QR-based construction tool tracking SaaS.
+TakeMoveReturn is a QR-based construction tool tracking SaaS for small crews.
 
 ## Run locally
 
-Serve `dist/` with any static HTTP server.
+Run the Next.js preview with `npm run dev`, or build the Cloudflare Worker bundle with `npm run cf:build`.
 
 ## Production status
 
-**NOT COMPLETED:** This preview does not include a database, Supabase authentication/RLS, Stripe billing, transactional email, Cloudflare R2, analytics, error monitoring, or server-side authorization. Forms and operational controls demonstrate intended flows only. Before public launch, replace preview forms and sample records with secured server-side implementations and counsel-reviewed legal pages.
+The public marketing, SEO, auth-entry, and workspace interface are implemented. Production records and account actions remain gated until Supabase authentication/RLS, Stripe billing, transactional email, R2/Queue services, server-side authorization, monitoring, and legal review are configured. The interface intentionally shows an honest connection state instead of sample operational data.

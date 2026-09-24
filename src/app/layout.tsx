@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   openGraph: { title: siteConfig.descriptor + " | " + siteConfig.name, description: "QR-based construction tool tracking that shows who has every tool, where it is, and what happened to it.", url: siteConfig.siteUrl, siteName: siteConfig.name, type: "website" },
   twitter: { card: "summary_large_image", title: siteConfig.descriptor + " | " + siteConfig.name, description: "QR-based construction tool tracking that shows who has every tool, where it is, and what happened to it." },
+  icons: { icon: "/favicon.svg" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -26,6 +26,8 @@
 - Cloudflare `NEXT_PUBLIC_SITE_URL` binding configured so production canonical URLs use the deployed Worker instead of localhost.
 - Help Center and Contact Support pages expanded with real navigation, product-boundary FAQs, and an explicit support-configuration state.
 - Authenticated workspace UI expanded across dashboard, tools, workers, locations, activity, damage, maintenance, import, reports, settings, billing, and privacy routes with honest empty states and security gating.
+- Auth UI polished for login, signup, password recovery, and callback states with disabled credential submission until Supabase Auth is connected.
+- Site completeness improved with a branded favicon, a safe `/app` redirect, a noindex branded 404 page, and updated TakeMoveReturn project documentation.
 
 ## Tests run
 
@@ -55,6 +57,7 @@
 - Runtime Help Center checks: `/help` and `/help/contact` returned HTTP 200 with expected navigation, FAQ, canonical, and support-state output.
 - Workspace runtime checks: all 12 `/app/*` routes returned HTTP 200 with `noindex, nofollow` and the secure-data connection banner.
 - Latest Cloudflare Worker deployment: version `082514e9-95f6-4af6-867a-702e8f98bc5e`.
+- Auth runtime checks: `/auth/login`, `/auth/signup`, `/auth/forgot-password`, and `/auth/callback` returned HTTP 200 with `noindex, nofollow` and the secure-connection state.
 
 ## Current task
 

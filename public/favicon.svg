@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">TakeMoveReturn</title>
+  <desc id="desc">Orange QR tool tracking mark</desc>
+  <rect width="64" height="64" rx="14" fill="#0b3027"/>
+  <path d="M15 15h13v13H15zM36 15h13v13H36zM15 36h13v13H15z" fill="#e8551f"/>
+  <path d="M37 37h5v5h-5zM44 44h5v5h-5zM37 46h5v3h-5z" fill="#f7efe4"/>
+</svg>

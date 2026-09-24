@@ -1,3 +1,8 @@
+import type { Metadata } from "next";
+import { AuthShell } from "../../../components/auth-shell";
+
+export const metadata: Metadata = { title: "Completing Sign In | TakeMoveReturn", robots: { index: false, follow: false } };
+
 export default function AuthCallbackPage() {
-  return <main><h1>Completing sign-in</h1><p>Authentication callback handling is waiting for Supabase credentials.</p></main>;
+  return <AuthShell variant="callback" />;
 }
