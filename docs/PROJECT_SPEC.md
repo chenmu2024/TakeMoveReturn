@@ -1,5 +1,7 @@
 # TakeMoveReturn
 
+> 2026-09-24 用户更新：正式域名为 `takemovereturn.com`；联系邮箱为 `contact@takemovereturn.com`、`billing@takemovereturn.com`、`support@takemovereturn.com`。支付拟使用 Waffo Pancake（`https://pancake.waffo.ai/`），但支付集成和收费上线明确推迟到其他功能完成之后。下文所有 Stripe/Resend/旧域名要求，如与本更新冲突，以本更新为准；不得据此声称支付或邮件发送已完成。
+
 # AI 编程完整开发总指令
 
 ## 最终锁定版 · SEO V2 竞品验证整合版

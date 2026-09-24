@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { WorkspaceShell, type WorkspaceView } from "../../../components/workspace";
+import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
 
 const views: Record<string, WorkspaceView> = {
   dashboard: { key: "dashboard", title: "Workspace dashboard", summary: "A clear starting point for tool custody, locations, exceptions, and the next handoff.", eyebrow: "DASHBOARD", kind: "dashboard", primaryAction: { label: "Add first tool", href: "/app/tools" } },
-  tools: { key: "tools", title: "Tools", summary: "Manage reusable tools, QR labels, holders, locations, conditions, and history.", eyebrow: "TOOLS", kind: "table", columns: ["Tool", "Asset code", "Holder", "Location", "Status", "Last move"], primaryAction: { label: "Add tool", href: "/app/tools" }, secondaryAction: { label: "Import list", href: "/app/import" }, emptyTitle: "No tools connected", emptyText: "Your tool register will appear here after secure workspace onboarding is connected." },
+  tools: { key: "tools", title: "Tools", summary: "Register reusable tools with company-scoped asset codes and current status. Field custody and QR actions follow after security checks.", eyebrow: "TOOLS", kind: "table", columns: ["Tool", "Asset code", "Status", "Updated"], primaryAction: { label: "Add tool", href: "/app/tools/new" }, secondaryAction: { label: "Import list", href: "/app/import" }, emptyTitle: "No tools yet", emptyText: "Add the first reusable tool to begin your company register." },
   workers: { key: "workers", title: "Field workers", summary: "Manage worker identity, role, PIN security, sessions, and currently held tools.", eyebrow: "WORKERS", kind: "table", columns: ["Worker", "Role", "Status", "Tools held", "Last active"], primaryAction: { label: "Add worker", href: "/app/workers" }, emptyTitle: "No workers connected", emptyText: "Workers will appear here after an authenticated company workspace is available." },
   locations: { key: "locations", title: "Locations", summary: "Track warehouses, trucks, job sites, and the places where tools are handed off.", eyebrow: "LOCATIONS", kind: "table", columns: ["Location", "Type", "Tools", "Address or note", "Updated"], primaryAction: { label: "Add location", href: "/app/locations" }, emptyTitle: "No locations connected", emptyText: "Locations will appear here after your company workspace is created." },
   activity: { key: "activity", title: "Activity", summary: "Review durable TAKE, MOVE, RETURN, damage, maintenance, and correction events.", eyebrow: "ACTIVITY", kind: "activity", secondaryAction: { label: "Export history", href: "/app/reports" }, emptyTitle: "No transactions yet", emptyText: "Events will appear here after the first authenticated tool movement." },
@@ -22,7 +23,24 @@ export default async function WorkspacePage({ params }: { params: Promise<{ slug
   const key = path.replace(/^\/app\//, "");
   const view = views[key];
   if (!view) notFound();
-  return <WorkspaceShell path={path} view={view} />;
+  let tools = null;
+  if (isSupabaseConfigured()) {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getClaims();
+    if (!data?.claims) redirect("/auth/login");
+    const { data: membership, error } = await supabase.from("organization_members")
+      .select("company_id").eq("user_id", data.claims.sub).eq("status", "active").limit(1).maybeSingle();
+    if (error) throw new Error("Workspace membership could not be checked.");
+    if (!membership) redirect("/app/onboarding");
+    if (key === "tools") {
+      const { data: toolRows, error: toolError } = await supabase.from("tools")
+        .select("id,name,asset_code,status,updated_at").eq("company_id", membership.company_id)
+        .order("updated_at", { ascending: false }).limit(100);
+      if (toolError) throw new Error("Tools could not be loaded.");
+      tools = toolRows;
+    }
+  }
+  return <WorkspaceShell path={path} view={view} tools={tools} />;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {

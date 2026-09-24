@@ -12,7 +12,7 @@
 
 **Decision:** Use Supabase PostgreSQL, Supabase Auth, and PostgreSQL Row Level Security for all tenant data.
 
-**Status:** LOCKED — BLOCKED_BY_EXTERNAL_CREDENTIALS for live provisioning.
+**Status:** LOCKED — seven tracked migrations are applied to the live project. Rollback-only SQL checks cover two-company isolation and first-tool capacity; browser Auth and real customer sessions remain pending.
 
 ## Branding
 
@@ -25,3 +25,15 @@
 **Decision:** Use Free, Starter, Growth, and Pro plans with the limits in `docs/PROJECT_SPEC.md`; field workers remain unlimited on every plan.
 
 **Status:** LOCKED
+
+## Production domain and public email addresses
+
+**Decision:** Use `takemovereturn.com` as the canonical site domain. Use `contact@takemovereturn.com` for general/privacy contact, `support@takemovereturn.com` for help, and reserve `billing@takemovereturn.com` for future billing communication.
+
+**Status:** LOCKED — the root domain routes to the existing Cloudflare Worker. Mailbox delivery and outbound transactional email still require verification.
+
+## Payment provider
+
+**Decision:** Defer payment implementation until the non-payment product is ready. The user selected Waffo Pancake as the intended provider, superseding the historical Stripe-specific implementation instructions. Do not enable paid actions before the provider's API and webhook behavior are verified.
+
+**Status:** DEFERRED
