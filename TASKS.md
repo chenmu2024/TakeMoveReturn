@@ -88,7 +88,7 @@
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: Resend API key.
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: Cloudflare Queue provisioning for future import jobs.
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: production domain and legal entity information.
-- GitHub sync pending: local commit `df5f999` could not be pushed because the connection to `github.com:443` timed out twice. The Cloudflare deployment above is live.
+- GitHub `main` was updated through the connected repository API at commit `4c8805e` after local Git HTTPS connections failed. The uploaded tree matched the local `e70a679` tree exactly. Local history and remote history have different commit SHAs; fetch and reconcile when Git HTTPS is available.
 
 ## Next exact task
 
