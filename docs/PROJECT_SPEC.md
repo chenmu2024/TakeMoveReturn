@@ -1,9 +1,8 @@
-
 # TakeMoveReturn
 
 # AI 编程完整开发总指令
 
-## 最终锁定版
+## 最终锁定版 · SEO V2 竞品验证整合版
 
 ## SEO-first Construction Tool Tracking SaaS
 
@@ -316,6 +315,32 @@ SEO必须影响：
 * Schema
 * Sitemap
 * Content architecture
+* Industry pages
+* Comparison / Best pages
+* Guides
+* Free templates / link bait
+* Backlink acquisition
+
+SEO总原则：
+
+```text
+1 search-intent cluster
+→ 1 canonical URL
+→ 1 Primary Keyword
+→ 多个 Secondary / semantic keywords
+```
+
+禁止：
+
+* 一个近义词做一个页面
+* 为了关键词批量生成 doorway pages
+* 因为竞品覆盖某关键词就改变产品边界
+* 为了搜索量引入 GPS / RFID / Fleet / ERP / Procurement / Workforce 功能
+* 为了SEO声称不存在的功能
+
+如果关键词与真实产品不匹配：
+
+# 不发布。
 
 ---
 
@@ -327,10 +352,11 @@ SEO必须影响：
 src/data/seo-keywords.ts
 ```
 
-字段：
+字段至少：
 
 ```ts
 keyword
+cluster
 volume
 kd
 cpc
@@ -338,25 +364,65 @@ intent
 intentFit
 priority
 targetUrl
+pageType
+
+metricSource
+metricScope
+metricCheckedAt
+
+competitorEvidence
+needsUSVerification
+
+status
 notes
 ```
 
-intentFit：
+其中：
 
 ```text
+intentFit:
 strong
 mixed
 weak
 excluded
+
+priority:
+P0
+P1
+P2
+HOLD
+
+status:
+locked
+candidate
+verify_before_build
+excluded
 ```
 
-禁止AI自行编造：
+## 数据规则
 
-Volume / KD / CPC。
+1. 已有 TakeMoveReturn 原始关键词数据继续保留，视为当前项目基准数据。
+2. 本轮竞品数据来自 Semrush 竞品 Organic Keywords 导出，主要为 Global 数据。
+3. 竞品 Global 数据可以用于：
+   * 发现关键词
+   * 竞品交叉验证
+   * 判断搜索意图
+   * 判断页面架构
+4. 竞品 Global 数据不能静默覆盖已有 US / 项目基准数据。
+5. 任何新建 Money Page / Industry Page 在正式 index 前：
+   * 用 Semrush US database 再核一次
+   * 检查 Google US SERP
+6. CPC 缺失：
+   ```text
+   null
+   ```
+   禁止AI猜测。
+7. Volume / KD / CPC：
+   # 禁止AI自行编造。
 
 ---
 
-# 12. 核心关键词数据
+# 12. 核心关键词数据：项目基准
 
 必须录入：
 
@@ -376,9 +442,13 @@ Volume / KD / CPC。
 | equipment management system                |    320 | 11 | $35.88 |
 | asset check out                            |    260 | 10 | $18.68 |
 
+这些为项目既有基准值。
+
+不要因为竞品 Global 数据出现轻微差异就覆盖。
+
 ---
 
-# 13. Supporting Keywords
+# 13. Supporting Keywords：项目基准
 
 | Keyword                        | Volume | KD |    CPC |
 | ------------------------------ | -----: | -: | -----: |
@@ -398,7 +468,81 @@ Volume / KD / CPC。
 
 ---
 
-# 14. Maintenance Keywords
+# 14. 竞品验证新增关键词
+
+以下数据来自本轮竞品 Semrush Global Organic Keywords。
+
+必须标记：
+
+```text
+metricScope: global
+metricSource: competitor_semrush
+needsUSVerification: true
+```
+
+不得静默当作 US 最终值。
+
+## Core / Money Cluster
+
+| Keyword | Volume | KD | Evidence | Status |
+|---|---:|---:|---|---|
+| tool tracking system for construction | 170 | 8 | MapTrack | locked-secondary |
+| tools and equipment tracking | 210 | 7 | ShareMyToolbox + MapTrack | locked-secondary |
+| small tool tracking software | 140 | 11 | ShareMyToolbox | locked-secondary |
+| tool checkout system | 140 | 2 | ShareMyToolbox | locked-secondary |
+| tool management systems | 210 | 10 | AlignOps | locked-secondary |
+| tool management solution | 170 | 12 | AlignOps | locked-secondary |
+| tool management tool | 140 | 12 | AlignOps | locked-secondary |
+
+## Commercial / Best Cluster
+
+| Keyword | Volume | KD | Evidence | Status |
+|---|---:|---:|---|---|
+| best tool tracking software | 110 | 4 | ShareMyToolbox | P1 |
+| best tool tracking system | 110 | 9 | ShareMyToolbox + MapTrack | P1 |
+| best tool tracking platform for field crews | 90 | 8 | ShareMyToolbox | P1 |
+| best tool tracking platforms for construction contractors | 70 | 12 | ShareMyToolbox | P1 |
+
+## QR Cluster
+
+| Keyword | Volume | KD | Evidence | Status |
+|---|---:|---:|---|---|
+| qr code tracking system | 70 | 16 | GoCodes | candidate |
+| qr code tracking | 390 | 24 | MapTrack | candidate |
+| qr tracking | 260 | 26 | MapTrack | candidate |
+
+说明：
+
+QR 是真实产品核心。
+
+但泛 `qr tracking` 可能混入物流/营销/包裹等意图。
+
+因此当前策略：
+
+```text
+先加强：
+/
+ /asset-tagging-system
+ /equipment-checkout
+
+US SERP验证后：
+如意图明显属于工具/设备追踪，
+再创建：
+/qr-code-tool-tracking
+```
+
+禁止为了抢 QR 词声称支持：
+
+* RFID
+* GPS
+* Bluetooth tracking
+* Telematics
+
+---
+
+# 15. Maintenance / Service Keywords
+
+项目基准：
 
 | Keyword                                     | Volume | KD |    CPC |
 | ------------------------------------------- | -----: | -: | -----: |
@@ -409,13 +553,32 @@ Volume / KD / CPC。
 | heavy equipment management software         |    390 | 15 | $45.27 |
 | heavy equipment fleet management software   |    320 | 16 | $36.88 |
 
-不要因为后两个词增加：
+竞品新增 Guide 机会：
 
-GPS / Telematics。
+| Keyword | Volume | KD | Evidence |
+|---|---:|---:|---|
+| tool calibration | 170 | 19 | GoCodes |
+| calibrate tool | 110 | 11 | GoCodes |
+
+处理：
+
+```text
+/guides/tool-calibration-tracking
+```
+
+不要因为：
+
+```text
+heavy equipment fleet management software
+```
+
+增加 GPS / Fleet Telematics。
 
 ---
 
-# 15. 信息关键词
+# 16. 信息 / Guide Keywords
+
+## Existing Core Informational
 
 Primary：
 
@@ -423,7 +586,7 @@ Primary：
 how to manage construction site inventory
 ```
 
-数据：
+项目基准：
 
 ```text
 Volume 1,600
@@ -437,11 +600,45 @@ CPC $0
 /blog/how-to-manage-construction-site-inventory
 ```
 
+必须明确：
+
+```text
+Materials / consumables
+→ traditional inventory
+
+Reusable tools / equipment
+→ TakeMoveReturn
+```
+
+不要把产品扩成 Generic Inventory ERP。
+
+## Competitor-validated Guides
+
+| Keyword | Volume | KD | Evidence | Target |
+|---|---:|---:|---|---|
+| how to keep track of tools and equipment | 70 | 12 | ShareMyToolbox | `/guides/how-to-keep-track-of-tools-and-equipment` |
+| how to store power tools | 110 | 11 | GoCodes | `/guides/how-to-store-power-tools` |
+| storing power tools | 590 | 19 | GoCodes | same page |
+| how much does asset tracking cost | 70 | 11 | GoCodes | `/guides/asset-tracking-cost` |
+| asset tracking technology | 320 | 23 | AlignOps | `/guides/asset-tracking-technologies` |
+| asset tracking technologies | 140 | 22 | AlignOps | same page |
+| technology asset tracking | 390 | 20 | AlignOps | same page |
+| tool calibration | 170 | 19 | GoCodes | `/guides/tool-calibration-tracking` |
+| calibrate tool | 110 | 11 | GoCodes | same page |
+
+所有竞品新增 Guide：
+
+```text
+needsUSVerification: true
+```
+
+但因为与产品高度匹配，可列为 P1 内容计划。
+
 ---
 
-# 16. Mixed Intent Keywords
+# 17. Mixed Intent Keywords
 
-以下词存在明显Hardware/GPS混合意图：
+以下词存在明显 Hardware / GPS / broader intent：
 
 ## equipment tracker
 
@@ -470,11 +667,11 @@ intentFit: mixed
 
 H1 / Primary Keyword
 
-除非未来重新SERP验证。
+除非未来重新 SERP 验证。
 
 ---
 
-# 17. 不作为初期主攻词
+# 18. 不作为初期主攻词
 
 ```text
 asset management software
@@ -505,9 +702,9 @@ equipment tracking software
 
 ---
 
-# 18. Generic Inventory词处理
+# 19. Generic Inventory 词处理
 
-以下关键词不做核心Money Page：
+以下关键词不做核心 Money Page：
 
 ```text
 cloud based inventory management
@@ -532,13 +729,35 @@ cloud inventory system
 1300 / KD28 / $25.07
 ```
 
+竞品还证明了大量 Generic Inventory 大词：
+
+```text
+inventory management software
+inventory tracking software
+warehouse inventory software
+small business inventory software
+```
+
+都不要做核心 Money Page。
+
 原因：
 
-库存/SKU/warehouse/ecommerce intent太强。
+```text
+SKU / warehouse / ecommerce / consumables intent 太强
+```
+
+Sortly 可以借鉴：
+
+* 产品展示
+* editorial/listing backlink ecosystem
+
+不能借鉴：
+
+* Generic Inventory 定位
 
 ---
 
-# 19. 首页 Keyword Map
+# 20. 首页 Keyword Map：最终锁定
 
 URL：
 
@@ -565,16 +784,55 @@ Secondary：
 ```text
 tool tracking software
 1000 / KD23 / $20.95
-```
 
-```text
 tool tracking
 1000 / KD20 / $10.77
+
+tool tracking system for construction
+170 / KD8 / CPC unknown / Global competitor evidence
+
+tools and equipment tracking
+210 / KD7 / CPC unknown / multi-competitor evidence
+
+small tool tracking software
+140 / KD11 / CPC unknown / competitor evidence
+```
+
+Cannibalization Rule：
+
+这些词：
+
+# 全部归首页。
+
+禁止另外创建：
+
+```text
+/tool-tracking-software
+/construction-tool-tracking
+/construction-tool-tracking-software
+/tool-tracking-system-for-construction
+/tools-and-equipment-tracking
+/small-tool-tracking-software
+```
+
+首页必须同时表达：
+
+```text
+Construction
+Tools
+QR
+TAKE / MOVE / RETURN
+Workers
+Trucks
+Job Sites
+No native app
+Unlimited field workers
+Spreadsheet import
 ```
 
 ---
 
-# 20. Equipment Management Page
+# 21. Equipment Management Page
 
 ```text
 /construction-equipment-management-software
@@ -592,16 +850,21 @@ Secondary：
 ```text
 equipment management software
 1600 / KD18 / $35.64
-```
 
-```text
 equipment management system
 320 / KD11 / $35.88
 ```
 
+不要扩展到：
+
+* Fleet
+* GPS
+* fuel
+* telematics
+
 ---
 
-# 21. Equipment Tracking Page
+# 22. Equipment Tracking Page
 
 ```text
 /construction-equipment-tracking-software
@@ -616,11 +879,17 @@ construction equipment tracking software
 
 Mixed-intent词：
 
+```text
+equipment tracking
+equipment tracker
+equipment tracking system
+```
+
 只能辅助自然使用。
 
 ---
 
-# 22. Tool Management Page
+# 23. Tool Management Page：最终优化
 
 ```text
 /tool-management-software
@@ -638,16 +907,33 @@ Secondary：
 ```text
 tool management
 480 / KD14 / $6.24
-```
 
-```text
 tool management system
 480 / KD11 / $12.16
+
+tool management systems
+210 / KD10 / CPC unknown
+
+tool management solution
+170 / KD12 / CPC unknown
+
+tool management tool
+140 / KD12 / CPC unknown
 ```
+
+后3个为 AlignOps 竞品验证 Global 数据。
+
+全部归：
+
+```text
+/tool-management-software
+```
+
+禁止创建同义页面。
 
 ---
 
-# 23. Tool Inventory Page
+# 24. Tool Inventory Page
 
 ```text
 /tool-inventory-software
@@ -665,26 +951,34 @@ Secondary：
 ```text
 equipment inventory software
 390 / KD21 / $26.50
-```
 
-```text
 tool inventory
 320 / KD27 / $13.52
-```
 
-```text
 tool inventory management
 320 / KD27 / $20.69
-```
 
-```text
 tool inventory tracking system
 320 / KD22 / $16.29
 ```
 
+页面必须明确：
+
+TakeMoveReturn 是：
+
+```text
+Reusable Tool / Equipment Inventory
+```
+
+不是：
+
+```text
+Warehouse / SKU / Consumables ERP
+```
+
 ---
 
-# 24. Construction Asset Tracking
+# 25. Construction Asset Tracking
 
 ```text
 /construction-asset-tracking-software
@@ -704,9 +998,16 @@ construction asset tracking
 390 / KD21 / $36.26
 ```
 
+不主动主攻泛：
+
+```text
+asset tracking software
+asset tracking system
+```
+
 ---
 
-# 25. Maintenance SEO Page
+# 26. Maintenance SEO Page
 
 ```text
 /construction-equipment-maintenance-software
@@ -724,16 +1025,31 @@ Secondary：
 ```text
 equipment maintenance tracking software
 590 / KD28 / $55.19
-```
 
-```text
 asset maintenance software
 590 / KD28 / $21.56
 ```
 
+产品范围保持轻量：
+
+```text
+Last Service
+Next Service
+Interval
+Reminder
+Cost
+History
+Notes
+Attachments
+```
+
+不要变 Full CMMS。
+
 ---
 
-# 26. Asset Tagging Page
+# 27. Asset Tagging / QR Page Strategy
+
+当前 URL：
 
 ```text
 /asset-tagging-system
@@ -751,16 +1067,57 @@ Secondary：
 ```text
 barcode asset tracking
 320 / KD10 / $18.96
-```
 
-```text
 asset tag system
 320 / KD29 / $42.75
 ```
 
+必须增加真实 QR 产品内容：
+
+```text
+QR label
+scan from phone browser
+TAKE
+MOVE
+RETURN
+No dedicated scanner
+No native app required
+```
+
+QR competitor candidates：
+
+```text
+qr code tracking system
+70 / KD16
+
+qr code tracking
+390 / KD24
+
+qr tracking
+260 / KD26
+```
+
+在 US SERP 未确认前：
+
+# 不创建独立 QR Money Page。
+
+如果 US SERP 验证：
+
+```text
+qr code tool tracking
+qr tool tracking
+qr equipment tracking
+```
+
+与本产品高度匹配，才允许：
+
+```text
+/qr-code-tool-tracking
+```
+
 ---
 
-# 27. Equipment Checkout
+# 28. Equipment Checkout：重点强化
 
 ```text
 /equipment-checkout
@@ -773,28 +1130,595 @@ asset check out
 260 / KD10 / $18.68
 ```
 
-禁止编造其他关键词数据。
+Secondary：
+
+```text
+tool checkout system
+140 / KD2 / CPC unknown
+equipment checkout
+tool checkout tracking
+tool return tracking
+```
+
+其中：
+
+```text
+tool checkout system
+```
+
+来自 ShareMyToolbox 竞品验证。
+
+这是产品 TAKE / RETURN 闭环的高匹配词。
+
+页面必须真实展示：
+
+```text
+Worker scans QR
+→ TAKE
+→ tool assigned
+→ MOVE if needed
+→ RETURN
+→ history retained
+```
+
+禁止为：
+
+```text
+/tool-checkout-system
+```
+
+另建重复页面。
 
 ---
 
-# 28. SEO页面质量
+# 28A. Industry SEO：最终锁定
 
-所有Money Page必须包含：
+Industry Pages 不再只是“未来预留”。
+
+进入正式 SEO Roadmap。
+
+## P0
+
+```text
+/industries/plumbing-contractors
+/industries/electrical-contractors
+/industries/general-contractors
+```
+
+## P1
+
+```text
+/industries/remodeling-contractors
+/industries/concrete-contractors
+/industries/civil-engineering
+```
+
+## P2 / 待验证
+
+```text
+/industries/restoration-contractors
+/industries/hvac-contractors
+/industries/roofing-contractors
+```
+
+### Plumbing Keyword Cluster
+
+竞品验证：
+
+```text
+tool tracking solution for plumbers
+110 / KD0
+
+tool tracking tool for plumbers
+140 / KD1
+
+tool management tool for plumbers
+110 / KD0
+
+asset tracking tool for plumbers
+110 / KD0
+
+plumbing inventory software
+260 / KD11
+```
+
+Evidence：
+
+```text
+ShareMyToolbox
+MapTrack
+Sortly
+```
+
+Primary 语义：
+
+```text
+tool tracking software for plumbing contractors
+```
+
+注意：
+
+`plumbing inventory software` 只能作为辅助语义。
+
+不得把产品写成：
+
+Consumables / parts / warehouse inventory system。
+
+### Electrical Keyword Cluster
+
+```text
+tool tracking solution for electricians
+110 / KD3
+
+tool tracking tool for electricians
+140 / KD1
+```
+
+Evidence：
+
+```text
+ShareMyToolbox
+MapTrack
+AlignOps
+```
+
+三竞品验证。
+
+状态：
+
+# P0 LOCKED
+
+### General Contractors Cluster
+
+```text
+tool tracking solution for general contractors
+110 / KD3
+
+tool tracking software for general contractors
+110 / KD11
+```
+
+Evidence：
+
+```text
+ShareMyToolbox
+```
+
+状态：
+
+P0 / US SERP final check before index。
+
+### Builders / Remodeling Cluster
+
+竞品验证：
+
+```text
+tool tracking solution for builders
+140 / KD13
+
+tool tracking software for builders
+110 / KD4
+```
+
+不要同时创建：
+
+```text
+/builders
+/remodeling
+```
+
+如果 SERP 意图高度重叠：
+
+优先：
+
+```text
+/industries/remodeling-contractors
+```
+
+并自然覆盖 builders 语义。
+
+### Concrete Contractors
+
+```text
+tool tracking software for concrete contractors
+110 / KD3
+```
+
+状态：
+
+P1。
+
+### Civil Engineering
+
+竞品验证：
+
+```text
+tool tracking solution for civil engineers
+110 / KD6
+
+tool tracking tool for civil engineers
+110 / KD2
+
+asset tracking software for civil engineers
+70 / KD2
+
+asset tracking solution for civil engineers
+90 / KD5
+```
+
+Evidence：
+
+```text
+GoCodes
+AlignOps
+```
+
+状态：
+
+P1。
+
+### Industry Page Anti-Doorway Rule
+
+每个 Industry Page 必须至少包含真实差异：
+
+* 该行业常见工具
+* 该行业常见现场流转
+* Worker / Truck / Job Site 场景
+* 该行业最典型丢失/归还问题
+* 与 Excel / paper sheet 的比较
+* 真实产品 UI / screenshot
+* QR Take / Move / Return workflow
+* FAQ
+* 内链到 Money Pages
+* CTA
+
+禁止：
+
+把同一页面只替换：
+
+```text
+plumber
+→ electrician
+→ contractor
+```
+
+就发布。
+
+---
+
+# 28B. Best / Commercial Content
+
+正式规划：
+
+```text
+/best/tool-tracking-software
+```
+
+覆盖：
+
+```text
+best tool tracking software
+110 / KD4
+
+best tool tracking system
+110 / KD9
+
+best tool tracking platform for field crews
+90 / KD8
+
+best tool tracking platforms for construction contractors
+70 / KD12
+```
+
+Evidence：
+
+```text
+ShareMyToolbox
+MapTrack
+```
+
+Priority：
+
+# P1
+
+要求：
+
+* 客观比较
+* 有来源
+* 明确 checkedAt
+* 不伪造评分
+* 不伪造客户评价
+* 不伪造“#1”
+* 不隐藏 TakeMoveReturn 自己是比较方
+* 竞品功能/价格必须有证据
+
+---
+
+# 28C. Alternatives Pages
+
+正式规划：
+
+```text
+/alternatives/sharemytoolbox
+/alternatives/gocodes
+/alternatives/sortly
+/alternatives/toolwatch
+```
+
+优先级：
+
+```text
+P1: ShareMyToolbox
+P1: GoCodes
+P2: Sortly
+P2: ToolWatch
+```
+
+在：
+
+# Legal / competitor factual review
+
+完成前：
+
+```text
+noindex
+```
+
+或不发布。
+
+---
+
+# 28D. Guide Roadmap
+
+P1：
+
+```text
+/guides/how-to-keep-track-of-tools-and-equipment
+/guides/how-to-store-power-tools
+/guides/asset-tracking-cost
+/guides/asset-tracking-technologies
+/guides/tool-calibration-tracking
+/guides/qr-code-vs-barcode-tool-tracking
+```
+
+每篇 Guide：
+
+* 先解决问题
+* 不先推销产品
+* 用真实产品场景承接
+* 至少一个自然 CTA
+* 内链到相关 Money Page
+* 不写 AI thin content
+
+---
+
+# 28E. Template / Link-Bait SEO
+
+MapTrack 证明：
+
+```text
+/templates/
+```
+
+是值得借鉴的 SEO 模型。
+
+TakeMoveReturn 候选：
+
+```text
+/templates/tool-inventory-spreadsheet
+/templates/tool-checkout-sheet
+/templates/equipment-checkout-form
+/templates/tool-maintenance-log
+/templates/tool-return-form
+/templates/construction-tool-inventory-template
+```
+
+状态：
+
+# VERIFY_BEFORE_BUILD
+
+这些具体模板词尚未完成本项目 US Volume/KD 验证。
+
+不要在没有验证前声称：
+
+有多少搜索量。
+
+模板产品逻辑：
+
+```text
+Free Excel / PDF
+→ User experiences manual tracking limits
+→ Import CSV/XLSX
+→ Generate QR
+→ Start TakeMoveReturn
+```
+
+模板页必须真正提供有用资源。
+
+不能只做一篇 SEO 文章假装“template”。
+
+---
+
+# 28F. Special Query：Tool Crib
+
+多个竞品出现：
+
+```text
+tool crib checkout return system fields manufacturing tool tracking
+880 / KD2
+```
+
+Evidence：
+
+```text
+GoCodes
+Sortly
+```
+
+但 query 本身不自然。
+
+禁止原样做页面。
+
+必须先拆分并验证：
+
+```text
+tool crib software
+tool crib management software
+tool crib checkout system
+tool crib tracking software
+tool checkout system
+manufacturing tool tracking
+```
+
+当前状态：
+
+# HOLD / VERIFY_BEFORE_BUILD
+
+---
+
+# 28G. SEO Release Order
+
+不要一次发布几十个页面。
+
+## Phase 1 — Core
+
+必须优先完成：
+
+```text
+/
+ /construction-equipment-management-software
+ /construction-equipment-tracking-software
+ /construction-asset-tracking-software
+ /construction-equipment-maintenance-software
+ /tool-management-software
+ /tool-inventory-software
+ /asset-tagging-system
+ /equipment-checkout
+ /blog/how-to-manage-construction-site-inventory
+```
+
+## Phase 2 — P0 Industry
+
+```text
+/industries/plumbing-contractors
+/industries/electrical-contractors
+/industries/general-contractors
+```
+
+## Phase 3 — Commercial + Guides
+
+```text
+/best/tool-tracking-software
+
+/guides/how-to-keep-track-of-tools-and-equipment
+/guides/how-to-store-power-tools
+/guides/asset-tracking-cost
+/guides/asset-tracking-technologies
+/guides/tool-calibration-tracking
+/guides/qr-code-vs-barcode-tool-tracking
+```
+
+## Phase 4 — Templates
+
+仅在 US 关键词验证后：
+
+```text
+/templates/*
+```
+
+## Phase 5 — P1/P2 Industry + Alternatives
+
+```text
+/industries/remodeling-contractors
+/industries/concrete-contractors
+/industries/civil-engineering
+/industries/restoration-contractors
+
+/alternatives/*
+```
+
+---
+
+# 28H. Keyword Cannibalization Rules
+
+必须在：
+
+```text
+npm run seo:audit
+```
+
+中检查：
+
+* same primary keyword
+* overlapping keyword cluster
+* duplicate title intent
+* duplicate H1 intent
+* duplicate canonical
+* sibling pages competing for same SERP
+
+强制规则：
+
+```text
+Homepage:
+construction tool tracking cluster
+
+/tool-management-software:
+tool management cluster
+
+/tool-inventory-software:
+tool inventory cluster
+
+/equipment-checkout:
+checkout / return cluster
+
+/asset-tagging-system:
+asset tag + QR support cluster
+
+/best/tool-tracking-software:
+best / comparison cluster
+
+每个 /industries/*:
+industry-specific cluster
+```
+
+如果两个页面目标意图高度重叠：
+
+# 合并，不新增。
+
+---
+
+# 28I. SEO页面质量
+
+所有 Money / Industry / Best / Guide 页面必须：
 
 * Direct Answer
-* Product UI
+* Real Product UI
 * User Pain
 * Construction Scenario
 * Workflow
 * Relevant Features
-* Spreadsheet/manual comparison
+* Spreadsheet/manual comparison where relevant
 * FAQ
 * CTA
 * Internal links
+* Unique value
+* Real screenshots where product exists
 
 不要：
 
-写大量SEO文字才介绍产品。
+写大量 SEO 文字才介绍产品。
+
+不要：
+
+* Fake reviews
+* Fake ratings
+* Fake logos
+* Fake customers
+* Fake awards
+* Fake usage statistics
+* Fake case studies
+
+---
 
 ---
 
@@ -806,11 +1730,11 @@ SEO Title初始方向：
 
 H1：
 
-# Know Who Has Every Tool — In Seconds.
+# Construction Tool Tracking That Shows Who Has Every Tool.
 
 Subheading：
 
-> Simple QR-based tool tracking software for construction crews. Track tools across workers, trucks, warehouses and job sites without spreadsheets, expensive hardware or complicated enterprise software.
+> Simple QR-based construction tool tracking software for small crews. Know who has each tool, where it is, and whether it was returned — across workers, trucks, warehouses and job sites, with no native app or expensive tracking hardware.
 
 CTA：
 
@@ -3283,18 +4207,25 @@ content/help/
 
 # 151. Competitors
 
-研究：
+正式研究集合：
 
-* ProToolTrack
-* ShareMyToolbox
-* GoCodes
-* MapTrack
-* Sortly
-* ToolWatch / AlignOps
+```text
+ProToolTrack
+ShareMyToolbox
+GoCodes
+MapTrack
+Sortly
+ToolWatch / AlignOps
+```
 
 只能借鉴：
 
-思路。
+* 定位
+* 信息架构
+* workflow思路
+* keyword clusters
+* 内容类型
+* backlink acquisition pattern
 
 不能复制：
 
@@ -3303,40 +4234,425 @@ content/help/
 * Logo
 * Screenshots
 * Proprietary assets
+* 独有品牌表达
 
 ---
 
-# 152. Competitor Learning
+# 152. Competitor Learning：最终整合
 
-ProToolTrack：
+## ProToolTrack
 
-定位、自助、简单。
+重点学习：
 
-ShareMyToolbox：
+* 简单定位
+* self-serve
+* 小团队友好
+* tool-tracking focus
 
-Field workflow。
+## ShareMyToolbox
 
-GoCodes：
+重点学习：
 
-信任和内容。
+* Field workflow
+* Industry SEO
+* Plumbing / Electrical / General Contractor 长尾
+* Tool checkout intent
 
-MapTrack：
+## GoCodes
 
-SEO架构。
+重点学习：
 
-Sortly：
+* QR / asset tracking education
+* Guide 内容
+* Trust
+* Asset tracking cost
+* Power-tool content
+* Calibration content
 
-产品展示。
+不要因此扩：
 
-ToolWatch：
+* GPS
+* RFID
+* Bluetooth
 
-必要成熟功能。
+## MapTrack
+
+重点学习：
+
+* SEO architecture
+* Industry pages
+* `/best/`
+* `/templates/`
+* informational → product funnel
+
+不要因此扩：
+
+* Fleet
+* CMMS
+* Geofence
+* Oil & Gas platform
+
+## Sortly
+
+重点学习：
+
+* Product presentation
+* SaaS directories
+* editorial/listicle backlink ecosystem
+
+不要变成：
+
+* Generic Inventory
+* Warehouse ERP
+* Retail Inventory
+
+## ToolWatch / AlignOps
+
+重点学习：
+
+* Tool management language
+* Electrical contractor SEO
+* mature construction terminology
+
+不要扩：
+
+* Operations Management
+* Payroll
+* Workforce
+* Fleet
+* Safety platform
 
 ---
 
-# 153. Alternative Pages
+# 153. Competitor Evidence
 
-未来：
+建立：
+
+```text
+src/data/competitors.ts
+```
+
+每项至少：
+
+```text
+name
+category
+value
+sourceUrl
+checkedAt
+evidenceType
+notes
+```
+
+`evidenceType`：
+
+```text
+pricing
+feature
+positioning
+seo_keyword
+backlink
+content_pattern
+```
+
+任何 Best / Alternatives 页面：
+
+必须只使用这里已有证据或重新核验后的事实。
+
+---
+
+# 154. Backlink Strategy：正式纳入 Source of Truth
+
+建立：
+
+```text
+src/data/backlink-targets.ts
+```
+
+字段至少：
+
+```ts
+domain
+targetType
+priority
+competitorEvidence
+sourceUrl
+status
+lastCheckedAt
+outreachNotes
+```
+
+状态：
+
+```text
+research
+qualified
+outreach_ready
+contacted
+won
+rejected
+do_not_contact
+```
+
+---
+
+# 155. P0 / P1 Backlink Targets
+
+## P0 — Construction Executive
+
+竞品共同证据：
+
+```text
+ShareMyToolbox
+MapTrack
+AlignOps / ToolWatch
+```
+
+目标：
+
+```text
+constructionexec.com/top-tech/
+```
+
+定位：
+
+# Construction industry editorial / product recognition
+
+执行方式：
+
+* 研究最新 submission / nomination 规则
+* 按真实产品提交
+* 准备真实 screenshots
+* 提供产品 category
+* 提供 target customer
+* 提供 pricing / workflow facts
+* 不发“请给我外链”式邮件
+
+禁止：
+
+* fake award
+* fake nomination
+* claim inclusion before accepted
+
+## P0/P1 — Camcode
+
+竞品共同证据：
+
+```text
+ShareMyToolbox
+GoCodes
+```
+
+已出现页面类型：
+
+```text
+Best tool inventory / equipment tracking software
+Top asset tracking software
+```
+
+执行：
+
+* editorial outreach
+* 提供真实产品资料
+* 说明小型 construction crews 定位
+* 提供 QR Take / Move / Return 差异
+* 不买垃圾 guest post
+
+## P1 — SoftwareWorld
+
+竞品共同证据：
+
+```text
+GoCodes
+Sortly
+```
+
+目标：
+
+* Asset Tracking Software
+* Tool Tracking Software
+* Construction Software
+
+不要为了进入目录：
+
+把 TakeMoveReturn 填成 Generic Inventory ERP。
+
+## P1 — GoodFirms
+
+竞品共同证据：
+
+```text
+GoCodes
+Sortly
+```
+
+执行：
+
+* 建立完整 software/company profile
+* 选最接近的 category
+* 保持产品描述与真实产品一致
+
+---
+
+# 156. Secondary Backlink Targets
+
+## P1
+
+```text
+SaaSHub
+```
+
+用途：
+
+* product listing
+* alternatives ecosystem
+
+## P1/P2
+
+```text
+PCMag
+```
+
+类型：
+
+Editorial / review。
+
+难度较高。
+
+不做批量冷邮件轰炸。
+
+## P2
+
+```text
+The Retail Exec
+```
+
+只在：
+
+* asset inventory
+* barcode inventory
+* adjacent software editorial
+
+真正相关时联系。
+
+行业相关性低于 construction-specific sources。
+
+## Manual Review
+
+```text
+ABC Convention
+NUCA
+```
+
+先确定：
+
+* association
+* event
+* sponsorship
+* member resource
+* editorial opportunity
+
+再决定是否联系。
+
+## Event-driven PR
+
+```text
+PRNewswire
+```
+
+仅用于：
+
+* 正式产品发布
+* 融资
+* acquisition
+* major launch
+* significant company news
+
+不是常规 backlink strategy。
+
+---
+
+# 157. Backlink Quality Gate
+
+禁止主动追：
+
+```text
+random Blogspot domains
+Yahoo search URLs
+Bing image URLs
+random .cfd
+random .sbs
+spam-like pages.dev
+Aptoide mirrors
+irrelevant download sites
+PBN
+link farms
+bulk paid directories
+reciprocal-link schemes
+```
+
+优先：
+
+```text
+Construction industry
+Tool / equipment tracking relevance
+Editorial context
+Real audience
+Real resource page
+Real software comparison
+Legitimate SaaS directory
+Industry association
+```
+
+质量优先于数量。
+
+---
+
+# 158. Backlink Outreach Rules
+
+所有 outreach：
+
+* 个性化
+* 简短
+* 真实
+* 不欺骗
+* 不假装用户
+* 不假装合作关系
+* 不要求“dofollow”
+* 不强迫链接
+* 不群发完全相同模板
+
+推荐价值点：
+
+```text
+QR-based tool tracking
+Small construction crews
+Unlimited field workers
+No native app required
+Spreadsheet import
+TAKE / MOVE / RETURN
+```
+
+如果目标站已经收录多个竞品：
+
+邮件重点：
+
+```text
+You already cover this category.
+Here is a differentiated product for evaluation.
+```
+
+不是：
+
+```text
+Please add my backlink.
+```
+
+---
+
+# 159. Alternative Pages
+
+规划：
 
 ```text
 /alternatives/sharemytoolbox
@@ -3345,27 +4661,20 @@ ToolWatch：
 /alternatives/toolwatch
 ```
 
-不是立即全部index。
+不是立即全部 index。
 
----
-
-# 154. Competitor Evidence
+优先级：
 
 ```text
-src/data/competitors.ts
-```
-
-每项：
-
-```text
-value
-sourceUrl
-checkedAt
+P1 ShareMyToolbox
+P1 GoCodes
+P2 Sortly
+P2 ToolWatch
 ```
 
 ---
 
-# 155. Trademark
+# 160. Trademark + Competitor Index Gate
 
 只使用竞品名称做合理识别。
 
@@ -3375,34 +4684,43 @@ checkedAt
 * Imply endorsement
 * Copy logos
 * Copy visual identity
+* Misstate competitor pricing/features
 
----
-
-# 156. Competitor Index Gate
-
-没有法律审核：
+没有法律 / factual review：
 
 ```text
 noindex
 ```
 
-或：
-
-不发布。
+或不发布。
 
 ---
 
-# 157. Content
+# 161. Content
 
 使用：
 
 # MDX
 
-不要外接重CMS。
+不要外接重 CMS。
+
+内容目录：
+
+```text
+src/content/
+├── blog/
+├── guides/
+├── industries/
+├── best/
+├── alternatives/
+├── templates/
+├── help/
+└── seo/
+```
 
 ---
 
-# 158. SEO Frontmatter
+# 162. SEO Frontmatter
 
 ```text
 slug
@@ -3412,13 +4730,21 @@ h1
 
 primaryKeyword
 secondaryKeywords
+cluster
 
 volume
 kd
 cpc
+metricScope
+metricSource
+metricCheckedAt
 
 intent
 intentFit
+priority
+pageType
+competitorEvidence
+needsUSVerification
 
 datePublished
 dateModified
@@ -3426,59 +4752,54 @@ lastReviewed
 reviewCadenceDays
 
 canonical
+indexStatus
 ```
 
 ---
 
-# 159. dateModified
+# 163. dateModified + Review Cadence
 
-只有：
+`dateModified`：
 
-重大内容实际变化
+只有重大内容实际变化才更新。
 
-才更新。
+禁止：
 
-禁止每次build自动刷新。
+每次 build 自动刷新。
 
----
+Review：
 
-# 160. Review Cadence
-
-Alternatives：
-
-30 days。
-
-Best：
-
-30–60。
-
-Money Pages：
-
-90。
-
-Guides：
-
-180。
+```text
+Alternatives: 30 days
+Best: 30–60 days
+Money Pages: 90 days
+Industry Pages: 90 days
+Guides: 180 days
+Templates: 180 days
+Backlink targets: 60–90 days
+```
 
 ---
 
-# 161. SEO Audit
+# 164. SEO Audit
 
 ```text
 npm run seo:audit
 ```
 
-检测：
+必须检测：
 
 * stale content
 * duplicate primary keyword
 * duplicate canonical
 * missing keyword data
+* missing metric source
+* missing metric scope
 * cannibalization risk
-
----
-
-# 162. Scheduled Audit
+* duplicate cluster ownership
+* indexable page with `needsUSVerification: true`
+* competitor page indexed without factual/legal review
+* template page published without actual downloadable/useful resource
 
 GitHub Actions：
 
@@ -3492,9 +4813,11 @@ Issue / Report。
 
 ---
 
-# 163. Public Pages
+# 164A. Public Pages：最终分层
 
-必须完成：
+## Launch / Core
+
+必须完成并可索引：
 
 ```text
 /
@@ -3523,9 +4846,62 @@ Issue / Report。
 /subprocessors
 ```
 
+## P0 Industry
+
+完成 US keyword / SERP final check 后 index：
+
+```text
+/industries/plumbing-contractors
+/industries/electrical-contractors
+/industries/general-contractors
+```
+
+## P1 Content
+
+```text
+/best/tool-tracking-software
+
+/guides/how-to-keep-track-of-tools-and-equipment
+/guides/how-to-store-power-tools
+/guides/asset-tracking-cost
+/guides/asset-tracking-technologies
+/guides/tool-calibration-tracking
+/guides/qr-code-vs-barcode-tool-tracking
+```
+
+## P1/P2 Expansion
+
+```text
+/industries/remodeling-contractors
+/industries/concrete-contractors
+/industries/civil-engineering
+/industries/restoration-contractors
+```
+
+## Verify Before Build
+
+```text
+/qr-code-tool-tracking
+/templates/*
+```
+
+## Competitor Review Gate
+
+```text
+/alternatives/*
+```
+
+默认：
+
+```text
+noindex
+```
+
+直到 factual + legal review 完成。
+
 ---
 
-# 164. Future SEO
+# 164B. Future SEO Rule
 
 预留：
 
@@ -3534,9 +4910,30 @@ Issue / Report。
 /alternatives/
 /best/
 /guides/
+/templates/
 ```
 
-禁止批量薄内容。
+但：
+
+# 禁止批量薄内容。
+
+任何新 SEO 页面都必须同时满足：
+
+```text
+Real search intent
++
+Product fit
++
+Unique content
++
+Useful user value
++
+No cannibalization
++
+Correct index gate
+```
+
+---
 
 ---
 
@@ -4539,21 +5936,53 @@ Cancel
 
 ```text
 URL
+Page Type
+Keyword Cluster
+
 Primary Keyword
 Volume
 KD
 CPC
+
+Metric Scope
+Metric Source
+Metric Checked At
+Needs US Verification
+
 Secondary Keywords
+Competitor Evidence
+
 Intent
 Intent Fit
+Priority
+
 Title
 Meta Description
 H1
+
 Canonical
 Index Status
+Index Gate
+
 datePublished
 dateModified
 lastReviewed
+
+Internal Links In
+Internal Links Out
+
+Cannibalization Check
+Schema
+Screenshot / Product Evidence
+```
+
+另外输出：
+
+```text
+Backlink Targets
+Backlink Priority
+Competitor Backlink Evidence
+Outreach Status
 ```
 
 ---
@@ -4632,21 +6061,24 @@ Accessibility >= 95
 20. Help Center
 21. Public SEO Pages
 22. Keyword Map
-23. Metadata
-24. Sitemap
-25. Robots
-26. Canonical
-27. Analytics
-28. Unit Tests
-29. E2E Tests
-30. Load Tests
-31. Lighthouse
-32. Cloudflare Config
-33. Deploy Commands
-34. Domain Setup
-35. Google Search Console Steps
-36. External Blockers
-37. NOT COMPLETED Items
+23. Industry SEO Map
+24. Guide / Best / Template Roadmap
+25. Backlink Target Map
+26. Metadata
+27. Sitemap
+28. Robots
+29. Canonical
+30. Analytics
+31. Unit Tests
+32. E2E Tests
+33. Load Tests
+34. Lighthouse
+35. Cloudflare Config
+36. Deploy Commands
+37. Domain Setup
+38. Google Search Console Steps
+39. External Blockers
+40. NOT COMPLETED Items
 
 ---
 

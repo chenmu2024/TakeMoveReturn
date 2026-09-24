@@ -1,6 +1,8 @@
 
 # TakeMoveReturn
 
+> Current source of truth: `docs/PROJECT_SPEC.md` is the user's SEO V2 final specification. If the historical instructions below conflict with it, follow `docs/PROJECT_SPEC.md`. Before changing code, also read `docs/DECISIONS.md` and `TASKS.md`.
+
 # AI 编程完整开发总指令
 
 ## 最终锁定版

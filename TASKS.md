@@ -28,6 +28,10 @@
 - Authenticated workspace UI expanded across dashboard, tools, workers, locations, activity, damage, maintenance, import, reports, settings, billing, and privacy routes with honest empty states and security gating.
 - Auth UI polished for login, signup, password recovery, and callback states with disabled credential submission until Supabase Auth is connected.
 - Site completeness improved with a branded favicon, a safe `/app` redirect, a noindex branded 404 page, and updated TakeMoveReturn project documentation.
+- Updated `docs/PROJECT_SPEC.md` to the supplied final SEO V2 source and clarified its precedence in `AGENTS.md`.
+- Help Center expanded to ten searchable category articles with honest product availability notes and real content dates.
+- Privacy and Terms expanded into structured review drafts, marked noindex, and removed from the sitemap until legal review is complete.
+- Pricing page gained an accessible monthly/annual selector driven by the locked plan configuration.
 
 ## Tests run
 
@@ -61,10 +65,13 @@
 - Auth runtime checks: `/auth/login`, `/auth/signup`, `/auth/forgot-password`, and `/auth/callback` returned HTTP 200 with `noindex, nofollow` and the secure-connection state.
 - Latest Cloudflare Worker deployment: version `a568ee62-b7e1-4954-9bd6-309230edf780`.
 - Latest production smoke check: home, `/app`, all auth states, favicon, and a missing route returned the expected response; missing route returned branded HTTP 404.
+- SEO V2 public-page checks: TypeScript typecheck, SEO audit, Next.js build, and OpenNext bundle passed.
+- Local route checks: Help Center, two help articles, Privacy, Terms, and Pricing returned HTTP 200; Privacy and Terms emitted `noindex` and were absent from the sitemap, while help articles were present.
+- Cloudflare Worker deployment `4889ef23-7c7b-42da-ba00-f0f145067f71` passed online checks for Help, representative help articles, Privacy, Terms, Pricing, canonical URLs, robots gates, and sitemap membership.
 
 ## Current task
 
-- Expand the validated public marketing interface into authenticated product workflows once external services are configured.
+- Continue implementing the SEO V2 specification, with public Help/Legal/Pricing pages verified and the secure product workflows still pending external services.
 
 ## Remaining
 
@@ -72,7 +79,7 @@
 - Supabase migrations, Auth, and RLS.
 - Secure shared-device/PIN/QR workflow.
 - Tool, worker, location, transaction, damage, maintenance, import, R2, and queue services.
-- Billing, privacy, help center, SEO system, tests, CI, and production domain/legal review.
+- Real billing, privacy request processing, SEO review automation, tests, CI, and production domain/legal review. Help content and legal drafts are published as UI, not as completed legal or support operations.
 
 ## Blockers
 
@@ -81,6 +88,7 @@
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: Resend API key.
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: Cloudflare Queue provisioning for future import jobs.
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: production domain and legal entity information.
+- GitHub sync pending: local commit `df5f999` could not be pushed because the connection to `github.com:443` timed out twice. The Cloudflare deployment above is live.
 
 ## Next exact task
 
