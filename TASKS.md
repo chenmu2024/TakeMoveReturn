@@ -25,6 +25,7 @@
 - Public metadata and schema layer added: Open Graph, Twitter cards, canonical URLs, Organization, WebSite, SoftwareApplication, BreadcrumbList, Article, and FAQPage JSON-LD where applicable.
 - Cloudflare `NEXT_PUBLIC_SITE_URL` binding configured so production canonical URLs use the deployed Worker instead of localhost.
 - Help Center and Contact Support pages expanded with real navigation, product-boundary FAQs, and an explicit support-configuration state.
+- Authenticated workspace UI expanded across dashboard, tools, workers, locations, activity, damage, maintenance, import, reports, settings, billing, and privacy routes with honest empty states and security gating.
 
 ## Tests run
 
@@ -52,6 +53,8 @@
 - Latest Cloudflare Worker deployment: version `02d2d7a7-396c-4ff6-ae53-372d0806a4b4`.
 - Runtime SEO checks: homepage, Help, industry, and guide pages returned HTTP 200 with expected canonical, Open Graph, JSON-LD, and robots output.
 - Runtime Help Center checks: `/help` and `/help/contact` returned HTTP 200 with expected navigation, FAQ, canonical, and support-state output.
+- Workspace runtime checks: all 12 `/app/*` routes returned HTTP 200 with `noindex, nofollow` and the secure-data connection banner.
+- Latest Cloudflare Worker deployment: version `082514e9-95f6-4af6-867a-702e8f98bc5e`.
 
 ## Current task
 
