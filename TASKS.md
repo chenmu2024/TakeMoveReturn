@@ -50,7 +50,6 @@
 - Current SEO route count: 26 canonical routes; SEO audit passed after adding the expansion industry candidates.
 - Latest Cloudflare Worker deployment: version `11f6968b-3d05-4a3b-9e35-fdd0febed60b`.
 - Runtime SEO checks: homepage, Help, industry, and guide pages returned HTTP 200 with expected canonical, Open Graph, JSON-LD, and robots output.
-- GitHub sync for commits after `6c04f56` is pending because the GitHub connection was unavailable during this run; local commits are preserved.
 
 ## Current task
 
