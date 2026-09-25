@@ -21,6 +21,13 @@ insert into public.tools (id, company_id, asset_code, qr_token, name) values
 insert into public.locations (company_id, type, name)
 values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'job_site', 'Tenant B site');
 
+insert into public.workers (company_id, name, pin_hash, pin_salt)
+values (
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Tenant B worker',
+  encode(decode(repeat('00', 32), 'hex'), 'base64'),
+  encode(decode(repeat('00', 16), 'hex'), 'base64')
+);
+
 set local role authenticated;
 set local request.jwt.claim.sub = '11111111-1111-4111-8111-111111111111';
 
@@ -28,6 +35,7 @@ do $$
 declare
   existing_company uuid;
   created_tool uuid;
+  created_worker uuid;
 begin
   if auth.uid() <> '11111111-1111-4111-8111-111111111111'::uuid then
     raise exception 'Test identity was not applied';
@@ -52,6 +60,27 @@ begin
     raise exception 'Cross-tenant location creation unexpectedly succeeded';
   exception when insufficient_privilege then null;
   end;
+  if (select count(*) from public.workers) <> 0 then
+    raise exception 'Other company worker was visible';
+  end if;
+  begin
+    perform public.create_worker(
+      'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Cross-company worker', null, null,
+      encode(decode(repeat('00', 32), 'hex'), 'base64'),
+      encode(decode(repeat('00', 16), 'hex'), 'base64')
+    );
+    raise exception 'Cross-tenant worker creation unexpectedly succeeded';
+  exception when others then
+    if sqlerrm <> 'Forbidden' then raise; end if;
+  end;
+  created_worker := public.create_worker(
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Tenant A worker', null, 'CREW-1',
+    encode(decode(repeat('00', 32), 'hex'), 'base64'),
+    encode(decode(repeat('00', 16), 'hex'), 'base64')
+  );
+  if (select count(*) from public.workers where id = created_worker) <> 1 then
+    raise exception 'Own-company worker was not visible';
+  end if;
   if not public.is_active_member('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')
      or public.is_active_member('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb') then
     raise exception 'Membership check crossed tenants';
@@ -109,6 +138,8 @@ begin
     raise exception 'Own-company transaction was not recorded';
   end if;
   if has_column_privilege('authenticated', 'public.workers', 'pin_hash', 'SELECT')
+     or has_column_privilege('authenticated', 'public.workers', 'status', 'UPDATE')
+     or has_table_privilege('authenticated', 'public.workers', 'DELETE')
      or has_column_privilege('authenticated', 'public.tools', 'current_worker_id', 'UPDATE')
      or has_table_privilege('authenticated', 'public.tool_transactions', 'INSERT') then
     raise exception 'Sensitive direct access is still granted';

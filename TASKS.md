@@ -48,6 +48,8 @@
 - Resend free plan selected for transactional Auth mail. `takemovereturn.com` is verified in Resend with DKIM and SPF, while public MX records still point to Cloudflare Email Routing. Supabase custom SMTP uses `smtp.resend.com:465`, sender `support@takemovereturn.com`, and a domain-restricted sending-only key that is not stored in the repository.
 - The user received and confirmed a real signup email at `support@takemovereturn.com`. The first reset link exposed an implicit-flow fragment incompatibility with the server callback; the callback now verifies Supabase token hashes, and the signup/recovery templates use `RedirectTo` plus `TokenHash`. The user received the second reset email and set a password. Local runtime logs confirm recovery callback, password update, and authenticated workspace navigation. An invalid token redirects safely to the error state.
 - The same authenticated test account created a company, one tool, and one warehouse through the local browser. Screenshots show both records in company-scoped lists; read-only database checks show one confirmed, signed-in user, one company, one active membership, one tool, and one location. Public Auth remains gated off in production.
+- Worker creation now has a company-scoped server action, PIN hashing with the environment-only pepper, and a database function. The worker list reads only non-secret fields. Two new live migrations add the function and revoke direct worker status changes/deletion so future session revocation cannot be bypassed. The rollback-only tenant test covers own-company creation and cross-company denial. Local browser creation and shared-device login are not yet verified.
+- Dashboard cards now read real company-scoped active-tool, checked-out, attention, and seven-day activity counts instead of placeholders when authenticated.
 
 ## Tests run
 
@@ -95,16 +97,21 @@
 - The rollback-only two-company database test passed: own-company reads and transactions, cross-company denials, onboarding idempotence, 25-tool Free capacity, over-limit denial, and retired-tool capacity release. Post-test live counts remained zero users, companies, and tools.
 - Latest TypeScript, Next.js build, SEO audit, OpenNext Worker build, and Wrangler deployment dry-run passed. Worker `19b65727-3d8a-4c88-a45e-0a2819cbd4a7` deployed after directly uploading 11 cache entries; production home/signup/sitemap returned HTTP 200, while gated onboarding and new-tool routes redirected to signup (HTTP 307). Signup copy still states account access is closed.
 - After the token-hash Auth callback and location-register changes, typecheck, Next.js build, SEO audit, OpenNext bundle, and Wrangler dry-run passed. Worker `94c28bb7-b260-4c78-b2e6-ea90d4f99b88` deployed after 11 cache entries were uploaded. Production home and signup returned HTTP 200; an invalid recovery token redirected to login with an error, and the gated new-location route redirected to signup (HTTP 307).
+- Worker-create and write-guard migrations applied to linked Supabase after dry-run. The rollback-only two-company test passed; worker PIN hash verification accepted the correct PIN and rejected an incorrect PIN, and the database lint returned no warnings. Typecheck, Next.js build, and SEO audit passed.
 
 ## Current task
 
-- Production domain, public support contact, tenant schema, company onboarding, first-tool persistence, and location creation are deployed. Real signup, confirmation, password recovery, company onboarding, first-tool creation, and first-location creation worked in the local browser. The Auth launch gate remains disabled in production. Next: implement worker/QR field workflows without opening public registration prematurely.
+- Legal draft implementation completed in code on 2026-09-25: Privacy, Terms, DPA, active-provider register, Business Information, central legal/retention configuration, footer links, noindex and Brand schema. Commercial publication remains **LEGAL_REVIEW_REQUIRED**; see `docs/LEGAL_LAUNCH_CHECKLIST.md`.
+- A test worker's employee code matched a PIN visible in a user screenshot. With user approval the single affected worker was deactivated, its employee code cleared, auth version advanced, and sessions revoked. The create form now rejects employee-code/PIN reuse. Do not reactivate until the user resets the PIN through a secure flow (not yet implemented).
+
+- Production domain, public support contact, tenant schema, company onboarding, first-tool persistence, and location creation are deployed. Real signup, confirmation, password recovery, company onboarding, first-tool creation, and first-location creation worked in the local browser. Worker registration and real dashboard counts are implemented and tested at code/database level, pending browser verification and deployment. The Auth launch gate remains disabled in production. Next: finish worker/QR field workflows without opening public registration prematurely.
 
 ## Remaining
 
 - Verify US search demand and competitor facts before changing roadmap routes from noindex to indexable.
 - Verify session expiry/re-entry and production runtime before enabling public signup. Real email confirmation/reset and company/tool/location onboarding passed locally; SQL isolation tests pass, but automated browser E2E tests do not yet exist.
 - Secure shared-device/PIN/QR workflow.
+- Complete browser verification of worker creation and set the production worker PIN pepper securely before enabling the Auth launch gate.
 - Complete QR label generation, worker/location management, field-worker authentication, and TAKE/MOVE/RETURN UI; then damage, maintenance, import, R2, and queue services. Tool creation and transaction SQL exist, but the full field flow is not complete.
 - Privacy request processing, SEO review automation, tests, CI, and legal review. Help content and legal drafts are published as UI, not as completed legal or support operations. Payment implementation is intentionally last.
 
@@ -113,7 +120,7 @@
 - Production Worker Auth gate is intentionally disabled until remaining real browser signup/session tests pass. Supabase CLI is authenticated and linked; no database password was shared in chat.
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: Waffo Pancake integration details, deferred by the user until non-payment functionality is complete.
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: Cloudflare Queue provisioning for future import jobs.
-- BLOCKED_BY_EXTERNAL_CREDENTIALS: legal entity and jurisdiction information for final Privacy/Terms review. Production root and `www` redirect are connected.
+- BLOCKED_BY_EXTERNAL_CREDENTIALS: final legal operator name, registered business information if applicable, business address, final payment merchant identity, refund policy, processing locations/transfer terms, and professional legal review. The operator is known to be an individual in mainland China; AI cannot invent the remaining identity facts. Draft legal pages remain noindex. This does not block engineering.
 - GitHub HTTPS works with HTTP/1.1. The local and remote `main` histories diverged during earlier API-based updates but have identical pre-change trees; reconcile without force-pushing when publishing this work.
 
 ## Next exact task

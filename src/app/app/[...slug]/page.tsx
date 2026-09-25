@@ -6,7 +6,7 @@ import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server
 const views: Record<string, WorkspaceView> = {
   dashboard: { key: "dashboard", title: "Workspace dashboard", summary: "A clear starting point for tool custody, locations, exceptions, and the next handoff.", eyebrow: "DASHBOARD", kind: "dashboard", primaryAction: { label: "Add first tool", href: "/app/tools" } },
   tools: { key: "tools", title: "Tools", summary: "Register reusable tools with company-scoped asset codes and current status. Field custody and QR actions follow after security checks.", eyebrow: "TOOLS", kind: "table", columns: ["Tool", "Asset code", "Status", "Updated"], primaryAction: { label: "Add tool", href: "/app/tools/new" }, secondaryAction: { label: "Import list", href: "/app/import" }, emptyTitle: "No tools yet", emptyText: "Add the first reusable tool to begin your company register." },
-  workers: { key: "workers", title: "Field workers", summary: "Manage worker identity, role, PIN security, sessions, and currently held tools.", eyebrow: "WORKERS", kind: "table", columns: ["Worker", "Role", "Status", "Tools held", "Last active"], primaryAction: { label: "Add worker", href: "/app/workers" }, emptyTitle: "No workers connected", emptyText: "Workers will appear here after an authenticated company workspace is available." },
+  workers: { key: "workers", title: "Field workers", summary: "Register the people who will take, move, and return company tools.", eyebrow: "WORKERS", kind: "table", columns: ["Worker", "Employee code", "Status", "Updated"], primaryAction: { label: "Add worker", href: "/app/workers/new" }, emptyTitle: "No workers yet", emptyText: "Add a field worker to prepare for secure tool handoffs." },
   locations: { key: "locations", title: "Locations", summary: "Track warehouses, trucks, job sites, and the places where tools are handed off.", eyebrow: "LOCATIONS", kind: "table", columns: ["Location", "Type", "Address", "Status", "Updated"], primaryAction: { label: "Add location", href: "/app/locations/new" }, emptyTitle: "No locations yet", emptyText: "Add a warehouse, job site, truck, or other place where tools are kept." },
   activity: { key: "activity", title: "Activity", summary: "Review durable TAKE, MOVE, RETURN, damage, maintenance, and correction events.", eyebrow: "ACTIVITY", kind: "activity", secondaryAction: { label: "Export history", href: "/app/reports" }, emptyTitle: "No transactions yet", emptyText: "Events will appear here after the first authenticated tool movement." },
   damage: { key: "damage", title: "Damage reports", summary: "Keep reported damage, repair status, evidence, and the affected tool together.", eyebrow: "DAMAGE", kind: "table", columns: ["Tool", "Reported by", "Severity", "Status", "Reported"], primaryAction: { label: "Report damage", href: "/app/damage" }, emptyTitle: "No damage reports", emptyText: "Damage reports will appear here after secure tool records and attachments are connected." },
@@ -25,6 +25,8 @@ export default async function WorkspacePage({ params }: { params: Promise<{ slug
   if (!view) notFound();
   let tools = null;
   let locations = null;
+  let workers = null;
+  let dashboardStats = null;
   if (isSupabaseConfigured()) {
     const supabase = await createClient();
     const { data } = await supabase.auth.getClaims();
@@ -47,8 +49,33 @@ export default async function WorkspacePage({ params }: { params: Promise<{ slug
       if (locationError) throw new Error("Locations could not be loaded.");
       locations = locationRows;
     }
+    if (key === "workers") {
+      const { data: workerRows, error: workerError } = await supabase.from("workers")
+        .select("id,name,employee_code,status,updated_at").eq("company_id", membership.company_id)
+        .order("updated_at", { ascending: false }).limit(100);
+      if (workerError) throw new Error("Workers could not be loaded.");
+      workers = workerRows;
+    }
+    if (key === "dashboard") {
+      const recentSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const [total, checkedOut, needsAttention, recentActivity] = await Promise.all([
+        supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).neq("status", "retired"),
+        supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("status", "checked_out"),
+        supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).in("status", ["damaged", "maintenance", "missing"]),
+        supabase.from("tool_transactions").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).gte("created_at", recentSince),
+      ]);
+      if (total.error || checkedOut.error || needsAttention.error || recentActivity.error) {
+        throw new Error("Dashboard counts could not be loaded.");
+      }
+      dashboardStats = {
+        totalTools: total.count ?? 0,
+        checkedOut: checkedOut.count ?? 0,
+        needsAttention: needsAttention.count ?? 0,
+        recentActivity: recentActivity.count ?? 0,
+      };
+    }
   }
-  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} />;
+  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} />;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {

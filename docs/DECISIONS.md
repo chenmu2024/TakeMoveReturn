@@ -37,3 +37,9 @@
 **Decision:** Defer payment implementation until the non-payment product is ready. The user selected Waffo Pancake as the intended provider, superseding the historical Stripe-specific implementation instructions. Do not enable paid actions before the provider's API and webhook behavior are verified.
 
 **Status:** DEFERRED
+
+## Legal identity and policy publication
+
+**Decision:** AI may draft and review product-facing legal copy, but must not invent the operator's legal name, registration jurisdiction, registered address, or other legal identity facts. Keep legal pages marked as review drafts and noindex until the real operator details and legal review are supplied.
+
+**Status:** BLOCKED_BY_EXTERNAL_INFORMATION for final publication; non-legal product work continues.

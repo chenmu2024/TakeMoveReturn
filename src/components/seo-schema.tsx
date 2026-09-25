@@ -12,7 +12,7 @@ function SchemaScript({ value, id }: { value: Record<string, unknown>; id: strin
 export function HomeSeoSchema() {
   const url = siteConfig.siteUrl;
   return <>
-    <SchemaScript id="organization-schema" value={{ "@context": "https://schema.org", "@type": "Organization", name: siteConfig.name, url }} />
+    <SchemaScript id="brand-schema" value={{ "@context": "https://schema.org", "@type": "Brand", name: siteConfig.name, url }} />
     <SchemaScript id="website-schema" value={{ "@context": "https://schema.org", "@type": "WebSite", name: siteConfig.name, url, description: "QR-based construction tool tracking for small crews." }} />
     <SchemaScript id="software-schema" value={{ "@context": "https://schema.org", "@type": "SoftwareApplication", name: siteConfig.name, applicationCategory: "BusinessApplication", operatingSystem: "Web", url, description: "QR-based construction tool tracking that shows who has every tool, where it is, and what happened to it." }} />
   </>;
@@ -33,7 +33,7 @@ export function SeoPageSchema({ page, path }: { page: SeoPage; path: string }) {
   if (page.pageType === "money" || page.pageType === "industry") {
     schemas.push({ "@context": "https://schema.org", "@type": "SoftwareApplication", name: siteConfig.name, applicationCategory: "BusinessApplication", operatingSystem: "Web", url, description: page.description });
   } else {
-    schemas.push({ "@context": "https://schema.org", "@type": "Article", headline: page.h1, description: page.description, url, author: { "@type": "Organization", name: siteConfig.name, url: siteConfig.siteUrl }, publisher: { "@type": "Organization", name: siteConfig.name, url: siteConfig.siteUrl }, dateModified: page.dateModified });
+    schemas.push({ "@context": "https://schema.org", "@type": "Article", headline: page.h1, description: page.description, url, dateModified: page.dateModified });
   }
 
   if (page.faqs?.length) {

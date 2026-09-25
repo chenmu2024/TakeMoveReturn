@@ -12,7 +12,7 @@ export function MarketingHeader() {
 }
 
 export function MarketingFooter() {
-  return <footer className="site-footer"><div><strong>{siteConfig.name}</strong><p>Construction tool tracking software for crews that need a clear, practical record.</p></div><div className="footer-links"><Link href="/features">Features</Link><Link href="/pricing">Pricing</Link><Link href="/help">Help Center</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></div></footer>;
+  return <footer className="site-footer"><div><strong>{siteConfig.name}</strong><p>Construction tool tracking software for crews that need a clear, practical record.</p></div><div className="footer-links"><Link href="/features">Features</Link><Link href="/pricing">Pricing</Link><Link href="/help">Help Center</Link><Link href="/help/contact">Contact</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/dpa">DPA</Link><Link href="/subprocessors">Subprocessors</Link><Link href="/business-information">Business Information</Link></div></footer>;
 }
 
 export function ProductWorkspace({ compact = false }: { compact?: boolean }) {
