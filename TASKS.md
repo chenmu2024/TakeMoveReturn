@@ -101,6 +101,9 @@
 
 ## Current task
 
+- Worker security now has a manager-only PIN reset page and an atomic database function. Resetting increments `auth_version` and revokes old worker sessions; activation is an explicit opt-in on the reset form. The rollback-only SQL test verifies cross-tenant rejection and session invalidation. The quarantined real test worker remains inactive until the user privately chooses a new PIN.
+- Authenticated manager tool detail now offers TAKE, MOVE, and RETURN through the existing row-locked transaction function, with current custody and recent tool history. The activity view reads real company-scoped transactions. The SQL test verifies cross-company worker denial, the TAKE/MOVE/RETURN sequence, and double-return rejection. Field-worker PIN login and QR label scanning are still separate unfinished workflows.
+- The reset migration is applied to the linked Supabase project; the rollback-only tenant/movement test, typecheck, SEO audit, legal audit, Next build and OpenNext bundle passed. Cloudflare Worker `afdc054e-9b37-4cf1-9145-f7ae942d4dbb` is deployed. Online guest checks show tool detail and worker-security routes redirect to the gated signup page; public signup remains closed. Authenticated browser operation of the new forms is not yet verified.
 - Legal draft implementation completed in code on 2026-09-25: Privacy, Terms, DPA, active-provider register, Business Information, central legal/retention configuration, footer links, noindex and Brand schema. Commercial publication remains **LEGAL_REVIEW_REQUIRED**; see `docs/LEGAL_LAUNCH_CHECKLIST.md`.
 - A test worker's employee code matched a PIN visible in a user screenshot. With user approval the single affected worker was deactivated, its employee code cleared, auth version advanced, and sessions revoked. The create form now rejects employee-code/PIN reuse. Do not reactivate until the user resets the PIN through a secure flow (not yet implemented).
 
@@ -110,9 +113,9 @@
 
 - Verify US search demand and competitor facts before changing roadmap routes from noindex to indexable.
 - Verify session expiry/re-entry and production runtime before enabling public signup. Real email confirmation/reset and company/tool/location onboarding passed locally; SQL isolation tests pass, but automated browser E2E tests do not yet exist.
-- Secure shared-device/PIN/QR workflow.
+- Secure shared-device/PIN/QR workflow, including rate limits, device/worker session issuance, lock/switch, anonymous QR minimal view, and QR rotation.
 - Complete browser verification of worker creation and set the production worker PIN pepper securely before enabling the Auth launch gate.
-- Complete QR label generation, worker/location management, field-worker authentication, and TAKE/MOVE/RETURN UI; then damage, maintenance, import, R2, and queue services. Tool creation and transaction SQL exist, but the full field flow is not complete.
+- Complete QR label generation, worker/location management, and field-worker authentication; then damage, maintenance, import, R2, and queue services. Manager TAKE/MOVE/RETURN works at the code/database level; full field flow is not complete.
 - Privacy request processing, SEO review automation, tests, CI, and legal review. Help content and legal drafts are published as UI, not as completed legal or support operations. Payment implementation is intentionally last.
 
 ## Blockers
@@ -125,4 +128,4 @@
 
 ## Next exact task
 
-- Implement and test worker/QR field workflows while keeping public registration gated until security and production runtime checks pass.
+- Verify manager PIN-reset and TAKE/MOVE/RETURN forms in an authenticated browser, then implement rate-limited shared-device worker sessions and QR field workflow. Keep public registration gated until security and production runtime checks pass.
