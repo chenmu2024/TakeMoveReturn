@@ -18,6 +18,9 @@ insert into public.tools (id, company_id, asset_code, qr_token, name) values
   ('aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'TEST-A', 'tenant-test-a-token', 'Test tool A'),
   ('bbbbbbbb-2222-4222-8222-bbbbbbbbbbbb', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'TEST-B', 'tenant-test-b-token', 'Test tool B');
 
+insert into public.locations (company_id, type, name)
+values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'job_site', 'Tenant B site');
+
 set local role authenticated;
 set local request.jwt.claim.sub = '11111111-1111-4111-8111-111111111111';
 
@@ -35,6 +38,20 @@ begin
   if (select count(*) from public.tools) <> 1 then
     raise exception 'Tool RLS isolation failed';
   end if;
+  if (select count(*) from public.locations) <> 0 then
+    raise exception 'Other company location was visible';
+  end if;
+  insert into public.locations (company_id, type, name)
+  values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'warehouse', 'Test warehouse');
+  if (select count(*) from public.locations) <> 1 then
+    raise exception 'Location RLS isolation failed';
+  end if;
+  begin
+    insert into public.locations (company_id, type, name)
+    values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'truck', 'Cross-company truck');
+    raise exception 'Cross-tenant location creation unexpectedly succeeded';
+  exception when insufficient_privilege then null;
+  end;
   if not public.is_active_member('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')
      or public.is_active_member('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb') then
     raise exception 'Membership check crossed tenants';

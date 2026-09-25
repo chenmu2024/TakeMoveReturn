@@ -7,7 +7,7 @@ const views: Record<string, WorkspaceView> = {
   dashboard: { key: "dashboard", title: "Workspace dashboard", summary: "A clear starting point for tool custody, locations, exceptions, and the next handoff.", eyebrow: "DASHBOARD", kind: "dashboard", primaryAction: { label: "Add first tool", href: "/app/tools" } },
   tools: { key: "tools", title: "Tools", summary: "Register reusable tools with company-scoped asset codes and current status. Field custody and QR actions follow after security checks.", eyebrow: "TOOLS", kind: "table", columns: ["Tool", "Asset code", "Status", "Updated"], primaryAction: { label: "Add tool", href: "/app/tools/new" }, secondaryAction: { label: "Import list", href: "/app/import" }, emptyTitle: "No tools yet", emptyText: "Add the first reusable tool to begin your company register." },
   workers: { key: "workers", title: "Field workers", summary: "Manage worker identity, role, PIN security, sessions, and currently held tools.", eyebrow: "WORKERS", kind: "table", columns: ["Worker", "Role", "Status", "Tools held", "Last active"], primaryAction: { label: "Add worker", href: "/app/workers" }, emptyTitle: "No workers connected", emptyText: "Workers will appear here after an authenticated company workspace is available." },
-  locations: { key: "locations", title: "Locations", summary: "Track warehouses, trucks, job sites, and the places where tools are handed off.", eyebrow: "LOCATIONS", kind: "table", columns: ["Location", "Type", "Tools", "Address or note", "Updated"], primaryAction: { label: "Add location", href: "/app/locations" }, emptyTitle: "No locations connected", emptyText: "Locations will appear here after your company workspace is created." },
+  locations: { key: "locations", title: "Locations", summary: "Track warehouses, trucks, job sites, and the places where tools are handed off.", eyebrow: "LOCATIONS", kind: "table", columns: ["Location", "Type", "Address", "Status", "Updated"], primaryAction: { label: "Add location", href: "/app/locations/new" }, emptyTitle: "No locations yet", emptyText: "Add a warehouse, job site, truck, or other place where tools are kept." },
   activity: { key: "activity", title: "Activity", summary: "Review durable TAKE, MOVE, RETURN, damage, maintenance, and correction events.", eyebrow: "ACTIVITY", kind: "activity", secondaryAction: { label: "Export history", href: "/app/reports" }, emptyTitle: "No transactions yet", emptyText: "Events will appear here after the first authenticated tool movement." },
   damage: { key: "damage", title: "Damage reports", summary: "Keep reported damage, repair status, evidence, and the affected tool together.", eyebrow: "DAMAGE", kind: "table", columns: ["Tool", "Reported by", "Severity", "Status", "Reported"], primaryAction: { label: "Report damage", href: "/app/damage" }, emptyTitle: "No damage reports", emptyText: "Damage reports will appear here after secure tool records and attachments are connected." },
   maintenance: { key: "maintenance", title: "Maintenance", summary: "Schedule service, track repair history, costs, due dates, and attachments.", eyebrow: "MAINTENANCE", kind: "table", columns: ["Tool", "Service", "Due", "Status", "Last service"], primaryAction: { label: "Add maintenance", href: "/app/maintenance" }, emptyTitle: "No maintenance records", emptyText: "Maintenance records will appear here after authenticated company data is connected." },
@@ -24,6 +24,7 @@ export default async function WorkspacePage({ params }: { params: Promise<{ slug
   const view = views[key];
   if (!view) notFound();
   let tools = null;
+  let locations = null;
   if (isSupabaseConfigured()) {
     const supabase = await createClient();
     const { data } = await supabase.auth.getClaims();
@@ -39,8 +40,15 @@ export default async function WorkspacePage({ params }: { params: Promise<{ slug
       if (toolError) throw new Error("Tools could not be loaded.");
       tools = toolRows;
     }
+    if (key === "locations") {
+      const { data: locationRows, error: locationError } = await supabase.from("locations")
+        .select("id,name,type,address,active,updated_at").eq("company_id", membership.company_id)
+        .order("updated_at", { ascending: false }).limit(100);
+      if (locationError) throw new Error("Locations could not be loaded.");
+      locations = locationRows;
+    }
   }
-  return <WorkspaceShell path={path} view={view} tools={tools} />;
+  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} />;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {

@@ -52,7 +52,7 @@ export async function requestPasswordReset(form: FormData) {
   const supabase = await createClient();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: new URL("/auth/callback?next=update-password", siteUrl).toString(),
+    redirectTo: new URL("/auth/callback", siteUrl).toString(),
   });
   redirect("/auth/forgot-password?notice=reset-sent");
 }

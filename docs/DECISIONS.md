@@ -30,7 +30,7 @@
 
 **Decision:** Use `takemovereturn.com` as the canonical site domain. Use `contact@takemovereturn.com` for general/privacy contact, `support@takemovereturn.com` for help, and reserve `billing@takemovereturn.com` for future billing communication.
 
-**Status:** LOCKED — the root domain routes to the existing Cloudflare Worker. Mailbox delivery and outbound transactional email still require verification.
+**Status:** LOCKED — the root domain routes to the existing Cloudflare Worker. The user confirms receipt through Cloudflare Email Routing and sending from an email client for all three addresses. Cloudflare Email Sending is unavailable on the current free plan; the user selected Resend's free plan for automated Auth mail. The domain is verified in Resend, and Supabase custom SMTP is configured with a domain-restricted sending-only key. A real signup confirmation and password-reset email were received at `support@takemovereturn.com`; the user confirmed the account and set a password. Authenticated local company onboarding also succeeded. Production public Auth remains gated off pending further browser workflow checks.
 
 ## Payment provider
 

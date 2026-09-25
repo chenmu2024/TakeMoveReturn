@@ -43,6 +43,11 @@
 - A follow-up migration closes direct tool-custody and transaction writes, limits database visibility of worker PIN/device-token fields, and narrows session update permissions. Live grants were read back and verified.
 - Seven tracked Supabase migrations are now applied to the live project. Privileged implementations were moved behind non-exposed `private` functions; public RPC wrappers run with caller privileges. Company onboarding and first-tool creation enforce authenticated membership, tenant scope, and the Free/paid active-tool capacities in the database.
 - The first-tool form and company-scoped tool list are implemented behind the disabled Auth launch gate and deployed, but have not been exercised with a real email-confirmed browser account.
+- Company-scoped locations now have a real add form and register for warehouses, job sites, trucks, and other places. Authenticated owner/admin/manager writes use the existing location RLS; the rollback-only database test covers other-company read and write denial. The user created a test warehouse with an address in the local browser, and the location appeared in the list.
+- The user confirms that `contact@`, `billing@`, and `support@takemovereturn.com` can receive forwarded mail and send from an email client. This is distinct from verified automated Supabase Auth SMTP delivery.
+- Resend free plan selected for transactional Auth mail. `takemovereturn.com` is verified in Resend with DKIM and SPF, while public MX records still point to Cloudflare Email Routing. Supabase custom SMTP uses `smtp.resend.com:465`, sender `support@takemovereturn.com`, and a domain-restricted sending-only key that is not stored in the repository.
+- The user received and confirmed a real signup email at `support@takemovereturn.com`. The first reset link exposed an implicit-flow fragment incompatibility with the server callback; the callback now verifies Supabase token hashes, and the signup/recovery templates use `RedirectTo` plus `TokenHash`. The user received the second reset email and set a password. Local runtime logs confirm recovery callback, password update, and authenticated workspace navigation. An invalid token redirects safely to the error state.
+- The same authenticated test account created a company, one tool, and one warehouse through the local browser. Screenshots show both records in company-scoped lists; read-only database checks show one confirmed, signed-in user, one company, one active membership, one tool, and one location. Public Auth remains gated off in production.
 
 ## Tests run
 
@@ -89,28 +94,28 @@
 - Supabase CLI login/link succeeded for `xcdhhxyqdlorxztafpee`; migration history shows all seven local migrations applied remotely. Linked database lint at warning level and Supabase security advisor at warning level both returned no issues.
 - The rollback-only two-company database test passed: own-company reads and transactions, cross-company denials, onboarding idempotence, 25-tool Free capacity, over-limit denial, and retired-tool capacity release. Post-test live counts remained zero users, companies, and tools.
 - Latest TypeScript, Next.js build, SEO audit, OpenNext Worker build, and Wrangler deployment dry-run passed. Worker `19b65727-3d8a-4c88-a45e-0a2819cbd4a7` deployed after directly uploading 11 cache entries; production home/signup/sitemap returned HTTP 200, while gated onboarding and new-tool routes redirected to signup (HTTP 307). Signup copy still states account access is closed.
+- After the token-hash Auth callback and location-register changes, typecheck, Next.js build, SEO audit, OpenNext bundle, and Wrangler dry-run passed. Worker `94c28bb7-b260-4c78-b2e6-ea90d4f99b88` deployed after 11 cache entries were uploaded. Production home and signup returned HTTP 200; an invalid recovery token redirected to login with an error, and the gated new-location route redirected to signup (HTTP 307).
 
 ## Current task
 
-- Production domain, public support contact, tenant schema, company onboarding, and first-tool persistence are deployed. The Auth launch gate remains disabled. Next: configure and test outbound email, verify real browser signup/onboarding/tool creation, then implement worker/location/QR field workflows without opening public registration prematurely.
+- Production domain, public support contact, tenant schema, company onboarding, first-tool persistence, and location creation are deployed. Real signup, confirmation, password recovery, company onboarding, first-tool creation, and first-location creation worked in the local browser. The Auth launch gate remains disabled in production. Next: implement worker/QR field workflows without opening public registration prematurely.
 
 ## Remaining
 
 - Verify US search demand and competitor facts before changing roadmap routes from noindex to indexable.
-- Verify real email confirmation/reset, authenticated browser onboarding and tool creation, and session behavior before enabling public signup. SQL isolation tests pass but browser E2E tests do not yet exist.
+- Verify session expiry/re-entry and production runtime before enabling public signup. Real email confirmation/reset and company/tool/location onboarding passed locally; SQL isolation tests pass, but automated browser E2E tests do not yet exist.
 - Secure shared-device/PIN/QR workflow.
 - Complete QR label generation, worker/location management, field-worker authentication, and TAKE/MOVE/RETURN UI; then damage, maintenance, import, R2, and queue services. Tool creation and transaction SQL exist, but the full field flow is not complete.
 - Privacy request processing, SEO review automation, tests, CI, and legal review. Help content and legal drafts are published as UI, not as completed legal or support operations. Payment implementation is intentionally last.
 
 ## Blockers
 
-- Production Worker Auth gate is intentionally disabled until outbound email and real browser signup/session tests pass. Supabase CLI is now authenticated and linked; no database password was shared in chat.
+- Production Worker Auth gate is intentionally disabled until remaining real browser signup/session tests pass. Supabase CLI is authenticated and linked; no database password was shared in chat.
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: Waffo Pancake integration details, deferred by the user until non-payment functionality is complete.
-- BLOCKED_BY_EXTERNAL_CREDENTIALS: Outbound transactional email provider credentials and delivery verification; inbound addresses alone do not establish Supabase SMTP.
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: Cloudflare Queue provisioning for future import jobs.
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: legal entity and jurisdiction information for final Privacy/Terms review. Production root and `www` redirect are connected.
 - GitHub HTTPS works with HTTP/1.1. The local and remote `main` histories diverged during earlier API-based updates but have identical pre-change trees; reconcile without force-pushing when publishing this work.
 
 ## Next exact task
 
-- Configure an outbound transactional email sender for Supabase Auth, verify confirmation/reset delivery, then run a real browser signup → company onboarding → first-tool creation test while keeping public registration gated until the test passes.
+- Implement and test worker/QR field workflows while keeping public registration gated until security and production runtime checks pass.
