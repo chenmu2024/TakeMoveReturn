@@ -1,6 +1,6 @@
 # TakeMoveReturn
 
-> 2026-09-24 用户更新：正式域名为 `takemovereturn.com`；联系邮箱为 `contact@takemovereturn.com`、`billing@takemovereturn.com`、`support@takemovereturn.com`。支付拟使用 Waffo Pancake（`https://pancake.waffo.ai/`），但支付集成和收费上线明确推迟到其他功能完成之后。下文所有 Stripe/Resend/旧域名要求，如与本更新冲突，以本更新为准；不得据此声称支付或邮件发送已完成。
+> 2026-09-25 LOCKED 决策：TakeMoveReturn 是品牌，由中国个人经营者 Qiaosheng Zhong 运营；没有注册公司或个体工商户。网站为 `https://takemovereturn.com`，支持邮箱 `support@takemovereturn.com`，隐私邮箱 `privacy@takemovereturn.com`（投产前须验证收件）。支付选用 Waffo Pancake，Waffo.com Limited 是适用交易的 Merchant of Record。旧版支付服务商方案及“支付最后处理”决策均已失效；不得凭此说明支付已接通。以实际验证的 Waffo API、产品 ID、签名回调和运行状态为准。
 
 # AI 编程完整开发总指令
 
@@ -73,7 +73,7 @@ Inspect
 
 * Cloudflare账号权限
 * Supabase credentials
-* Stripe credentials
+* Waffo credentials
 * Resend credentials
 * 正式域名
 * 公司法律信息
@@ -131,7 +131,7 @@ domain
 siteUrl
 supportEmail
 privacyEmail
-companyLegalName
+legalOperatorName
 ```
 
 正式域名确认前：
@@ -2029,8 +2029,8 @@ name
 monthlyPrice
 annualPrice
 
-stripeMonthlyPriceId
-stripeAnnualPriceId
+waffoMonthlyProductId
+waffoAnnualProductId
 
 toolLimit
 adminLimit
@@ -2046,9 +2046,9 @@ unlimited
 
 ---
 
-# 41. Stripe Monthly / Annual
+# 41. Waffo Monthly / Annual
 
-Stripe为每个Paid Plan配置：
+Waffo为每个Paid Plan配置：
 
 独立Monthly Price。
 
@@ -2063,7 +2063,7 @@ plan
 billing_interval
 ```
 
-选择允许的Stripe Price ID。
+选择允许的 Waffo Subscription Product ID。
 
 禁止客户端直接提交任意：
 
@@ -2259,7 +2259,7 @@ Starter
 
 立即生效。
 
-Stripe处理：
+Waffo处理：
 
 合理Proration。
 
@@ -2474,7 +2474,7 @@ Free / restricted state。
 
 # 61. Failed Payment
 
-Stripe付款失败：
+Waffo付款失败：
 
 状态：
 
@@ -2593,12 +2593,12 @@ CTA：
 
 ---
 
-# 67. Stripe
+# 67. Waffo
 
 使用：
 
-* Stripe Checkout
-* Stripe Billing
+* Waffo Checkout
+* Waffo Billing
 * Customer Portal
 * Verified Webhooks
 
@@ -2614,13 +2614,13 @@ CTA：
 
 ---
 
-# 68. Stripe Source of Truth
+# 68. Waffo Source of Truth
 
 数据库Subscription状态：
 
 由：
 
-# Verified Stripe Webhook
+# Verified Waffo Webhook
 
 驱动。
 
@@ -2632,7 +2632,7 @@ CTA：
 
 ---
 
-# 69. Stripe Webhook Security
+# 69. Waffo Webhook Security
 
 必须：
 
@@ -2650,8 +2650,8 @@ CTA：
 ```text
 id
 company_id
-stripe_customer_id
-stripe_subscription_id
+provider_customer_id
+provider_subscription_id
 
 plan
 billing_interval
@@ -2711,7 +2711,7 @@ Supabase PostgreSQL
 Supabase Auth
 Supabase RLS
 
-Stripe
+Waffo
 Resend
 
 MDX
@@ -2810,7 +2810,7 @@ src/
 ├── lib/
 │   ├── supabase/
 │   ├── cloudflare/
-│   ├── stripe/
+│   ├── waffo/
 │   ├── resend/
 │   ├── auth/
 │   ├── permissions/
@@ -2842,7 +2842,7 @@ Workers：
 * API
 * Route Handlers
 * Server Actions
-* Stripe Webhooks
+* Waffo Webhooks
 * Auth logic
 
 R2：
@@ -5286,8 +5286,7 @@ Mutation：
 
 ```text
 SUPABASE_SERVICE_ROLE_KEY
-STRIPE_SECRET_KEY
-STRIPE_WEBHOOK_SECRET
+WAFFO_PRIVATE_KEY
 TURNSTILE_SECRET_KEY
 WORKER_PIN_PEPPER
 RESEND_API_KEY
@@ -5313,15 +5312,14 @@ NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY
 
-STRIPE_SECRET_KEY
-STRIPE_WEBHOOK_SECRET
+WAFFO_PRIVATE_KEY
 
-STRIPE_PRICE_STARTER_MONTHLY
-STRIPE_PRICE_STARTER_ANNUAL
-STRIPE_PRICE_GROWTH_MONTHLY
-STRIPE_PRICE_GROWTH_ANNUAL
-STRIPE_PRICE_PRO_MONTHLY
-STRIPE_PRICE_PRO_ANNUAL
+WAFFO_PRODUCT_STARTER_MONTHLY
+WAFFO_PRODUCT_STARTER_ANNUAL
+WAFFO_PRODUCT_GROWTH_MONTHLY
+WAFFO_PRODUCT_GROWTH_ANNUAL
+WAFFO_PRODUCT_PRO_MONTHLY
+WAFFO_PRODUCT_PRO_ANNUAL
 
 RESEND_API_KEY
 
@@ -5564,7 +5562,7 @@ TAKE/MOVE/RETURN：
 
 ---
 
-# 200. Stripe Tests
+# 200. Waffo Tests
 
 必须：
 
@@ -5744,7 +5742,7 @@ main
 * QR Security
 * Import
 * Pricing
-* Stripe Monthly/Annual
+* Waffo Monthly/Annual
 * Plan limits
 * Storage limits
 * Privacy
@@ -6029,7 +6027,7 @@ Accessibility >= 95
 * No Privacy Export/Delete
 * No Help Center
 * No load testing
-* Unverified Stripe webhook
+* Unverified Waffo webhook
 * Monthly/annual price controlled by client
 * Secret exposed
 * Fake dateModified
@@ -6057,7 +6055,7 @@ Accessibility >= 95
 14. Annual Billing
 15. Upgrade/Downgrade
 16. Over-Limit Behaviour
-17. Stripe
+17. Waffo
 18. Email
 19. Privacy
 20. Help Center

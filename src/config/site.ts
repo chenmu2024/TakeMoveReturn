@@ -1,29 +1,29 @@
-const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://takemovereturn.com";
 
 const legal = {
   brandName: "TakeMoveReturn",
   operatorType: "individual",
-  legalOperatorName: process.env.LEGAL_OPERATOR_NAME || null,
-  registeredBusinessName: process.env.REGISTERED_BUSINESS_NAME || null,
-  registrationNumber: process.env.REGISTRATION_NUMBER || null,
-  taxId: process.env.TAX_ID || null,
+  legalOperatorName: "Qiaosheng Zhong",
+  operatorCountry: "CN",
+  registeredCompany: false,
+  registeredSoleProprietor: false,
+  legalOperatorStatement: "TakeMoveReturn is operated by Qiaosheng Zhong, an individual operator based in China.",
   countryCode: "CN",
   jurisdiction: "People's Republic of China",
-  registeredAddress: process.env.REGISTERED_ADDRESS || null,
-  businessAddress: process.env.BUSINESS_ADDRESS || null,
   supportEmail: process.env.SUPPORT_EMAIL || "support@takemovereturn.com",
-  privacyEmail: process.env.PRIVACY_CONTACT_EMAIL || "contact@takemovereturn.com",
-  legalReviewStatus: "draft",
+  privacyEmail: "privacy@takemovereturn.com",
+  legalReviewStatus: "draft" as "draft" | "effective",
   governingLaw: "People's Republic of China",
   disputeResolutionVenue: null,
   lastLegalReviewDate: null,
   lastUpdated: "2026-09-25",
-  effectiveDate: null,
-  refundPolicyStatus: "REFUND_POLICY_REVIEW_REQUIRED",
+  effectiveDate: null as string | null,
+  refundPolicyStatus: "owner-approved",
 } as const;
 
 export const siteConfig = {
   name: "TakeMoveReturn",
+  brandName: "TakeMoveReturn",
   descriptor: "Construction Tool Tracking Software",
   domain: new URL(rawSiteUrl).host,
   siteUrl: rawSiteUrl,

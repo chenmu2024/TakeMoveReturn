@@ -28,14 +28,26 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
   let workers = null;
   let dashboardStats = null;
   let activity: ActivityRecord[] | null = null;
+  let attentionTools = null;
+  let companySettings = null;
+  let reportAccess = false;
+  let reportConnected = false;
   if (isSupabaseConfigured()) {
     const supabase = await createClient();
     const { data } = await supabase.auth.getClaims();
     if (!data?.claims) redirect("/auth/login");
     const { data: membership, error } = await supabase.from("organization_members")
-      .select("company_id").eq("user_id", data.claims.sub).eq("status", "active").limit(1).maybeSingle();
+      .select("company_id,role").eq("user_id", data.claims.sub).eq("status", "active").limit(1).maybeSingle();
     if (error) throw new Error("Workspace membership could not be checked.");
     if (!membership) redirect("/app/onboarding");
+    reportConnected = key === "reports";
+    reportAccess = reportConnected && (membership.role === "owner" || membership.role === "admin");
+    if (key === "settings") {
+      const { data: company, error: companyError } = await supabase.from("companies")
+        .select("name,plan,timezone").eq("id", membership.company_id).single();
+      if (companyError) throw new Error("Company settings could not be loaded.");
+      companySettings = { ...company, role: membership.role };
+    }
     if (key === "tools") {
       const { data: toolRows, error: toolError } = await supabase.from("tools")
         .select("id,name,asset_code,status,updated_at").eq("company_id", membership.company_id)
@@ -57,10 +69,10 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       if (workerError) throw new Error("Workers could not be loaded.");
       workers = workerRows;
     }
-    if (key === "activity") {
+    if (key === "activity" || key === "dashboard") {
       const { data: events, error: eventError } = await supabase.from("tool_transactions")
         .select("id,tool_id,transaction_type,notes,created_at").eq("company_id", membership.company_id)
-        .order("created_at", { ascending: false }).limit(100);
+        .order("created_at", { ascending: false }).limit(key === "dashboard" ? 5 : 100);
       if (eventError) throw new Error("Tool activity could not be loaded.");
       const toolIds = [...new Set((events ?? []).map((event) => event.tool_id))];
       const { data: eventTools, error: eventToolError } = toolIds.length
@@ -79,6 +91,12 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       }));
     }
     if (key === "dashboard") {
+      const { data: attentionRows, error: attentionError } = await supabase.from("tools")
+        .select("id,name,asset_code,status,updated_at").eq("company_id", membership.company_id)
+        .in("status", ["damaged", "maintenance", "missing"])
+        .order("updated_at", { ascending: false }).limit(5);
+      if (attentionError) throw new Error("Attention items could not be loaded.");
+      attentionTools = attentionRows;
       const recentSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const [total, checkedOut, needsAttention, recentActivity] = await Promise.all([
         supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).neq("status", "retired"),
@@ -97,7 +115,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       };
     }
   }
-  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} activity={activity} notice={(await searchParams).notice} />;
+  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} activity={activity} attentionTools={attentionTools} companySettings={companySettings} reportAccess={reportAccess} reportConnected={reportConnected} notice={(await searchParams).notice} />;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {

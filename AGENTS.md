@@ -1,7 +1,7 @@
 
 # TakeMoveReturn
 
-> Current source of truth: `docs/PROJECT_SPEC.md` is the user's SEO V2 final specification. If the historical instructions below conflict with it, follow `docs/PROJECT_SPEC.md`. Before changing code, also read `docs/DECISIONS.md` and `TASKS.md`.
+> Current source of truth: `docs/PROJECT_SPEC.md` plus the locked 2026-09-25 decisions in `docs/DECISIONS.md`. Historical payment-provider, company-name, and payment-deferral instructions below are superseded: the legal operator is Qiaosheng Zhong (an individual in China), and the chosen Merchant of Record is Waffo.com Limited. Do not claim unimplemented checkout or privacy operations are live. Before changing code, read `docs/DECISIONS.md` and `TASKS.md`.
 
 # AI 编程完整开发总指令
 
@@ -74,7 +74,7 @@ Inspect
 
 * Cloudflare账号权限
 * Supabase credentials
-* Stripe credentials
+* Waffo credentials
 * Resend credentials
 * 正式域名
 * 公司法律信息
@@ -132,7 +132,7 @@ domain
 siteUrl
 supportEmail
 privacyEmail
-companyLegalName
+legalOperatorName
 ```
 
 正式域名确认前：
@@ -1105,8 +1105,8 @@ name
 monthlyPrice
 annualPrice
 
-stripeMonthlyPriceId
-stripeAnnualPriceId
+waffoMonthlyProductId
+waffoAnnualProductId
 
 toolLimit
 adminLimit
@@ -1122,9 +1122,9 @@ unlimited
 
 ---
 
-# 41. Stripe Monthly / Annual
+# 41. Waffo Monthly / Annual
 
-Stripe为每个Paid Plan配置：
+Waffo为每个Paid Plan配置：
 
 独立Monthly Price。
 
@@ -1139,7 +1139,7 @@ plan
 billing_interval
 ```
 
-选择允许的Stripe Price ID。
+选择允许的 Waffo Subscription Product ID。
 
 禁止客户端直接提交任意：
 
@@ -1335,7 +1335,7 @@ Starter
 
 立即生效。
 
-Stripe处理：
+Waffo处理：
 
 合理Proration。
 
@@ -1550,7 +1550,7 @@ Free / restricted state。
 
 # 61. Failed Payment
 
-Stripe付款失败：
+Waffo付款失败：
 
 状态：
 
@@ -1669,12 +1669,12 @@ CTA：
 
 ---
 
-# 67. Stripe
+# 67. Waffo
 
 使用：
 
-* Stripe Checkout
-* Stripe Billing
+* Waffo Checkout
+* Waffo Billing
 * Customer Portal
 * Verified Webhooks
 
@@ -1690,13 +1690,13 @@ CTA：
 
 ---
 
-# 68. Stripe Source of Truth
+# 68. Waffo Source of Truth
 
 数据库Subscription状态：
 
 由：
 
-# Verified Stripe Webhook
+# Verified Waffo Webhook
 
 驱动。
 
@@ -1708,7 +1708,7 @@ CTA：
 
 ---
 
-# 69. Stripe Webhook Security
+# 69. Waffo Webhook Security
 
 必须：
 
@@ -1726,8 +1726,8 @@ CTA：
 ```text
 id
 company_id
-stripe_customer_id
-stripe_subscription_id
+provider_customer_id
+provider_subscription_id
 
 plan
 billing_interval
@@ -1787,7 +1787,7 @@ Supabase PostgreSQL
 Supabase Auth
 Supabase RLS
 
-Stripe
+Waffo
 Resend
 
 MDX
@@ -1886,7 +1886,7 @@ src/
 ├── lib/
 │   ├── supabase/
 │   ├── cloudflare/
-│   ├── stripe/
+│   ├── waffo/
 │   ├── resend/
 │   ├── auth/
 │   ├── permissions/
@@ -1918,7 +1918,7 @@ Workers：
 * API
 * Route Handlers
 * Server Actions
-* Stripe Webhooks
+* Waffo Webhooks
 * Auth logic
 
 R2：
@@ -3889,8 +3889,7 @@ Mutation：
 
 ```text
 SUPABASE_SERVICE_ROLE_KEY
-STRIPE_SECRET_KEY
-STRIPE_WEBHOOK_SECRET
+WAFFO_PRIVATE_KEY
 TURNSTILE_SECRET_KEY
 WORKER_PIN_PEPPER
 RESEND_API_KEY
@@ -3916,15 +3915,14 @@ NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY
 
-STRIPE_SECRET_KEY
-STRIPE_WEBHOOK_SECRET
+WAFFO_PRIVATE_KEY
 
-STRIPE_PRICE_STARTER_MONTHLY
-STRIPE_PRICE_STARTER_ANNUAL
-STRIPE_PRICE_GROWTH_MONTHLY
-STRIPE_PRICE_GROWTH_ANNUAL
-STRIPE_PRICE_PRO_MONTHLY
-STRIPE_PRICE_PRO_ANNUAL
+WAFFO_PRODUCT_STARTER_MONTHLY
+WAFFO_PRODUCT_STARTER_ANNUAL
+WAFFO_PRODUCT_GROWTH_MONTHLY
+WAFFO_PRODUCT_GROWTH_ANNUAL
+WAFFO_PRODUCT_PRO_MONTHLY
+WAFFO_PRODUCT_PRO_ANNUAL
 
 RESEND_API_KEY
 
@@ -4167,7 +4165,7 @@ TAKE/MOVE/RETURN：
 
 ---
 
-# 200. Stripe Tests
+# 200. Waffo Tests
 
 必须：
 
@@ -4347,7 +4345,7 @@ main
 * QR Security
 * Import
 * Pricing
-* Stripe Monthly/Annual
+* Waffo Monthly/Annual
 * Plan limits
 * Storage limits
 * Privacy
@@ -4600,7 +4598,7 @@ Accessibility >= 95
 * No Privacy Export/Delete
 * No Help Center
 * No load testing
-* Unverified Stripe webhook
+* Unverified Waffo webhook
 * Monthly/annual price controlled by client
 * Secret exposed
 * Fake dateModified
@@ -4628,7 +4626,7 @@ Accessibility >= 95
 14. Annual Billing
 15. Upgrade/Downgrade
 16. Over-Limit Behaviour
-17. Stripe
+17. Waffo
 18. Email
 19. Privacy
 20. Help Center

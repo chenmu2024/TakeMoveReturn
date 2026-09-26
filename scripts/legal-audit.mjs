@@ -6,6 +6,9 @@ const providers = readFileSync(new URL("../src/data/subprocessors.ts", import.me
 const footer = readFileSync(new URL("../src/components/marketing.tsx", import.meta.url), "utf8");
 const schema = readFileSync(new URL("../src/components/seo-schema.tsx", import.meta.url), "utf8");
 const config = readFileSync(new URL("../src/config/site.ts", import.meta.url), "utf8");
+const signup = readFileSync(new URL("../src/app/auth/actions.ts", import.meta.url), "utf8");
+const signupForm = readFileSync(new URL("../src/components/auth-shell.tsx", import.meta.url), "utf8");
+const acceptanceMigration = readFileSync(new URL("../supabase/migrations/202609250004_legal_acceptances.sql", import.meta.url), "utf8");
 const paths = ["privacy", "terms", "dpa", "subprocessors", "business-information"];
 const checks = [
   ...paths.map((path) => [path, route.includes(`${path}: {`) || route.includes(`"${path}": {`)]),
@@ -14,12 +17,16 @@ const checks = [
   ["privacy/terms/DPA content", ["privacy:", "terms:", "dpa:"].every((marker) => documents.includes(marker))],
   ["active provider register", ["Cloudflare", "Supabase", "Resend"].every((name) => providers.includes(`name: "${name}"`))],
   ["no false organization schema", !schema.includes('"@type": "Organization"')],
+  ["confirmed individual operator", config.includes('legalOperatorName: "Qiaosheng Zhong"') && config.includes('registeredCompany: false')],
+  ["unselected signup consent", signupForm.includes('name="legal_consent"') && signupForm.includes('type="checkbox"') && !signupForm.includes('defaultChecked')],
+  ["signup consent enforced on server", signup.includes('form.get("legal_consent") !== "yes"')],
+  ["consent audit table", acceptanceMigration.includes("create table public.legal_acceptances") && acceptanceMigration.includes("enable row level security")],
 ];
 for (const [label, passed] of checks) console.log(`${passed ? "PASS" : "FAIL"} ${label}`);
 if (checks.some(([, passed]) => !passed)) process.exitCode = 1;
 
 if (process.argv.includes("--production")) {
-  const required = ["LEGAL_OPERATOR_NAME", "REGISTERED_ADDRESS", "SUPPORT_EMAIL", "PRIVACY_CONTACT_EMAIL", "LEGAL_REVIEW_APPROVED", "REFUND_POLICY_APPROVED", "DISPUTE_RESOLUTION_VENUE", "DATA_PROCESSING_LOCATIONS_REVIEWED", "INTERNATIONAL_TRANSFERS_REVIEWED"];
+  const required = ["PRIVACY_EMAIL_RECEIPT_VERIFIED", "DATA_PROCESSING_LOCATIONS_REVIEWED", "INTERNATIONAL_TRANSFERS_REVIEWED", "PRIVACY_REQUESTS_OPERATIONAL"];
   const missing = required.filter((name) => !process.env[name]);
   if (missing.length) {
     console.error(`LEGAL_REVIEW_REQUIRED: ${missing.join(", ")}`);

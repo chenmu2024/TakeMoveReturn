@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { siteConfig } from "../../config/site";
 import { createClient, isSupabaseConfigured } from "../../lib/supabase/server";
 
 function value(form: FormData, key: string) {
@@ -24,9 +25,13 @@ export async function signIn(form: FormData) {
 
 export async function signUp(form: FormData) {
   requireConnection();
+  if (siteConfig.legal.legalReviewStatus !== "effective" || !siteConfig.legal.effectiveDate) {
+    redirect("/auth/signup?notice=unavailable");
+  }
   const email = value(form, "email");
   const password = String(form.get("password") ?? "");
   const companyName = value(form, "company");
+  if (form.get("legal_consent") !== "yes") redirect("/auth/signup?notice=consent");
   if (!email || password.length < 12 || companyName.length < 2 || companyName.length > 120) {
     redirect("/auth/signup?notice=required");
   }
@@ -37,7 +42,13 @@ export async function signUp(form: FormData) {
     password,
     options: {
       emailRedirectTo: new URL("/auth/callback", siteUrl).toString(),
-      data: { company_name: companyName },
+      data: {
+        company_name: companyName,
+        terms_version: siteConfig.legal.effectiveDate,
+        privacy_version: siteConfig.legal.effectiveDate,
+        terms_accepted_at: new Date().toISOString(),
+        privacy_acknowledged_at: new Date().toISOString(),
+      },
     },
   });
   if (error) redirect("/auth/signup?notice=signup-error");

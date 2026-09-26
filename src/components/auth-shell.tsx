@@ -14,6 +14,7 @@ const copy: Record<AuthVariant, { eyebrow: string; title: string; detail: string
 const notices: Record<string, string> = {
   unavailable: "Sign-in is temporarily unavailable. Please try again later.",
   required: "Check the required fields. New passwords need at least 12 characters.",
+  consent: "Please agree to the Terms and acknowledge the Privacy Policy before creating an account.",
   invalid: "Email or password not recognized. Check your details or reset your password.",
   "signup-error": "The account could not be created. Please try again.",
   "check-email": "Check your email for a verification link before signing in.",
@@ -29,7 +30,7 @@ function AuthForm({ variant }: { variant: AuthVariant }) {
   return <form className="auth-form" action={action}>
     {variant !== "update-password" && <><label htmlFor="auth-email">Work email</label><input id="auth-email" name="email" type="email" placeholder="you@company.com" required autoComplete="email" /></>}
     {variant !== "forgot-password" && <><label htmlFor="auth-password">{variant === "update-password" ? "New password" : "Password"}</label><input id="auth-password" name="password" type="password" placeholder="At least 12 characters" required minLength={variant === "login" ? undefined : 12} autoComplete={variant === "login" ? "current-password" : "new-password"} /></>}
-    {variant === "signup" && <><label htmlFor="auth-company">Company name</label><input id="auth-company" name="company" type="text" placeholder="Your construction company" required minLength={2} maxLength={120} autoComplete="organization" /></>}
+    {variant === "signup" && <><label htmlFor="auth-company">Company name</label><input id="auth-company" name="company" type="text" placeholder="Your construction company" required minLength={2} maxLength={120} autoComplete="organization" /><label className="auth-consent" htmlFor="auth-consent"><input id="auth-consent" name="legal_consent" type="checkbox" value="yes" required /><span>I agree to the <Link href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</Link> and acknowledge the <Link href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</Link>.</span></label></>}
     <button className="auth-submit" type="submit">{current.submit}<IconArrowRight size={17} aria-hidden="true" /></button>
     {variant === "login" && <Link className="auth-secondary-link" href="/auth/forgot-password">Forgot password? <IconArrowRight size={15} aria-hidden="true" /></Link>}
     {variant === "forgot-password" && <Link className="auth-secondary-link" href="/auth/login">Back to sign in <IconArrowRight size={15} aria-hidden="true" /></Link>}

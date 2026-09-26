@@ -1,16 +1,16 @@
 # Legal commercial-launch gate
 
-Status: **LEGAL_REVIEW_REQUIRED**. Public legal pages are working drafts and noindex. This gate does not block product development or non-commercial preview.
+Status: **IMPLEMENTATION_REVIEW_REQUIRED**. The owner has identified the individual operator and approved a refund principle. Public legal pages remain noindex while wording and actual product/privacy operations are reconciled; do not misstate them as active contractual controls.
 
 ## Operator and contract
 
-- [ ] Verify the individual's legal operator name; do not substitute the brand.
-- [ ] Verify registered business name, registration number and tax ID if applicable; do not invent them if not applicable.
-- [ ] Verify business/registered address and jurisdiction.
+- [x] Owner confirmed legal operator Qiaosheng Zhong, individual based in China; TakeMoveReturn is only the brand.
+- [x] Owner confirmed no registered company or sole proprietorship; do not invent registration details.
 - [x] Support and privacy email addresses receive mail; verify production configuration again at launch.
-- [ ] Lawyer reviews Privacy, Terms, DPA, provider register, governing law and dispute venue.
-- [ ] Approve real effective dates and customer acceptance mechanism.
-- [ ] Confirm refund policy, actual payment provider and merchant identity before paid checkout.
+- [ ] Owner says legal review was completed; reconcile the exact revised Privacy, Terms, DPA and provider-register version with that review before publication. Do not claim lawyer approval on the site.
+- [ ] Approve effective dates; deploy and test the signup acceptance migration and workflow.
+- [x] Owner confirmed refund principle and Waffo.com Limited as Merchant of Record; actual checkout remains unimplemented.
+- [ ] Verify `privacy@takemovereturn.com` receives messages; previously verified routes were contact@, billing@ and support@ only.
 
 ## Data operations
 
@@ -21,4 +21,4 @@ Status: **LEGAL_REVIEW_REQUIRED**. Public legal pages are working drafts and noi
 - [ ] Verify security/incident procedures before describing them as contractual controls.
 - [ ] Re-review legal copy after QR field flow, uploads, imports, analytics or billing launch.
 
-`npm run legal:audit` checks route/content wiring. `npm run legal:audit -- --production` additionally checks key environment flags; it is a guardrail, **not** a substitute for evidence or legal review. Do not set approval flags merely to pass the script. Final human sign-off is required.
+`npm run legal:audit` checks route/content and consent wiring. `npm run legal:audit -- --production` additionally checks launch evidence flags; it is a guardrail, **not** a substitute for evidence or legal review. Do not set flags merely to pass the script. Final human sign-off is required.

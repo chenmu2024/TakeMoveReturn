@@ -1,13 +1,11 @@
-// Durations are intentionally unset until operational deletion and backup rules are approved.
 export const retention = {
-  account: null,
-  workspace: null,
-  toolHistory: null,
-  billing: null,
-  auditLogs: null,
-  securityLogs: null,
-  support: null,
-  temporaryImports: null,
-  uploadedFiles: null,
-  deletedAccounts: null,
+  operationalLogsDays: 90,
+  securityLogsDays: 180,
+  temporaryImportsHours: 24,
+  supportAfterClosureMonths: 24,
+  privacyRequestsAfterCompletionMonths: 24,
+  deletedAccountActiveDataTargetDays: 30,
+  orphanedFilesCleanupDays: 30,
+  toolHistory: "while-workspace-active",
+  billing: "active-plus-legal-or-dispute-need",
 } as const;

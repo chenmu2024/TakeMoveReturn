@@ -12,7 +12,7 @@
 
 **Decision:** Use Supabase PostgreSQL, Supabase Auth, and PostgreSQL Row Level Security for all tenant data.
 
-**Status:** LOCKED — seven tracked migrations are applied to the live project. Rollback-only SQL checks cover two-company isolation and first-tool capacity; browser Auth and real customer sessions remain pending.
+**Status:** LOCKED — all 13 tracked migrations are applied to the linked project as of 2026-09-27. Rollback-only SQL checks cover two-company isolation, first-tool capacity, legal acceptance and QR lookup/rotation; full authenticated browser workflows remain pending.
 
 ## Branding
 
@@ -34,12 +34,12 @@
 
 ## Payment provider
 
-**Decision:** Defer payment implementation until the non-payment product is ready. The user selected Waffo Pancake as the intended provider, superseding the historical Stripe-specific implementation instructions. Do not enable paid actions before the provider's API and webhook behavior are verified.
+**Decision:** Waffo Pancake is the sole selected provider for production subscriptions. Waffo.com Limited is Merchant of Record for applicable transactions. Work on billing now, but do not enable paid actions before production products, checkout API, signatures and webhook behavior are verified.
 
-**Status:** DEFERRED
+**Status:** LOCKED — integration not yet complete.
 
 ## Legal identity and policy publication
 
-**Decision:** AI may draft and review product-facing legal copy, but must not invent the operator's legal name, registration jurisdiction, registered address, or other legal identity facts. Keep legal pages marked as review drafts and noindex until the real operator details and legal review are supplied.
+**Decision:** TakeMoveReturn is a brand operated by Qiaosheng Zhong, an individual based in China. There is no registered company or sole proprietorship. The owner confirms the refund principle and says legal review is complete; do not claim a specific revised text was reviewed unless that version is evidenced. Keep incomplete service promises out of operative documents.
 
-**Status:** BLOCKED_BY_EXTERNAL_INFORMATION for final publication; non-legal product work continues.
+**Status:** LOCKED identity and payment-provider decisions. Formal publication still requires the privacy request/deletion operations, provider-region review, verified privacy mailbox, and final content/version sign-off to match deployed behavior.
