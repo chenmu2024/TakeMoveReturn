@@ -16,7 +16,7 @@ test("individual operator is not represented as a company", () => {
   assert.equal(siteConfig.legal.legalOperatorName, "Qiaosheng Zhong");
   assert.equal(siteConfig.legal.registeredCompany, false);
   assert.equal(siteConfig.legal.registeredSoleProprietor, false);
-  assert.equal(siteConfig.privacyEmail, "privacy@takemovereturn.com");
+  assert.equal(siteConfig.privacyEmail, "contact@takemovereturn.com");
 });
 
 test("retention targets are explicit", () => {

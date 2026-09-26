@@ -43,3 +43,5 @@
 **Decision:** TakeMoveReturn is a brand operated by Qiaosheng Zhong, an individual based in China. There is no registered company or sole proprietorship. The owner confirms the refund principle and says legal review is complete; do not claim a specific revised text was reviewed unless that version is evidenced. Keep incomplete service promises out of operative documents.
 
 **Status:** LOCKED identity and payment-provider decisions. Formal publication still requires the privacy request/deletion operations, provider-region review, verified privacy mailbox, and final content/version sign-off to match deployed behavior.
+
+**2026-09-27 clarification:** `privacy@takemovereturn.com` is not configured. Use the already verified `contact@takemovereturn.com` for privacy correspondence. A limited signed-in account export and request queue are implemented, but deletion fulfilment and legal transfer review remain outstanding.

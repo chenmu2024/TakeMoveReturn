@@ -2,6 +2,8 @@
 
 ## Completed
 
+- 2026-09-27: Signed-in Privacy Settings gained own-account JSON export and a durable, company-scoped privacy-request queue. Requests are limited to the requester by RLS; deletion remains a reviewed request, not an automatic destructive action. Privacy correspondence now uses verified `contact@takemovereturn.com`.
+- 2026-09-27: Provider location disclosure now records the verified Supabase primary region (`us-west-1`), Cloudflare R2 cache location hint (`WNAM`), and Resend's stated US primary processing; transfer compliance is not inferred from those facts.
 - Project specification copied to `docs/PROJECT_SPEC.md`.
 - Architecture decisions recorded in `docs/DECISIONS.md`.
 - Legacy static Fieldmark demonstration identified as non-production code.
@@ -53,6 +55,7 @@
 
 ## Tests run
 
+- 2026-09-27: Privacy migration `202609270003` applied to linked Supabase; rollback-only test passed for own read/create, cross-company and forged-user denial, duplicate-open prevention, and inability to change request status. Typecheck, six unit tests, SEO audit, draft legal audit and Next production build passed. Production legal audit still fails by design.
 - Project-document presence check: passed.
 - TypeScript typecheck: passed.
 - Next.js production build: passed.
@@ -101,6 +104,7 @@
 
 ## Current task
 
+- 2026-09-27: Non-payment commercial launch remains in progress. The privacy request/export slice is implemented and database-tested; production sign-in and public registration remain gated until field-worker security, deletion fulfilment, legal sign-off and browser/runtime verification are complete. Do not describe this as a full commercial launch.
 - 2026-09-25 owner decision: Qiaosheng Zhong is the real individual operator in China; no registered company or sole proprietorship. Waffo Pancake/Waffo.com Limited replaces the previous payment provider decision. This supersedes the earlier payment-deferral and missing-operator blockers below.
 - Code staged: central operator identity and privacy email, approved refund principle in draft Terms, retention policy targets, unselected signup Terms/Privacy checkbox and server validation, immutable signup-acceptance migration, Waffo SDK and owner-only/server-allowlisted checkout entry (default disabled), and revised source-of-truth docs. Four unit tests, typecheck, SEO audit, legal audit, Next build, OpenNext bundle and Wrangler dry-run passed. Production legal audit intentionally fails. The legal-acceptance migration is applied to the linked Supabase project and its rollback-only database test passed on 2026-09-27; no Cloudflare deployment of this change has occurred. Public signup and paid checkout remain disabled.
 - 2026-09-27 owner direction: complete non-payment work first. The dashboard now loads the five newest company-scoped movements and five attention-status tools instead of showing placeholder cards; the first-tool prompt disappears after a tool exists. Settings show the authenticated company name, timezone, plan, and current member role. Reports now offer owner/admin-only, company-scoped CSV downloads for tools, workers, locations and transactions, with CSV-formula neutralization and a 10,000-row safety limit. Six unit tests, typecheck, SEO/legal audits, Next build and the legal-acceptance database test passed. Unauthenticated report access returns 401, invalid report names return 404; authenticated browser export checks remain pending.
@@ -133,4 +137,4 @@
 
 ## Next exact task
 
-- Verify QR label download, anonymous scan, owner/admin rotation, manager PIN reset, and TAKE/MOVE/RETURN in an authenticated browser. Then implement rate-limited shared-device worker sessions and worker-attributed QR actions. Keep public registration gated until security and production runtime checks pass.
+- Verify QR label download, anonymous scan, owner/admin rotation, manager PIN reset, and TAKE/MOVE/RETURN in an authenticated browser. Then implement rate-limited shared-device worker sessions and worker-attributed QR actions, plus privacy request fulfilment/deletion. Keep public registration gated until security, legal and production runtime checks pass.

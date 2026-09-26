@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { WorkspaceShell, type ActivityRecord, type WorkspaceView } from "../../../components/workspace";
+import { WorkspaceShell, type ActivityRecord, type PrivacyRequest, type WorkspaceView } from "../../../components/workspace";
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
 
 const views: Record<string, WorkspaceView> = {
@@ -30,6 +30,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
   let activity: ActivityRecord[] | null = null;
   let attentionTools = null;
   let companySettings = null;
+  let privacyRequests: PrivacyRequest[] | null = null;
   let reportAccess = false;
   let reportConnected = false;
   if (isSupabaseConfigured()) {
@@ -40,6 +41,13 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       .select("company_id,role").eq("user_id", data.claims.sub).eq("status", "active").limit(1).maybeSingle();
     if (error) throw new Error("Workspace membership could not be checked.");
     if (!membership) redirect("/app/onboarding");
+    if (key === "settings/privacy") {
+      const { data: requests, error: requestsError } = await supabase.from("privacy_requests")
+        .select("id,request_type,status,created_at,completed_at")
+        .eq("requester_user_id", data.claims.sub).order("created_at", { ascending: false }).limit(10);
+      if (requestsError) throw new Error("Privacy requests could not be loaded.");
+      privacyRequests = requests ?? [];
+    }
     reportConnected = key === "reports";
     reportAccess = reportConnected && (membership.role === "owner" || membership.role === "admin");
     if (key === "settings") {
@@ -115,7 +123,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       };
     }
   }
-  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} activity={activity} attentionTools={attentionTools} companySettings={companySettings} reportAccess={reportAccess} reportConnected={reportConnected} notice={(await searchParams).notice} />;
+  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} activity={activity} attentionTools={attentionTools} companySettings={companySettings} privacyRequests={privacyRequests} reportAccess={reportAccess} reportConnected={reportConnected} notice={(await searchParams).notice} />;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {

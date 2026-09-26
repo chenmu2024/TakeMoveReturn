@@ -10,14 +10,14 @@ Status: **IMPLEMENTATION_REVIEW_REQUIRED**. The owner has identified the individ
 - [ ] Owner says legal review was completed; reconcile the exact revised Privacy, Terms, DPA and provider-register version with that review before publication. Do not claim lawyer approval on the site.
 - [ ] Approve effective dates; deploy and test the signup acceptance migration and workflow.
 - [x] Owner confirmed refund principle and Waffo.com Limited as Merchant of Record; actual checkout remains unimplemented.
-- [ ] Verify `privacy@takemovereturn.com` receives messages; previously verified routes were contact@, billing@ and support@ only.
+- [x] Use verified `contact@takemovereturn.com` for privacy requests; `privacy@` is not configured.
 
 ## Data operations
 
-- [ ] Confirm active providers, project regions, data processing locations and provider DPA terms.
+- [ ] Confirm all active-provider subprocessor locations and applicable DPA terms. Verified on 2026-09-27: Supabase project `xcdhhxyqdlorxztafpee` reports `us-west-1` via `supabase projects list`; the Cloudflare R2 cache bucket reports `WNAM` via `wrangler r2 bucket info`; Resend's DPA states its primary processing is in the United States. These facts do not establish a legal transfer mechanism or guarantee all processing stays in one region.
 - [ ] Review applicable international transfer mechanism(s), if any, with counsel.
 - [ ] Approve retention periods for every category in `src/config/retention.ts` and implement deletion/backup cleanup.
-- [ ] Implement and test verified privacy requests, company-scoped export and deletion.
+- [ ] Complete verified privacy-request handling, company-scoped export and deletion. The signed-in request queue and limited personal account export are implemented; manual review and deletion execution are not.
 - [ ] Verify security/incident procedures before describing them as contractual controls.
 - [ ] Re-review legal copy after QR field flow, uploads, imports, analytics or billing launch.
 
