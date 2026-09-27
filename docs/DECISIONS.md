@@ -12,7 +12,7 @@
 
 **Decision:** Use Supabase PostgreSQL, Supabase Auth, and PostgreSQL Row Level Security for all tenant data.
 
-**Status:** LOCKED — all 24 tracked migrations are applied to the linked project as of 2026-09-27. Rollback-only SQL checks cover two-company isolation, first-tool capacity, legal acceptance, QR lookup/rotation, field-session boundaries, device revocation, worker deactivation, company settings, workspace search, atomic bulk return and atomic selected transfer; full authenticated browser workflows remain pending.
+**Status:** LOCKED — all 25 tracked migrations are applied to the linked project as of 2026-09-28. Rollback-only SQL checks cover two-company isolation, first-tool capacity, legal acceptance and re-acceptance, QR lookup/rotation, field-session boundaries, device revocation, worker deactivation, company settings, workspace search, atomic bulk return and atomic selected transfer; full authenticated browser workflows remain pending.
 
 ## Branding
 
@@ -30,7 +30,7 @@
 
 **Decision:** Use `takemovereturn.com` as the canonical site domain. Use `contact@takemovereturn.com` for general/privacy contact, `support@takemovereturn.com` for help, and reserve `billing@takemovereturn.com` for future billing communication.
 
-**Status:** LOCKED — the root domain routes to the existing Cloudflare Worker. The user confirms receipt through Cloudflare Email Routing and sending from an email client for all three addresses. Cloudflare Email Sending is unavailable on the current free plan; the user selected Resend's free plan for automated Auth mail. The domain is verified in Resend, and Supabase custom SMTP is configured with a domain-restricted sending-only key. A real signup confirmation and password-reset email were received at `support@takemovereturn.com`; the user confirmed the account and set a password. Authenticated local company onboarding also succeeded. Production public Auth remains gated off pending further browser workflow checks.
+**Status:** LOCKED — the root domain routes to the existing Cloudflare Worker. The user confirms receipt through Cloudflare Email Routing and sending from an email client for all three addresses. Cloudflare Email Sending is unavailable on the current free plan; the user selected Resend's free plan for automated Auth mail. The domain is verified in Resend, and Supabase custom SMTP is configured with a domain-restricted sending-only key. Two new accounts received and confirmed real signup mail on 2026-09-28; both recorded the current legal version, and one logged into the production workspace. Production public Auth is now enabled. Payment remains gated off.
 
 ## Payment provider
 
@@ -42,6 +42,6 @@
 
 **Decision:** TakeMoveReturn is a brand operated by Qiaosheng Zhong, an individual based in China. There is no registered company or sole proprietorship. The owner confirms the refund principle and says legal review is complete; do not claim a specific revised text was reviewed unless that version is evidenced. Keep incomplete service promises out of operative documents.
 
-**Status:** LOCKED identity and payment-provider decisions. Formal publication still requires the privacy request/deletion operations, provider-region review, verified privacy mailbox, and final content/version sign-off to match deployed behavior.
+**Status:** LOCKED identity and payment-provider decisions. On 2026-09-28 the owner approved the current legal text for use, with 2026-09-28 as its effective date; this is owner approval, not a claim of external professional review. The owner authorized production registration after the initial signup/login evidence. Operational privacy and authenticated field-flow checks remain open.
 
 **2026-09-27 clarification:** `privacy@takemovereturn.com` is not configured. Use the already verified `contact@takemovereturn.com` for privacy correspondence. A limited signed-in account export and request queue are implemented, but deletion fulfilment and legal transfer review remain outstanding.

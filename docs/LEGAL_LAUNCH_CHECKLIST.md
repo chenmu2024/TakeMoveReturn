@@ -1,14 +1,14 @@
 # Legal commercial-launch gate
 
-Status: **IMPLEMENTATION_REVIEW_REQUIRED**. Public pages now describe the verified operating facts without draft placeholders. They remain noindex and do not, by themselves, open commercial registration. See `docs/INTERNAL_LEGAL_REVIEW.md` for evidence and remaining limits.
+Status: **REGISTRATION_OPEN_WITH_OPERATIONAL_FOLLOW_UP**. The owner-approved legal pages are public and noindex; new account registration and acceptance are enabled. This checklist records remaining data-operations work and is not a claim of external professional review. See `docs/INTERNAL_LEGAL_REVIEW.md` for evidence and limits.
 
 ## Operator and contract
 
 - [x] Owner confirmed legal operator Qiaosheng Zhong, individual based in China; TakeMoveReturn is only the brand.
 - [x] Owner confirmed no registered company or sole proprietorship; do not invent registration details.
 - [x] Support and privacy email addresses receive mail; verify production configuration again at launch.
-- [ ] Owner says legal review was completed; reconcile the exact revised Privacy, Terms, DPA and provider-register version with that review before publication. Do not claim lawyer approval on the site.
-- [ ] Approve effective dates; deploy and test the signup acceptance migration and workflow.
+- [x] On 2026-09-28 the owner approved the current Privacy, Terms, DPA and provider-register text for use. This is owner sign-off, not evidence of external professional review; do not claim lawyer approval on the site.
+- [x] Set the owner-approved legal effective date to 2026-09-28. Two new test accounts confirmed email and recorded the current Terms/Privacy versions; one logged into the production workspace. Older-account re-consent needs browser verification.
 - [x] Waffo.com Limited is the selected future Merchant of Record; paid checkout remains disabled. Current public Terms do not promise an unimplemented refund workflow.
 - [x] Use verified `contact@takemovereturn.com` for privacy requests; `privacy@` is not configured.
 

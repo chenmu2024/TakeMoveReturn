@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AuthShell, type AuthVariant } from "../../../components/auth-shell";
+import { siteConfig } from "../../../config/site";
 import { isSupabaseConfigured } from "../../../lib/supabase/server";
 
 const variants = new Set<AuthVariant>(["login", "signup", "forgot-password", "update-password"]);
@@ -8,7 +9,8 @@ const variants = new Set<AuthVariant>(["login", "signup", "forgot-password", "up
 export default async function AuthPage({ params, searchParams }: { params: Promise<{ slug: string[] }>; searchParams: Promise<{ notice?: string }> }) {
   const key = (await params).slug.join("/") as AuthVariant;
   if (!variants.has(key)) notFound();
-  return <AuthShell variant={key} notice={(await searchParams).notice} connected={isSupabaseConfigured()} />;
+  return <AuthShell variant={key} notice={(await searchParams).notice} connected={isSupabaseConfigured()}
+    registrationOpen={siteConfig.legal.legalReviewStatus === "effective" && Boolean(siteConfig.legal.effectiveDate)} />;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {

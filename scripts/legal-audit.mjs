@@ -8,8 +8,11 @@ const schema = readFileSync(new URL("../src/components/seo-schema.tsx", import.m
 const config = readFileSync(new URL("../src/config/site.ts", import.meta.url), "utf8");
 const review = readFileSync(new URL("../src/config/legal-review.ts", import.meta.url), "utf8");
 const signup = readFileSync(new URL("../src/app/auth/actions.ts", import.meta.url), "utf8");
+const authPage = readFileSync(new URL("../src/app/auth/[...slug]/page.tsx", import.meta.url), "utf8");
 const signupForm = readFileSync(new URL("../src/components/auth-shell.tsx", import.meta.url), "utf8");
 const acceptanceMigration = readFileSync(new URL("../supabase/migrations/202609250004_legal_acceptances.sql", import.meta.url), "utf8");
+const reacceptanceLayout = readFileSync(new URL("../src/app/app/layout.tsx", import.meta.url), "utf8");
+const reacceptanceAction = readFileSync(new URL("../src/app/auth/accept-terms/actions.ts", import.meta.url), "utf8");
 const paths = ["privacy", "terms", "dpa", "subprocessors", "business-information", "about"];
 const checks = [
   ...paths.map((path) => [path, route.includes(`${path}: {`) || route.includes(`"${path}": {`)]),
@@ -28,7 +31,10 @@ const checks = [
   ["internal review is separate", review.includes('method: "ai-assisted-internal-review"') && review.includes('externalProfessionalReview: "not-obtained"')],
   ["unselected signup consent", signupForm.includes('name="legal_consent"') && signupForm.includes('type="checkbox"') && !signupForm.includes('defaultChecked')],
   ["signup consent enforced on server", signup.includes('form.get("legal_consent") !== "yes"')],
+  ["signup UI follows legal gate", authPage.includes('registrationOpen={siteConfig.legal.legalReviewStatus === "effective"') && signupForm.includes('variant !== "signup" || registrationOpen')],
+  ["effective legal version recorded at signup", config.includes('effectiveDate: "2026-09-28"') && signup.includes('terms_version: siteConfig.legal.effectiveDate') && signup.includes('privacy_version: siteConfig.legal.effectiveDate')],
   ["consent audit table", acceptanceMigration.includes("create table public.legal_acceptances") && acceptanceMigration.includes("enable row level security")],
+  ["older accounts review current terms", reacceptanceLayout.includes('redirect("/auth/accept-terms")') && reacceptanceAction.includes('form.get("legal_consent") !== "yes"')],
 ];
 for (const [label, passed] of checks) console.log(`${passed ? "PASS" : "FAIL"} ${label}`);
 if (checks.some(([, passed]) => !passed)) process.exitCode = 1;

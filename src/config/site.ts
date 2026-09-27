@@ -12,12 +12,12 @@ const legal = {
   legalOperatorStatement: "TakeMoveReturn is an independently operated construction tool tracking service operated from the People's Republic of China.",
   supportEmail: process.env.SUPPORT_EMAIL || "support@takemovereturn.com",
   privacyEmail: process.env.PRIVACY_CONTACT_EMAIL || "contact@takemovereturn.com",
-  legalReviewStatus: "draft" as "draft" | "effective",
+  legalReviewStatus: "effective" as "draft" | "effective",
   governingLaw: "People's Republic of China",
   disputeResolutionVenue: null,
   lastLegalReviewDate: null,
-  lastUpdated: "2026-09-27",
-  effectiveDate: null as string | null,
+  lastUpdated: "2026-09-28",
+  effectiveDate: "2026-09-28" as string | null,
   refundPolicyStatus: "owner-approved",
 } as const;
 
