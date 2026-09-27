@@ -1,6 +1,6 @@
 # Legal commercial-launch gate
 
-Status: **IMPLEMENTATION_REVIEW_REQUIRED**. The owner has identified the individual operator and approved a refund principle. Public legal pages remain noindex while wording and actual product/privacy operations are reconciled; do not misstate them as active contractual controls.
+Status: **IMPLEMENTATION_REVIEW_REQUIRED**. Public pages now describe the verified operating facts without draft placeholders. They remain noindex and do not, by themselves, open commercial registration. See `docs/INTERNAL_LEGAL_REVIEW.md` for evidence and remaining limits.
 
 ## Operator and contract
 
@@ -9,7 +9,7 @@ Status: **IMPLEMENTATION_REVIEW_REQUIRED**. The owner has identified the individ
 - [x] Support and privacy email addresses receive mail; verify production configuration again at launch.
 - [ ] Owner says legal review was completed; reconcile the exact revised Privacy, Terms, DPA and provider-register version with that review before publication. Do not claim lawyer approval on the site.
 - [ ] Approve effective dates; deploy and test the signup acceptance migration and workflow.
-- [x] Owner confirmed refund principle and Waffo.com Limited as Merchant of Record; actual checkout remains unimplemented.
+- [x] Waffo.com Limited is the selected future Merchant of Record; paid checkout remains disabled. Current public Terms do not promise an unimplemented refund workflow.
 - [x] Use verified `contact@takemovereturn.com` for privacy requests; `privacy@` is not configured.
 
 ## Data operations

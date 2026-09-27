@@ -2,6 +2,7 @@
 
 ## Completed
 
+- 2026-09-27: Public Privacy, Terms, DPA, provider register and Business Information were rewritten from verified product facts without draft placeholders or fictitious corporate details; About and an internal AI-assisted legal consistency review were added. Formal signup/legal-effective and billing gates remain closed pending the evidence listed in `docs/INTERNAL_LEGAL_REVIEW.md`.
 - 2026-09-27: Signed-in Privacy Settings gained own-account JSON export and a durable, company-scoped privacy-request queue. Requests are limited to the requester by RLS; deletion remains a reviewed request, not an automatic destructive action. Privacy correspondence now uses verified `contact@takemovereturn.com`.
 - 2026-09-27: Provider location disclosure now records the verified Supabase primary region (`us-west-1`), Cloudflare R2 cache location hint (`WNAM`), and Resend's stated US primary processing; transfer compliance is not inferred from those facts.
 - Project specification copied to `docs/PROJECT_SPEC.md`.

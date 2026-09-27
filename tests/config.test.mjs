@@ -14,8 +14,10 @@ test("published prices and annual billing stay aligned", () => {
 
 test("individual operator is not represented as a company", () => {
   assert.equal(siteConfig.legal.legalOperatorName, "Qiaosheng Zhong");
-  assert.equal(siteConfig.legal.registeredCompany, false);
-  assert.equal(siteConfig.legal.registeredSoleProprietor, false);
+  assert.equal(siteConfig.legal.operatorType, "individual");
+  assert.equal(siteConfig.legal.registeredBusinessName, null);
+  assert.equal(siteConfig.legal.registrationNumber, null);
+  assert.equal(siteConfig.legal.registeredAddress, null);
   assert.equal(siteConfig.privacyEmail, "contact@takemovereturn.com");
 });
 
