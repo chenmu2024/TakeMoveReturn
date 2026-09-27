@@ -1,4 +1,4 @@
-const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://takemovereturn.com";
+const rawSiteUrl = "https://takemovereturn.com";
 
 const legal = {
   operatingName: "TakeMoveReturn",

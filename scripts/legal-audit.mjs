@@ -17,6 +17,8 @@ const checks = [
   ["direct support email in footer", footer.includes('mailto:${siteConfig.supportEmail}')],
   ["direct contact email in footer", footer.includes('mailto:${siteConfig.contactEmail}')],
   ["refund conditions and billing contact", documents.includes('title: "6. Refunds and billing questions"') && documents.includes("duplicate or erroneous charge") && documents.includes("service was not delivered as described") && documents.includes("siteConfig.billingEmail")],
+  ["terms use verified production address", documents.includes("service at https://takemovereturn.com") && !documents.includes("service at ${siteConfig.siteUrl}")],
+  ["no development address in legal text", !/(?:localhost|127\.0\.0\.1|workers\.dev|chatgpt\.site|example\.com)/i.test(documents)],
   ["legal noindex", ["privacy", "terms", "dpa", "subprocessors", "business-information"].every((path) => route.includes(`"${path}"`)) && route.includes("index: false")],
   ["privacy/terms/DPA content", ["privacy:", "terms:", "dpa:"].every((marker) => documents.includes(marker))],
   ["active provider register", ["Cloudflare", "Supabase", "Resend"].every((name) => providers.includes(`name: "${name}"`))],

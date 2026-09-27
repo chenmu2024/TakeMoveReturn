@@ -36,7 +36,7 @@ export async function signUp(form: FormData) {
     redirect("/auth/signup?notice=required");
   }
   const supabase = await createClient();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = process.env.NODE_ENV === "production" ? siteConfig.siteUrl : (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000");
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -61,7 +61,7 @@ export async function requestPasswordReset(form: FormData) {
   const email = value(form, "email");
   if (!email) redirect("/auth/forgot-password?notice=required");
   const supabase = await createClient();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = process.env.NODE_ENV === "production" ? siteConfig.siteUrl : (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000");
   await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: new URL("/auth/callback", siteUrl).toString(),
   });
