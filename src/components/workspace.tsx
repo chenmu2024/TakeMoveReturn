@@ -91,6 +91,9 @@ function ReportsContent({ ready }: { ready: boolean }) {
     { title: "Worker register", kind: "workers" },
     { title: "Location register", kind: "locations" },
     { title: "Transaction history", kind: "activity" },
+    { title: "Damage reports", kind: "damage" },
+    { title: "Maintenance schedules", kind: "maintenance" },
+    { title: "Service history", kind: "service-history" },
   ];
   return <section className="workspace-report-grid">{reports.map((report) => <article className="workspace-report-card" key={report.kind}><p className="workspace-eyebrow">CSV EXPORT</p><h2>{report.title}</h2><p>{ready ? "Download company-scoped records. Exports over 10,000 rows require support." : "Owner or admin access is required to export company records."}</p><ActionLink action={ready ? { label: "Download CSV", href: `/api/reports/${report.kind}` } : undefined} quiet /></article>)}</section>;
 }

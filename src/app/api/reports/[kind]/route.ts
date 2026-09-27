@@ -2,10 +2,13 @@ import { createClient, isSupabaseConfigured } from "../../../../lib/supabase/ser
 import { csvDocument } from "../../../../lib/reports/csv";
 
 const reports = {
-  tools: { table: "tools", columns: ["asset_code", "name", "category", "brand", "model", "serial_number", "status", "condition", "updated_at"] },
-  workers: { table: "workers", columns: ["name", "employee_code", "status", "updated_at"] },
-  locations: { table: "locations", columns: ["name", "type", "address", "active", "updated_at"] },
-  activity: { table: "tool_transactions", columns: ["tool_id", "transaction_type", "from_worker_id", "to_worker_id", "from_location_id", "to_location_id", "notes", "created_at"] },
+  tools: { table: "tools", columns: ["asset_code", "name", "category", "brand", "model", "serial_number", "status", "condition", "updated_at"], orderBy: "updated_at" },
+  workers: { table: "workers", columns: ["name", "employee_code", "status", "updated_at"], orderBy: "updated_at" },
+  locations: { table: "locations", columns: ["name", "type", "address", "active", "updated_at"], orderBy: "updated_at" },
+  activity: { table: "tool_transactions", columns: ["tool_id", "transaction_type", "from_worker_id", "to_worker_id", "from_location_id", "to_location_id", "notes", "created_at"], orderBy: "created_at" },
+  damage: { table: "damage_reports", columns: ["tool_id", "severity", "description", "status", "created_at", "resolved_at"], orderBy: "created_at" },
+  maintenance: { table: "maintenance_schedules", columns: ["tool_id", "service_name", "interval_days", "next_due_at", "active", "updated_at"], orderBy: "updated_at" },
+  "service-history": { table: "maintenance_events", columns: ["tool_id", "service_name", "notes", "cost_cents", "serviced_at", "created_at"], orderBy: "created_at" },
 } as const;
 
 export async function GET(_request: Request, { params }: { params: Promise<{ kind: string }> }) {
@@ -28,7 +31,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ kin
   for (let offset = 0; offset <= 10_000; offset += 500) {
     const { data, error } = await supabase.from(report.table).select(report.columns.join(","))
       .eq("company_id", membership.company_id)
-      .order(kind === "activity" ? "created_at" : "updated_at", { ascending: true })
+      .order(report.orderBy, { ascending: true })
       .order("id", { ascending: true })
       .range(offset, offset + 499);
     if (error || !data) return new Response("Report could not be loaded", { status: 503 });
