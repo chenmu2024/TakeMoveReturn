@@ -34,7 +34,8 @@ export async function createWorker(form: FormData) {
   if (membershipError) redirect("/app/workers/new?notice=unavailable");
   if (!membership) redirect("/app/onboarding");
 
-  const pin = await hashWorkerPin(input.data.pin, pepper);
+  const pin = await hashWorkerPin(input.data.pin, pepper).catch(() => null);
+  if (!pin) redirect("/app/workers/new?notice=unavailable");
   const { error } = await supabase.rpc("create_worker", {
     p_company_id: membership.company_id,
     p_name: input.data.name,

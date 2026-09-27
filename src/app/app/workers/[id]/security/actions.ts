@@ -32,7 +32,8 @@ export async function resetWorkerPin(form: FormData) {
   if (workerError || !worker) redirect("/app/workers");
   if (worker.employee_code && worker.employee_code === pin.data) redirect(`${path}?notice=code-matches-pin`);
 
-  const nextPin = await hashWorkerPin(pin.data, pepper);
+  const nextPin = await hashWorkerPin(pin.data, pepper).catch(() => null);
+  if (!nextPin) redirect(`${path}?notice=unavailable`);
   const { error } = await supabase.rpc("reset_worker_pin", {
     p_worker_id: id.data,
     p_pin_hash: nextPin.hash,

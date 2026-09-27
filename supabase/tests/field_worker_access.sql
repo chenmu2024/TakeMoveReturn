@@ -7,7 +7,8 @@ insert into public.companies(id,name,slug) values
 insert into public.organization_members(company_id,user_id,role) values
   ('66666666-aaaa-4aaa-8aaa-666666666666','66666666-6666-4666-8666-666666666666','owner');
 insert into public.workers(id,company_id,name,pin_hash,pin_salt) values
-  ('66666666-1111-4111-8111-666666666666','66666666-aaaa-4aaa-8aaa-666666666666','Field worker','hash','salt');
+  ('66666666-1111-4111-8111-666666666666','66666666-aaaa-4aaa-8aaa-666666666666','Field worker A','hash','salt'),
+  ('66666666-1112-4112-8112-666666666666','66666666-aaaa-4aaa-8aaa-666666666666','Field worker B','hash','salt');
 insert into public.locations(id,company_id,type,name) values
   ('66666666-2222-4222-8222-666666666666','66666666-aaaa-4aaa-8aaa-666666666666','warehouse','A warehouse'),
   ('77777777-2222-4222-8222-777777777777','77777777-bbbb-4bbb-8bbb-777777777777','warehouse','B warehouse');
@@ -66,7 +67,24 @@ begin
     raise exception 'Cross-company location accepted';
   exception when others then if SQLERRM <> 'Invalid location' then raise; end if;
   end;
-  perform public.record_field_tool_transaction(repeat('s',64),repeat('d',64),repeat('a',64),
+  select attempt_id into v_attempt from public.begin_field_pin_attempt(repeat('d',64),
+    '66666666-1112-4112-8112-666666666666',repeat('i',64));
+  select public.complete_field_pin_attempt(v_attempt,true,repeat('u',64)) into v_success;
+  if not v_success then raise exception 'Second worker session not issued'; end if;
+  perform public.record_field_tool_transaction(repeat('u',64),repeat('d',64),repeat('a',64),
+    'transfer','66666666-2222-4222-8222-666666666666',null);
+  if (select current_worker_id from public.tools where qr_token=repeat('a',64))
+    <> '66666666-1112-4112-8112-666666666666' then raise exception 'MOVE not attributed to second worker'; end if;
+  if (select performed_by_worker_id from public.tool_transactions where transaction_type='transfer'
+      and tool_id='66666666-3333-4333-8333-666666666666' order by created_at desc limit 1)
+    <> '66666666-1112-4112-8112-666666666666' then raise exception 'MOVE audit names wrong worker'; end if;
+  begin
+    perform public.record_field_tool_transaction(repeat('s',64),repeat('d',64),repeat('a',64),
+      'return','66666666-2222-4222-8222-666666666666',null);
+    raise exception 'Previous worker returned another worker''s tool';
+  exception when others then if SQLERRM <> 'Tool state changed or action not permitted' then raise; end if;
+  end;
+  perform public.record_field_tool_transaction(repeat('u',64),repeat('d',64),repeat('a',64),
     'return','66666666-2222-4222-8222-666666666666',null);
   update public.workers set auth_version=auth_version+1 where id='66666666-1111-4111-8111-666666666666';
   begin

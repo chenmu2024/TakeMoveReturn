@@ -4,16 +4,16 @@ TakeMoveReturn is a QR based construction tool tracking product for small crews.
 
 ## Current status
 
-The public marketing, SEO, Help Center, pricing, auth entry, and workspace interface are available for review at `https://takemovereturn.com/`. Auth forms and operational actions remain disabled by the `SUPABASE_AUTH_ENABLED` launch gate until company onboarding and security checks pass. Do not describe this deployment as production ready or treat the legal drafts as effective policies.
+The public site and production registration are available at `https://takemovereturn.com/`. Auth, company onboarding, tools, locations, and worker creation have been exercised in the production browser. Shared-device and QR field handoffs still need authenticated end-to-end verification; paid checkout remains disabled.
 
 ## Architecture
 
 - Next.js 16 App Router and React 19 render the public and workspace pages.
 - OpenNext packages the application for Cloudflare Workers. `wrangler.jsonc` contains the Worker and OpenNext cache binding.
-- Supabase PostgreSQL, Auth, and RLS are the locked data design. Seven tracked SQL migrations under `supabase/migrations/` have been applied to project `xcdhhxyqdlorxztafpee`. Rollback-only tenant, plan-capacity, and transaction checks are in `supabase/tests/tenant_isolation.sql`. Real email-confirmed sign-up and browser sessions remain untested.
+- Supabase PostgreSQL, Auth, and RLS are the locked data design. Tracked migrations under `supabase/migrations/` are applied to project `xcdhhxyqdlorxztafpee`; rollback-only security and transaction checks are under `supabase/tests/`.
 - R2 is planned for company files with storage quotas; the current R2 binding is only the OpenNext cache bucket.
 - Cloudflare Queues and scheduled jobs are planned for reliable imports, cleanup, and reminders. Neither has a production workflow yet.
-- Outbound transactional email, Turnstile, worker PINs, shared device sessions, and QR security need live integrations and security tests before account actions are enabled. The user selected Waffo Pancake for future payment integration, which is intentionally deferred.
+- Resend-backed transactional Auth email and worker PIN creation are live. Shared-device sessions and QR field actions are implemented but await authenticated production verification. The user selected Waffo Pancake for future payment integration, which is intentionally deferred.
 
 ## Local setup
 
@@ -22,18 +22,20 @@ The public marketing, SEO, Help Center, pricing, auth entry, and workspace inter
 3. Run `npm run dev` and open `http://localhost:3000`.
 4. Run `npm run typecheck`, `npm run seo:audit`, and `npm run build` before a release.
 
-Database migrations must be applied through the tracked Supabase CLI workflow, not pasted into the Dashboard SQL Editor. The project owner authenticated locally and linked project `xcdhhxyqdlorxztafpee`; the seven current migrations are applied. For future changes, review `npx supabase db push --dry-run` and a recoverable backup before `npx supabase db push`. Enter credentials only into the local CLI prompt, never into chat or committed files. The CLI's `supabase/.temp/` connection metadata is ignored by Git.
+Database migrations must be applied through the tracked Supabase CLI workflow, not pasted into the Dashboard SQL Editor. The project owner authenticated locally and linked project `xcdhhxyqdlorxztafpee`. For future changes, review `npx supabase db push --dry-run` and a recoverable backup before `npx supabase db push`. Enter credentials only into the local CLI prompt, never into chat or committed files. The CLI's `supabase/.temp/` connection metadata is ignored by Git.
 
-The Cloudflare bundle is produced with `npm run cf:build`. Build with `NEXT_PUBLIC_SITE_URL=https://takemovereturn.com` so prerendered metadata and sitemap entries use the canonical origin. The production root domain is routed to the Worker through `wrangler.jsonc`; `www` redirects to the root with a Cloudflare rule. The existing `workers.dev` URL remains configured but did not respond from this environment during the latest smoke check. Cloudflare Email Routing has active forwarding rules for `contact@takemovereturn.com`, `billing@takemovereturn.com`, and `support@takemovereturn.com`; outbound sending and end-to-end delivery are not yet verified.
+The Cloudflare bundle is produced with `npm run cf:build`. Build with `NEXT_PUBLIC_SITE_URL=https://takemovereturn.com` so prerendered metadata and sitemap entries use the canonical origin. The production root domain is routed to the Worker through `wrangler.jsonc`; `www` redirects to the root with a Cloudflare rule. Cloudflare Email Routing forwards `contact@takemovereturn.com`, `billing@takemovereturn.com`, and `support@takemovereturn.com`; Resend-backed Supabase Auth mail has been delivered and confirmed.
+
+Worker PIN hashing requires the private Supabase Edge Function in `supabase/functions/worker-pin-kdf/`. Deploy it before the Cloudflare Worker with `npx supabase functions deploy worker-pin-kdf --project-ref xcdhhxyqdlorxztafpee --no-verify-jwt`; its handler requires a secret API key despite the disabled platform JWT check. Keep `SUPABASE_SERVICE_ROLE_KEY` and `WORKER_PIN_PEPPER` in Worker secrets only. Never put either in a public environment variable or commit them.
 
 ## Product boundaries
 
 Plans are Free, Starter, Growth, and Pro. The locked capacities are 25, 200, 600, and 2,000 active tools; field workers are unlimited on every plan. The visible pricing selector uses `src/config/plans.ts`. No checkout or subscription is created; Waffo Pancake integration is deferred until non-payment functionality is complete and the provider's API and webhook behavior are verified.
 
-Company onboarding and first-tool registration have a database function, server action, and page behind the disabled Auth launch gate. Database checks verified company-scoped reads, cross-tenant denials, Free-plan active-tool capacity, retired-tool capacity release, and transaction history; the fixtures were rolled back. Worker PIN hashing and shared-device schema remain foundations. This does not constitute a working QR flow without verified email delivery, worker login, rate limiting, QR labels, and browser end-to-end tests. Import requires CSV/XLSX validation, preview, batching, idempotency, Queue processing, and R2 quota enforcement; the current page explains that workflow but cannot process files.
+Company onboarding, tool and worker registration, and location creation are live. Database checks verify tenant isolation and tool movements, including shared-device worker attribution. QR labels and field actions still need an authenticated production browser test before the field flow can be called complete. Import has local CSV/XLSX review but not server-side batch processing.
 
-Privacy export and deletion, file retention, outbound email, legal entity details, and counsel reviewed Privacy/Terms/DPA/subprocessor pages are still pending. The public drafts are marked `noindex` until reviewed. Help articles and public SEO pages have canonical metadata and index gates; pages based on competitor global metrics remain `noindex` until US review. Google Search Console verification is also pending.
+The owner approved the current Terms and Privacy text for production registration, without claiming external professional review of that exact version. Privacy export and request intake are available; deletion fulfilment remains an operational follow-up. Help and public SEO pages use canonical metadata and index gates. Google Search Console verification remains pending.
 
 ## Verification gaps
 
-There is no complete unit, end to end, tenant isolation, concurrency, import reliability, billing, load, or Lighthouse test suite yet. CI must run the required checks and block deployment on failure before a production launch. See `TASKS.md` for the exact blockers and next task.
+Unit, rollback-only database security, and build checks are in place, but full browser end-to-end, import reliability, load, and Lighthouse coverage remain incomplete. Billing is intentionally disabled. See `TASKS.md` for the current gaps.

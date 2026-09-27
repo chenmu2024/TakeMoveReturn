@@ -1,0 +1,2 @@
+[functions.worker-pin-kdf]
+verify_jwt = false

@@ -33,6 +33,24 @@ async function pepperPin(pin: string, pepper: string): Promise<Uint8Array> {
 
 async function derive(pin: string, pepper: string, salt: Uint8Array, iterations: number): Promise<Uint8Array> {
   const peppered = await pepperPin(pin, pepper);
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (url && secret) {
+    const response = await fetch(`${url}/functions/v1/worker-pin-kdf`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "user-agent": "TakeMoveReturn-Server/1.0", apikey: secret },
+      body: JSON.stringify({ peppered: toBase64(peppered), salt: toBase64(salt), iterations }),
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error("Worker PIN derivation is unavailable.");
+    const result: unknown = await response.json();
+    if (!result || typeof result !== "object" || !("hash" in result) || typeof result.hash !== "string") {
+      throw new Error("Worker PIN derivation returned an invalid result.");
+    }
+    const hash = fromBase64(result.hash);
+    if (hash.length !== 32) throw new Error("Worker PIN derivation returned an invalid hash.");
+    return hash;
+  }
   const key = await crypto.subtle.importKey("raw", peppered as BufferSource, "PBKDF2", false, ["deriveBits"]);
   return new Uint8Array(await crypto.subtle.deriveBits(
     { name: "PBKDF2", hash: "SHA-256", salt: salt as BufferSource, iterations },
