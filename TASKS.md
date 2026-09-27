@@ -2,6 +2,7 @@
 
 ## Completed
 
+- 2026-09-27: Shared-device enrollment, worker PIN sign-in/lock, rate-limited attempts and worker-attributed QR TAKE/MOVE/RETURN are implemented behind the production Auth gate. Migrations `202609270005`–`007` are applied; rollback-only SQL tests pass anonymous denial, cross-company isolation, location checks, PIN-reset session invalidation and five-failure cooldown. The server-only Supabase service-role key is not configured, so authenticated browser/runtime verification and production worker access are **not** complete. Do not expose that key to the browser or repository.
 - 2026-09-27: Manager-only, company-scoped damage reports and maintenance schedules/service history now have real persistence and tool-history events. Damage reporting and resolution update tool status atomically; service completion advances the next due date. Migration `202609270004` is applied to the linked Supabase project and its rollback-only two-company test passed. Photos, maintenance attachments and automatic reminders remain disabled.
 - 2026-09-27: Owner/admin CSV reports now include damage, maintenance schedules and service history. The limited own-account JSON export includes damage reports and service events attributed to the signed-in user, with per-section size limits; neither export grants company-wide data to a regular requester.
 - 2026-09-27: Damage/maintenance routes and expanded exports are deployed in Worker version `ee8d1de7-f0c6-4510-aee2-8be544975ad6` from commits `0bd05b2` and `ab9268d`. Online guest checks showed both workspace routes redirect to closed signup, all new report endpoints and personal export return 503 while Auth is disabled, and Privacy mentions the new records. Authenticated browser form/export verification remains open.
@@ -128,7 +129,7 @@
 
 - Verify US search demand and competitor facts before changing roadmap routes from noindex to indexable.
 - Verify session expiry/re-entry and production runtime before enabling public signup. Real email confirmation/reset and company/tool/location onboarding passed locally; SQL isolation tests pass, but automated browser E2E tests do not yet exist.
-- Secure shared-device/PIN workflow, including rate limits, device/worker session issuance, lock/switch, and worker-attributed QR mutations. Anonymous QR minimal view and owner/admin rotation are implemented but still need authenticated browser checks.
+- Complete security review and authenticated browser verification of the new shared-device/PIN workflow. Five failed worker PIN attempts trigger a 15-minute cooldown; Turnstile escalation, long-term audit retention and operational device revocation UI remain unfinished. Anonymous QR minimal view and owner/admin rotation still need authenticated browser checks.
 - Complete browser verification of worker creation and set the production worker PIN pepper securely before enabling the Auth launch gate.
 - Complete authenticated browser verification of QR labels and rotation, worker/location management, damage/maintenance forms and exports, and field-worker authentication; then customer-file uploads, import processing, and queue services. Manager TAKE/MOVE/RETURN and damage/maintenance database flows work at code/database level; full field flow is not complete.
 - Privacy request fulfilment/deletion, SEO review automation, authenticated browser tests, and reconciliation of the exact reviewed legal text remain. Public legal pages now describe the verified service without draft placeholders, but the formal commercial registration gate remains closed. Waffo remains the selected provider; payment work is deferred.
@@ -136,6 +137,7 @@
 ## Blockers
 
 - Production Worker Auth gate is intentionally disabled until remaining real browser signup/session tests pass. Supabase CLI is authenticated and linked; no database password was shared in chat.
+- BLOCKED_BY_EXTERNAL_CREDENTIALS: A server-only Supabase service-role key must be installed as a Worker secret for field access; it is absent from local and production configuration. Production worker access remains closed, and the key must never be pasted into chat or committed.
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: Waffo production Merchant ID, private signing key, six published subscription Product IDs and production webhook/store configuration are not in the current environment. Do not enable checkout before verified webhook tests.
 - BLOCKED_BY_EXTERNAL_CREDENTIALS: Cloudflare Queue provisioning for future import jobs.
 - IMPLEMENTATION_BLOCKED: the operator and current contact@ privacy mailbox are confirmed. Provider transfer terms, operational retention cleanup, deletion fulfilment, field-worker PIN/device access and authenticated browser flows are not verified. Do not invent corporate registration details. Legal pages remain noindex but are published without public engineering placeholders.
