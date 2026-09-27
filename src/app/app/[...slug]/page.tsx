@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { WorkspaceShell, type ActivityRecord, type PrivacyRequest, type WorkspaceView } from "../../../components/workspace";
+import { WorkspaceShell, type ActivityRecord, type PrivacyRequest, type SearchResult, type WorkspaceView } from "../../../components/workspace";
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
 
 const views: Record<string, WorkspaceView> = {
   dashboard: { key: "dashboard", title: "Workspace dashboard", summary: "A clear starting point for tool custody, locations, exceptions, and the next handoff.", eyebrow: "DASHBOARD", kind: "dashboard", primaryAction: { label: "Add first tool", href: "/app/tools" } },
+  search: { key: "search", title: "Search workspace", summary: "Find tools, field workers, trucks, warehouses, and job sites in your company.", eyebrow: "SEARCH", kind: "search" },
   tools: { key: "tools", title: "Tools", summary: "Register reusable tools with company-scoped asset codes and current status. Field custody and QR actions follow after security checks.", eyebrow: "TOOLS", kind: "table", columns: ["Tool", "Asset code", "Status", "Updated"], primaryAction: { label: "Add tool", href: "/app/tools/new" }, secondaryAction: { label: "Import list", href: "/app/import" }, emptyTitle: "No tools yet", emptyText: "Add the first reusable tool to begin your company register." },
   workers: { key: "workers", title: "Field workers", summary: "Register workers and manage their field access.", eyebrow: "WORKERS", kind: "table", columns: ["Worker", "Employee code", "Status", "Security"], primaryAction: { label: "Add worker", href: "/app/workers/new" }, secondaryAction: { label: "Field devices", href: "/app/workers/devices" }, emptyTitle: "No workers yet", emptyText: "Add a field worker to prepare for secure tool handoffs." },
   locations: { key: "locations", title: "Locations", summary: "Track warehouses, trucks, job sites, and the places where tools are handed off.", eyebrow: "LOCATIONS", kind: "table", columns: ["Location", "Type", "Address", "Status", "Updated"], primaryAction: { label: "Add location", href: "/app/locations/new" }, emptyTitle: "No locations yet", emptyText: "Add a warehouse, job site, truck, or other place where tools are kept." },
@@ -18,7 +19,7 @@ const views: Record<string, WorkspaceView> = {
   "settings/privacy": { key: "settings/privacy", title: "Privacy", summary: "Request personal-data export, account deletion, and privacy workflow status.", eyebrow: "PRIVACY", kind: "privacy" },
 };
 
-export default async function WorkspacePage({ params, searchParams }: { params: Promise<{ slug: string[] }>; searchParams: Promise<{ notice?: string }> }) {
+export default async function WorkspacePage({ params, searchParams }: { params: Promise<{ slug: string[] }>; searchParams: Promise<{ notice?: string; q?: string | string[] }> }) {
   const path = "/app/" + (await params).slug.join("/");
   const key = path.replace(/^\/app\//, "");
   const view = views[key];
@@ -33,6 +34,10 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
   let privacyRequests: PrivacyRequest[] | null = null;
   let reportAccess = false;
   let reportConnected = false;
+  let searchConnected = false;
+  let searchResults: SearchResult[] | null = null;
+  const queryValue = (await searchParams).q;
+  const searchQuery = typeof queryValue === "string" ? queryValue.trim() : "";
   if (isSupabaseConfigured()) {
     const supabase = await createClient();
     const { data } = await supabase.auth.getClaims();
@@ -41,6 +46,14 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       .select("company_id,role").eq("user_id", data.claims.sub).eq("status", "active").limit(1).maybeSingle();
     if (error) throw new Error("Workspace membership could not be checked.");
     if (!membership) redirect("/app/onboarding");
+    searchConnected = key === "search";
+    if (key === "search" && searchQuery.length >= 2 && searchQuery.length <= 100) {
+      const { data: matches, error: searchError } = await supabase.rpc("search_workspace", {
+        p_company_id: membership.company_id, p_query: searchQuery,
+      });
+      if (searchError) throw new Error("Workspace search could not be loaded.");
+      searchResults = matches ?? [];
+    }
     if (key === "settings/privacy") {
       const { data: requests, error: requestsError } = await supabase.from("privacy_requests")
         .select("id,request_type,status,created_at,completed_at")
@@ -123,7 +136,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       };
     }
   }
-  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} activity={activity} attentionTools={attentionTools} companySettings={companySettings} privacyRequests={privacyRequests} reportAccess={reportAccess} reportConnected={reportConnected} notice={(await searchParams).notice} />;
+  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} activity={activity} attentionTools={attentionTools} companySettings={companySettings} privacyRequests={privacyRequests} reportAccess={reportAccess} reportConnected={reportConnected} searchConnected={searchConnected} searchQuery={searchQuery} searchResults={searchResults} notice={(await searchParams).notice} />;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
