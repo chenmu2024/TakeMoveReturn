@@ -12,7 +12,7 @@
 
 **Decision:** Use Supabase PostgreSQL, Supabase Auth, and PostgreSQL Row Level Security for all tenant data.
 
-**Status:** LOCKED — all 25 tracked migrations are applied to the linked project as of 2026-09-28. Rollback-only SQL checks cover two-company isolation, first-tool capacity, legal acceptance and re-acceptance, QR lookup/rotation, field-session boundaries, device revocation, worker deactivation, company settings, workspace search, atomic bulk return and atomic selected transfer; full authenticated browser workflows remain pending.
+**Status:** LOCKED — tracked migrations are applied to the linked project as of 2026-09-28. Rollback-only SQL checks cover two-company isolation, first-tool capacity, legal acceptance and re-acceptance, QR lookup/rotation, field-session boundaries, device revocation, worker deactivation, company settings, workspace search, atomic bulk return and atomic selected transfer; the new import preflight SQL test requires a local Docker/Podman runtime and has not run. Full authenticated browser workflows remain pending.
 
 ## Branding
 

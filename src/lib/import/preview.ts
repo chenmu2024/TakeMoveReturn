@@ -75,10 +75,12 @@ export function reviewImport(rows: readonly unknown[][], mapping: ImportMapping)
   const seen = new Set<string>();
   const issues: ImportIssue[] = [];
   const preview: { row: number; assetCode: string; name: string; category: string; valid: boolean }[] = [];
+  const normalizedRows: { assetCode: string; name: string; category: string }[] = [];
   data.forEach(({ row, sourceRow }) => {
     const assetCode = cellText(row[mapping.assetCode]).trim();
     const name = cellText(row[mapping.name]).trim();
     const category = mapping.category < 0 ? "" : cellText(row[mapping.category]).trim();
+    normalizedRows.push({ assetCode, name, category });
     const reasons: string[] = [];
     if (!assetCode || assetCode.length > 80) reasons.push("Asset code must be 1–80 characters");
     if (name.length < 2 || name.length > 120) reasons.push("Tool name must be 2–120 characters");
@@ -88,5 +90,5 @@ export function reviewImport(rows: readonly unknown[][], mapping: ImportMapping)
     if (reasons.length) issues.push({ row: sourceRow, assetCode, name, category, reason: reasons.join("; ") });
     if (preview.length < 10) preview.push({ row: sourceRow, assetCode, name, category, valid: !reasons.length });
   });
-  return { total: data.length, valid: data.length - issues.length, issues, preview };
+  return { total: data.length, valid: data.length - issues.length, issues, preview, normalizedRows };
 }

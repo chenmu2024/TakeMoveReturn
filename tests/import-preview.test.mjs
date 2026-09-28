@@ -17,6 +17,7 @@ test("import review maps headers, validates rows and preserves source line numbe
   const result = reviewImport(rows, mapping);
   assert.equal(result.total, 3);
   assert.equal(result.valid, 1);
+  assert.deepEqual(result.normalizedRows[0], { assetCode: "A1", name: "Drill", category: "Power" });
   assert.deepEqual(result.issues.map((issue) => issue.row), [4, 5]);
   assert.match(result.issues[0].reason, /Duplicate/);
   assert.match(result.issues[1].reason, /Tool name/);

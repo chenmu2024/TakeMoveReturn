@@ -32,7 +32,7 @@ Worker PIN hashing requires the private Supabase Edge Function in `supabase/func
 
 Plans are Free, Starter, Growth, and Pro. The locked capacities are 25, 200, 600, and 2,000 active tools; field workers are unlimited on every plan. The visible pricing selector uses `src/config/plans.ts`. No checkout or subscription is created; Waffo Pancake integration is deferred until non-payment functionality is complete and the provider's API and webhook behavior are verified.
 
-Company onboarding, tool and worker registration, location creation, QR labels and worker-attributed field actions are live. Database checks verify tenant isolation and tool movements; the owner also completed one production TAKE → MOVE → RETURN walkthrough. Import has local CSV/XLSX review but not server-side batch processing.
+Company onboarding, tool and worker registration, location creation, QR labels and worker-attributed field actions are live. Database checks verify tenant isolation and tool movements; the owner also completed one production TAKE → MOVE → RETURN walkthrough. Import has local CSV/XLSX review and an authenticated, read-only company duplicate/capacity check, but not server-side batch processing or tool creation.
 
 The owner approved the current Terms and Privacy text for production registration, without claiming external professional review of that exact version. Privacy export and request intake are available; deletion fulfilment remains an operational follow-up. Help and public SEO pages use canonical metadata and index gates. Google Search Console verification remains pending.
 
