@@ -12,7 +12,7 @@ The public site and production registration are available at `https://takemovere
 - OpenNext packages the application for Cloudflare Workers. `wrangler.jsonc` contains the Worker and OpenNext cache binding.
 - Supabase PostgreSQL, Auth, and RLS are the locked data design. Tracked migrations under `supabase/migrations/` are applied to project `xcdhhxyqdlorxztafpee`; rollback-only security and transaction checks are under `supabase/tests/`.
 - R2 is planned for company files with storage quotas; the current R2 binding is only the OpenNext cache bucket.
-- Cloudflare Queues and scheduled jobs are planned for reliable imports, cleanup, and reminders. Neither has a production workflow yet.
+- Cloudflare Queues now runs the tool-import batch consumer. Scheduled cleanup and reminders are not connected yet.
 - Resend-backed transactional Auth email and worker PIN creation are live. Shared-device sessions and QR field actions have passed an authenticated production walkthrough but still need broader automated coverage. The user selected Waffo Pancake for future payment integration, which is intentionally deferred.
 
 ## Local setup
@@ -32,7 +32,7 @@ Worker PIN hashing requires the private Supabase Edge Function in `supabase/func
 
 Plans are Free, Starter, Growth, and Pro. The locked capacities are 25, 200, 600, and 2,000 active tools; field workers are unlimited on every plan. The visible pricing selector uses `src/config/plans.ts`. No checkout or subscription is created; Waffo Pancake integration is deferred until non-payment functionality is complete and the provider's API and webhook behavior are verified.
 
-Company onboarding, tool and worker registration, location creation, QR labels and worker-attributed field actions are live. Database checks verify tenant isolation and tool movements; the owner also completed one production TAKE → MOVE → RETURN walkthrough. Import has local CSV/XLSX review and an authenticated, read-only company duplicate/capacity check, but not server-side batch processing or tool creation.
+Company onboarding, tool and worker registration, location creation, QR labels and worker-attributed field actions are live. Database checks verify tenant isolation and tool movements; the owner also completed one production TAKE → MOVE → RETURN walkthrough. Import now has CSV/XLSX review, company duplicate/capacity checks, and a deployed Queue-backed 100-row batch workflow with progress and error-row export. An authenticated production import and the rollback-only database test have not yet been run.
 
 The owner approved the current Terms and Privacy text for production registration, without claiming external professional review of that exact version. Privacy export and request intake are available; deletion fulfilment remains an operational follow-up. Help and public SEO pages use canonical metadata and index gates. Google Search Console verification remains pending.
 

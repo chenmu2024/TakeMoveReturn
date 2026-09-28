@@ -3,7 +3,7 @@
   "name": "takemovereturn",
   "workers_dev": true,
   "preview_urls": true,
-  "main": ".open-next/worker.js",
+  "main": "worker-entry.mjs",
   "compatibility_date": "2026-09-23",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
@@ -17,5 +17,9 @@
     { "pattern": "www.takemovereturn.com", "custom_domain": true }
   ],
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "takemovereturn" }],
+  "queues": {
+    "producers": [{ "binding": "IMPORT_QUEUE", "queue": "takemovereturn-import" }],
+    "consumers": [{ "queue": "takemovereturn-import", "max_batch_size": 1, "max_batch_timeout": 5, "max_retries": 5 }]
+  },
   "r2_buckets": [{ "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "takemovereturn-opennext-cache" }]
 }

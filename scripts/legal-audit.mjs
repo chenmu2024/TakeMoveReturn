@@ -26,6 +26,7 @@ const checks = [
   ["legal noindex", ["privacy", "terms", "dpa", "subprocessors", "business-information"].every((path) => route.includes(`"${path}"`)) && route.includes("index: false")],
   ["privacy/terms/DPA content", ["privacy:", "terms:", "dpa:"].every((marker) => documents.includes(marker))],
   ["active provider register", ["Cloudflare", "Supabase", "Resend"].every((name) => providers.includes(`name: "${name}"`))],
+  ["import processing disclosure", providers.includes('service: "Workers, Queues and R2"') && documents.includes("Cloudflare Queues carries job and batch identifiers") && !documents.includes("Cloudflare Queues, Turnstile")],
   ["no false organization schema", !schema.includes('"@type": "Organization"')],
   ["confirmed individual operator", config.includes('operatorType: "individual"') && config.includes('registeredBusinessName: null')],
   ["public content has no engineering placeholders", !/\b(?:DRAFT|TBD|LEGAL REVIEW REQUIRED|FAKE ADDRESS)\b/i.test(route + documents)],
