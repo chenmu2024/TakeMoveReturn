@@ -86,11 +86,11 @@ export async function recordFieldMovement(form: FormData) {
     locationId: form.get("locationId"), notes: form.get("notes") ?? "" });
   if (!input.success) redirect("/field?notice=invalid");
   const session = await fieldWorker();
-  if (!session) redirect(`/q/${input.data.token}?notice=session`);
+  if (!session) redirect(`/q/${input.data.token}?notice=session#movement-status`);
   const { error } = await fieldDb().rpc("record_field_tool_transaction", {
     p_session_hash: session.hash, p_device_hash: session.device.hash,
     p_qr_token: input.data.token, p_type: input.data.type,
     p_location_id: input.data.locationId, p_notes: input.data.notes || null,
   });
-  redirect(`/q/${input.data.token}?notice=${error ? "state" : "saved"}`);
+  redirect(`/q/${input.data.token}?notice=${error ? "state" : `${input.data.type}-saved`}#movement-status`);
 }
