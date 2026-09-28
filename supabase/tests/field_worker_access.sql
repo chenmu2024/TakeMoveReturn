@@ -11,6 +11,7 @@ insert into public.workers(id,company_id,name,pin_hash,pin_salt) values
   ('66666666-1112-4112-8112-666666666666','66666666-aaaa-4aaa-8aaa-666666666666','Field worker B','hash','salt');
 insert into public.locations(id,company_id,type,name) values
   ('66666666-2222-4222-8222-666666666666','66666666-aaaa-4aaa-8aaa-666666666666','warehouse','A warehouse'),
+  ('66666666-2223-4223-8223-666666666666','66666666-aaaa-4aaa-8aaa-666666666666','job_site','A job site'),
   ('77777777-2222-4222-8222-777777777777','77777777-bbbb-4bbb-8bbb-777777777777','warehouse','B warehouse');
 insert into public.tools(id,company_id,asset_code,qr_token,name) values
   ('66666666-3333-4333-8333-666666666666','66666666-aaaa-4aaa-8aaa-666666666666','A-1',repeat('a',64),'A tool'),
@@ -56,6 +57,12 @@ begin
   if (select current_worker_id from public.tools where qr_token=repeat('a',64))
     <> '66666666-1111-4111-8111-666666666666' then raise exception 'TAKE not attributed'; end if;
   begin
+    perform public.record_field_tool_transaction(repeat('s',64),repeat('d',64),repeat('a',64),
+      'transfer','66666666-2222-4222-8222-666666666666',null);
+    raise exception 'No-op MOVE created a transaction';
+  exception when others then if SQLERRM <> 'Move requires a different worker or location' then raise; end if;
+  end;
+  begin
     perform public.record_field_tool_transaction(repeat('s',64),repeat('d',64),repeat('b',64),
       'checkout','66666666-2222-4222-8222-666666666666',null);
     raise exception 'Cross-company QR movement succeeded';
@@ -78,6 +85,16 @@ begin
   if (select performed_by_worker_id from public.tool_transactions where transaction_type='transfer'
       and tool_id='66666666-3333-4333-8333-666666666666' order by created_at desc limit 1)
     <> '66666666-1112-4112-8112-666666666666' then raise exception 'MOVE audit names wrong worker'; end if;
+  perform public.record_field_tool_transaction(repeat('u',64),repeat('d',64),repeat('a',64),
+    'transfer','66666666-2223-4223-8223-666666666666',null);
+  if (select current_location_id from public.tools where qr_token=repeat('a',64))
+    <> '66666666-2223-4223-8223-666666666666' then raise exception 'MOVE did not change location'; end if;
+  begin
+    perform public.record_field_tool_transaction(repeat('u',64),repeat('d',64),repeat('a',64),
+      'transfer','66666666-2223-4223-8223-666666666666',null);
+    raise exception 'Repeat MOVE at same location created a transaction';
+  exception when others then if SQLERRM <> 'Move requires a different worker or location' then raise; end if;
+  end;
   begin
     perform public.record_field_tool_transaction(repeat('s',64),repeat('d',64),repeat('a',64),
       'return','66666666-2222-4222-8222-666666666666',null);
@@ -86,6 +103,12 @@ begin
   end;
   perform public.record_field_tool_transaction(repeat('u',64),repeat('d',64),repeat('a',64),
     'return','66666666-2222-4222-8222-666666666666',null);
+  begin
+    perform public.record_field_tool_transaction(repeat('u',64),repeat('d',64),repeat('a',64),
+      'transfer','66666666-2223-4223-8223-666666666666',null);
+    raise exception 'MOVE checked out an available tool';
+  exception when others then if SQLERRM <> 'Tool state changed or action not permitted' then raise; end if;
+  end;
   update public.workers set auth_version=auth_version+1 where id='66666666-1111-4111-8111-666666666666';
   begin
     perform public.record_field_tool_transaction(repeat('s',64),repeat('d',64),repeat('a',64),
