@@ -36,7 +36,7 @@
 
 **Decision:** Waffo Pancake is the sole selected provider for production subscriptions. Waffo.com Limited is Merchant of Record for applicable transactions. Work on billing now, but do not enable paid actions before production products, checkout API, signatures and webhook behavior are verified.
 
-**Status:** LOCKED — integration not yet complete.
+**Status:** LOCKED — production checkout is enabled at the owner's direction on 2026-09-28. A real payment was reported by the owner, but signed Webhook delivery and automatic entitlement for that payment have not yet been independently verified.
 
 ## Legal identity and policy publication
 
