@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 
 const route = readFileSync(new URL("../src/app/[...slug]/page.tsx", import.meta.url), "utf8");
 const documents = readFileSync(new URL("../src/data/legal-documents.ts", import.meta.url), "utf8");
+const help = readFileSync(new URL("../src/data/help-articles.ts", import.meta.url), "utf8");
 const providers = readFileSync(new URL("../src/data/subprocessors.ts", import.meta.url), "utf8");
 const footer = readFileSync(new URL("../src/components/marketing.tsx", import.meta.url), "utf8");
 const schema = readFileSync(new URL("../src/components/seo-schema.tsx", import.meta.url), "utf8");
@@ -28,6 +29,8 @@ const checks = [
   ["no false organization schema", !schema.includes('"@type": "Organization"')],
   ["confirmed individual operator", config.includes('operatorType: "individual"') && config.includes('registeredBusinessName: null')],
   ["public content has no engineering placeholders", !/\b(?:DRAFT|TBD|LEGAL REVIEW REQUIRED|FAKE ADDRESS)\b/i.test(route + documents)],
+  ["help and about reflect open registration", route.includes("Registration and field handoffs are open.") && !route.includes("public signup opens") && !route.includes("Public registration and complete field-worker QR actions are not yet open")],
+  ["help does not call published legal pages drafts", !help.includes("Privacy and Terms pages are drafts") && !help.includes("Privacy draft")],
   ["internal review is separate", review.includes('method: "ai-assisted-internal-review"') && review.includes('externalProfessionalReview: "not-obtained"')],
   ["unselected signup consent", signupForm.includes('name="legal_consent"') && signupForm.includes('type="checkbox"') && !signupForm.includes('defaultChecked')],
   ["signup consent enforced on server", signup.includes('form.get("legal_consent") !== "yes"')],
