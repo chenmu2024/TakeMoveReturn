@@ -32,18 +32,33 @@ export async function POST(request: Request) {
   if (membershipError) return new Response("Membership could not be checked", { status: 503 });
   if (!membership) return new Response("Owner access required", { status: 403 });
 
+  const { data: intentId, error: intentError } = await supabase.rpc("create_billing_checkout_intent", {
+    p_company_id: membership.company_id,
+    p_plan: plan,
+    p_interval: interval,
+    p_product_id: productId,
+  });
+  if (intentError || typeof intentId !== "string") {
+    return new Response("Checkout is unavailable for this workspace. Check your current subscription and terms acceptance.", { status: 409 });
+  }
+
   try {
     const checkout = await client.checkout.createSession({
       productId,
       currency: "USD",
       buyerEmail: auth.user.email,
-      successUrl: new URL("/app/settings/billing", siteConfig.siteUrl).toString(),
-      metadata: { companyId: membership.company_id, userId: auth.user.id, plan, interval },
-    });
+      successUrl: new URL("/app/settings/billing?notice=payment-pending", siteConfig.siteUrl).toString(),
+      metadata: { checkoutIntentId: intentId },
+      orderMerchantExternalId: intentId,
+    }, { idempotencyKey: intentId });
     const destination = new URL(checkout.checkoutUrl);
     if (destination.protocol !== "https:" || (destination.hostname !== "waffo.ai" && !destination.hostname.endsWith(".waffo.ai"))) {
       return new Response("Invalid checkout destination", { status: 502 });
     }
+    const { error: startedError } = await supabase.rpc("mark_billing_checkout_started", {
+      p_intent_id: intentId, p_session_id: checkout.sessionId,
+    });
+    if (startedError) return new Response("Checkout state could not be saved", { status: 503 });
     return Response.redirect(destination.toString(), 303);
   } catch {
     return new Response("Checkout could not be started", { status: 502 });

@@ -10,6 +10,8 @@
   "vars": {
     "NEXT_PUBLIC_SITE_URL": "https://takemovereturn.com",
     "SUPABASE_AUTH_ENABLED": "true",
+    "WAFFO_MERCHANT_ID": "MER_1nlEgg0UD2PNj3UGzHWgUm",
+    "WAFFO_STORE_ID": "STO_41dTjcJJB7c2wSmzUpWqQr",
     "WAFFO_BILLING_ENABLED": "false"
   },
   "routes": [

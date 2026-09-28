@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { WorkspaceShell, type ActivityRecord, type PrivacyRequest, type SearchResult, type WorkspaceView } from "../../../components/workspace";
+import { WorkspaceShell, type ActivityRecord, type BillingState, type PrivacyRequest, type SearchResult, type WorkspaceView } from "../../../components/workspace";
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
 
 const views: Record<string, WorkspaceView> = {
@@ -31,6 +31,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
   let activity: ActivityRecord[] | null = null;
   let attentionTools = null;
   let companySettings = null;
+  let billing: BillingState | null = null;
   let privacyRequests: PrivacyRequest[] | null = null;
   let reportAccess = false;
   let reportConnected = false;
@@ -68,6 +69,20 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
         .select("name,plan,timezone").eq("id", membership.company_id).single();
       if (companyError) throw new Error("Company settings could not be loaded.");
       companySettings = { ...company, role: membership.role };
+    }
+    if (key === "settings/billing") {
+      const [{ data: company, error: companyError }, { data: subscription, error: subscriptionError }] = await Promise.all([
+        supabase.from("companies").select("plan").eq("id", membership.company_id).single(),
+        supabase.from("billing_subscriptions").select("status,billing_interval,current_period_end")
+          .eq("company_id", membership.company_id).maybeSingle(),
+      ]);
+      if (companyError || subscriptionError) throw new Error("Billing state could not be loaded.");
+      billing = {
+        plan: company.plan as BillingState["plan"], role: membership.role,
+        status: subscription?.status ?? null, billingInterval: subscription?.billing_interval ?? null,
+        periodEnd: subscription?.current_period_end ?? null,
+        enabled: process.env.WAFFO_BILLING_ENABLED === "true",
+      };
     }
     if (key === "tools") {
       const { data: toolRows, error: toolError } = await supabase.from("tools")
@@ -136,7 +151,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       };
     }
   }
-  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} activity={activity} attentionTools={attentionTools} companySettings={companySettings} privacyRequests={privacyRequests} reportAccess={reportAccess} reportConnected={reportConnected} searchConnected={searchConnected} searchQuery={searchQuery} searchResults={searchResults} notice={(await searchParams).notice} />;
+  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} activity={activity} attentionTools={attentionTools} companySettings={companySettings} billing={billing} privacyRequests={privacyRequests} reportAccess={reportAccess} reportConnected={reportConnected} searchConnected={searchConnected} searchQuery={searchQuery} searchResults={searchResults} notice={(await searchParams).notice} />;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {

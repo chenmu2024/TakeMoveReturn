@@ -28,14 +28,14 @@ test("retention targets are explicit", () => {
   assert.equal(retention.deletedAccountActiveDataTargetDays, 30);
 });
 
-test("Waffo product is selected only from server configuration", () => {
-  const previous = process.env.WAFFO_PRODUCT_STARTER_MONTHLY;
-  process.env.WAFFO_PRODUCT_STARTER_MONTHLY = "test-starter-month";
-  try {
-    assert.equal(waffoProductId("starter", "month"), "test-starter-month");
-    assert.equal(waffoProductId("starter", "year"), null);
-  } finally {
-    if (previous === undefined) delete process.env.WAFFO_PRODUCT_STARTER_MONTHLY;
-    else process.env.WAFFO_PRODUCT_STARTER_MONTHLY = previous;
-  }
+test("Waffo product IDs match the six approved production products", () => {
+  assert.deepEqual([
+    waffoProductId("starter", "month"), waffoProductId("starter", "year"),
+    waffoProductId("growth", "month"), waffoProductId("growth", "year"),
+    waffoProductId("pro", "month"), waffoProductId("pro", "year"),
+  ], [
+    "PROD_6r7BgQwdISjVP4rSXOSKM2", "PROD_6q1uR35uOFyVYKDg4ypBfn",
+    "PROD_4nt9dFLFaZPJleMoIB7Noi", "PROD_3TsrSqcc4LaDFNgUj2xPLG",
+    "PROD_47MCf9ZEwTRsubJ4BKepj1", "PROD_52Zme9Q6c2FruTBXOxtsNq",
+  ]);
 });
