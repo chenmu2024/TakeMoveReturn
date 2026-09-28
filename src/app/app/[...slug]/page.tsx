@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { WorkspaceShell, type ActivityRecord, type BillingState, type PrivacyRequest, type SearchResult, type WorkspaceView } from "../../../components/workspace";
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
+import "../service.css";
 
 const views: Record<string, WorkspaceView> = {
   dashboard: { key: "dashboard", title: "Workspace dashboard", summary: "A clear starting point for tool custody, locations, exceptions, and the next handoff.", eyebrow: "DASHBOARD", kind: "dashboard", primaryAction: { label: "Add first tool", href: "/app/tools" } },
