@@ -12,7 +12,8 @@
     "SUPABASE_AUTH_ENABLED": "true",
     "WAFFO_MERCHANT_ID": "MER_1nlEgg0UD2PNj3UGzHWgUm",
     "WAFFO_STORE_ID": "STO_41dTjcJJB7c2wSmzUpWqQr",
-    "WAFFO_BILLING_ENABLED": "true"
+    "WAFFO_BILLING_ENABLED": "true",
+    "CUSTOMER_FILES_ENABLED": "false"
   },
   "routes": [
     { "pattern": "takemovereturn.com/*", "zone_name": "takemovereturn.com" },

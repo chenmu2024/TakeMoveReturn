@@ -10,7 +10,7 @@ This section supersedes older status wording below when the two conflict. Histor
 - Billing lifecycle code now supports owner-requested plan changes, billing-interval changes, cancellation and reactivation. Higher-capacity upgrades are submitted as immediate Waffo plan changes; downgrades and interval changes are submitted for the next period. Workspace entitlements change only after accepted signed Waffo events. Production provider verification of these flows is still required.
 - Waffo is active and disclosed in the provider register. Stripe is not an active provider.
 - CSV/XLSX import uses server-side revalidation, Supabase-staged jobs and Cloudflare Queue-backed 100-row batches.
-- R2 is used for the OpenNext cache only. Customer tool photos, damage photos, maintenance attachments and other customer-file uploads are not enabled.
+- R2 is active for the OpenNext cache. A separate customer-file layer is implemented in code behind `CUSTOMER_FILES_ENABLED=false`: private metadata/RLS, plan quota reservations, tool photos, damage photos, maintenance attachments and authenticated read/delete routes. The dedicated `takemovereturn-files` bucket/binding and production migration/verification are still pending.
 - Pricing may show plan storage allowances, but the UI must explicitly state that customer-file uploads are not yet available.
 - Shared-device worker PIN sign-in and QR TAKE → MOVE → RETURN have passed a production walkthrough; broader automated browser E2E is still missing.
 - Tenant RLS and database security tests exist, but GitHub CI does not yet run the full Supabase rollback-only suite.
@@ -25,7 +25,7 @@ This section supersedes older status wording below when the two conflict. Histor
 1. Apply the billing-lifecycle migration, then verify a real Waffo activation webhook through `billing_subscriptions` and `companies.plan`.
 2. Verify plan-changed, plan-change-scheduled, plan-change-failed, renewal, past-due, recovery, canceling, uncanceled and canceled events against the production Waffo store.
 3. Apply and verify the workspace-member migration, Supabase invitation delivery, invitation acceptance, role changes, and deactivate/reactivate flows in production.
-4. Implement customer-file upload/storage quota/deletion before treating storage as an active file feature.
+4. Provision the dedicated `takemovereturn-files` R2 bucket and `CUSTOMER_FILES_R2_BUCKET` binding, apply `202609290004_customer_files.sql`, run the rollback-only storage test, then enable and production-verify customer-file upload/read/delete/quota.
 5. Complete privacy deletion/rectification/restriction fulfilment and automated retention cleanup.
 6. Add credentialed browser E2E and run the full Supabase rollback-only security suite in CI. A source-level DB audit, local production runtime smoke, and baseline public-route load smoke now run in CI, but they do not replace those tests.
 7. Add production-scale load testing and Lighthouse/Core Web Vitals coverage; the current 100-request local load smoke is only a regression baseline.
@@ -34,9 +34,12 @@ This section supersedes older status wording below when the two conflict. Histor
 
 ### Next exact task
 
-Pass CI for the billing-lifecycle branch. Before deploying that code, apply migration `202609290002_billing_lifecycle.sql` to the linked Supabase project. Then deploy the Worker and verify one real owner flow for plan change, cancel/reactivate, and signed webhook-to-entitlement reconciliation. Do not describe billing lifecycle as production-verified until those provider events are observed.
+Apply production migrations `202609290002_billing_lifecycle.sql` and `202609290003_workspace_member_management.sql` to the linked Supabase project, deploy the current main Worker, and verify signed Waffo lifecycle reconciliation plus one invitation/role/deactivate-reactivate flow. After those production gates pass, provision the separate customer-file R2 bucket/binding, apply `202609290004_customer_files.sql`, run its rollback-only test, set `CUSTOMER_FILES_ENABLED=true`, and verify upload/read/delete/quota before describing file storage as active.
 
 ## Completed
+
+- 2026-09-29: Implemented the code-side customer-file storage layer behind a disabled production gate. Added a separate metadata/RLS/quota migration, 10 MB per-file cap, JPEG/PNG/WebP and maintenance-PDF allowlists, file-signature sniffing, authenticated private download/delete routes, tool/damage/maintenance attachment UI, real plan usage wiring, rollback-only SQL coverage, and a dedicated storage activation/rollback runbook. The existing OpenNext cache bucket remains separate. Production bucket provisioning, migration application, binding, enablement and browser verification remain pending.
+
 
 - 2026-09-29: Implemented workspace management seats in code. Owners can create Admin/Manager invitations, pending invitations reserve plan capacity, invitees must authenticate with the invited email and accept current legal terms, owners can revoke invitations, change Admin/Manager roles, and deactivate/reactivate non-owner members without deleting history. Access changes are audited, Free/Starter/Growth/Pro admin limits are enforced transactionally in PostgreSQL, owner access cannot be removed through this flow, and ambiguous multi-workspace invitations are rejected until workspace switching exists. Production migration and email/browser verification remain pending.
 

@@ -199,6 +199,7 @@ function BillingContent({ billing, notice }: { billing: BillingState | null; not
   const storageUsage = billing ? billing.storageBytes < 1024 ** 2 ? `${Math.round(billing.storageBytes / 1024)} KB` : `${(billing.storageBytes / (1024 ** 2)).toFixed(1)} MB` : "—";
   const pendingChange = billing?.pendingPlanChange ?? null;
   const paidOwner = Boolean(billing && billing.role === "owner" && billing.plan !== "free");
+  const fileStorageActive = process.env.CUSTOMER_FILES_ENABLED === "true";
 
   const noticeText = notice === "payment-pending"
     ? "Checkout returned successfully. Subscription activation is pending a valid signed Waffo event."
@@ -232,7 +233,7 @@ function BillingContent({ billing, notice }: { billing: BillingState | null; not
         <div className="workspace-plan-line"><span>Active tools</span><strong>{billing && current ? `${billing.activeTools.toLocaleString("en-US")} / ${current.toolLimit.toLocaleString("en-US")}` : "—"}</strong></div>
         <div className="workspace-plan-line"><span>Administrators</span><strong>{billing && current ? `${billing.admins} / ${current.adminLimit}` : "—"}</strong></div>
         <div className="workspace-plan-line"><span>Storage allowance</span><strong>{billing && current ? `${storageUsage} / ${current.id === "free" ? `${current.storageLimitBytes / (1024 ** 2)} MB` : `${current.storageLimitBytes / (1024 ** 3)} GB`}` : "—"}</strong></div>
-        <p className="workspace-plan-note">Customer-file uploads are not yet enabled. Tool records, QR tracking and imports do not depend on file storage.</p>
+        {fileStorageActive ? <p className="workspace-plan-note">Private tool photos, damage photos, and maintenance attachments are enabled and count against this allowance.</p> : <p className="workspace-plan-note">Customer-file uploads are staged but not enabled until the dedicated R2 bucket, database migration, and production verification are complete. Tool records, QR tracking and imports do not depend on file storage.</p>}
         <div className="workspace-plan-line"><span>Billing interval</span><strong>{billing?.billingInterval === "year" ? "Annual" : billing?.billingInterval === "month" ? "Monthly" : "—"}</strong></div>
         {billing?.periodEnd && <div className="workspace-plan-line"><span>Current period ends</span><strong>{billing.periodEnd.slice(0, 10)}</strong></div>}
         {billing?.status === "canceling" && <p>Cancellation is scheduled. Access remains until the current period ends unless Waffo reports otherwise.</p>}
@@ -255,7 +256,7 @@ function BillingContent({ billing, notice }: { billing: BillingState | null; not
         <h2>Choose capacity by tools, not people.</h2>
         <p>Field workers are unlimited on every plan. Prices are charged in USD.</p>
 
-        {billing?.enabled && billing.role === "owner" && billing.plan === "free" ? <div className="workspace-billing-options">{(["starter", "growth", "pro"] as const).map((plan) => <article key={plan} className="workspace-billing-option"><header><h3>{plans[plan].name}</h3><span>{plans[plan].toolLimit.toLocaleString("en-US")} tools</span></header><div className="workspace-billing-prices"><p><strong>${plans[plan].monthlyPrice}</strong><span> / month</span></p><p>${plans[plan].annualPrice} / year <small>Save 2 months</small></p></div><ul><li>{plans[plan].toolLimit.toLocaleString("en-US")} active tools</li><li>{plans[plan].adminLimit} administrators</li><li>Unlimited field workers</li><li>{plans[plan].storageLimitBytes / (1024 ** 3)} GB storage allowance*</li></ul><form method="post" action="/api/billing/checkout"><input type="hidden" name="plan" value={plan} /><label htmlFor={`billing-interval-${plan}`}>Billing interval</label><select id={`billing-interval-${plan}`} name="billing_interval" defaultValue="month"><option value="month">Monthly</option><option value="year">Annual · Save 2 months</option></select><button className="workspace-button" type="submit">Upgrade to {plans[plan].name}</button></form></article>)}</div>
+        {billing?.enabled && billing.role === "owner" && billing.plan === "free" ? <div className="workspace-billing-options">{(["starter", "growth", "pro"] as const).map((plan) => <article key={plan} className="workspace-billing-option"><header><h3>{plans[plan].name}</h3><span>{plans[plan].toolLimit.toLocaleString("en-US")} tools</span></header><div className="workspace-billing-prices"><p><strong>${plans[plan].monthlyPrice}</strong><span> / month</span></p><p>${plans[plan].annualPrice} / year <small>Save 2 months</small></p></div><ul><li>{plans[plan].toolLimit.toLocaleString("en-US")} active tools</li><li>{plans[plan].adminLimit} administrators</li><li>Unlimited field workers</li><li>{plans[plan].storageLimitBytes / (1024 ** 3)} GB {fileStorageActive ? "private file storage" : "storage allowance*"}</li></ul><form method="post" action="/api/billing/checkout"><input type="hidden" name="plan" value={plan} /><label htmlFor={`billing-interval-${plan}`}>Billing interval</label><select id={`billing-interval-${plan}`} name="billing_interval" defaultValue="month"><option value="month">Monthly</option><option value="year">Annual · Save 2 months</option></select><button className="workspace-button" type="submit">Upgrade to {plans[plan].name}</button></form></article>)}</div>
         : billing?.enabled && paidOwner ? <div className="workspace-billing-management">
           <h3>Change subscription</h3>
           <p>Upgrades to a higher capacity are submitted as immediate changes. Downgrades and billing-interval switches are submitted for the next billing period. Your current limits stay authoritative until a signed Waffo webhook confirms the change.</p>
@@ -270,7 +271,7 @@ function BillingContent({ billing, notice }: { billing: BillingState | null; not
         : billing?.plan !== "free" ? <p>Only the workspace owner can manage the paid subscription.</p>
         : <p>Only the workspace owner can start a paid subscription when checkout is open.</p>}
 
-        <p className="workspace-plan-note">* Customer-file uploads are not yet enabled. Storage allowances are reserved for that future capability.</p>
+        {fileStorageActive ? <p className="workspace-plan-note">Private customer files are limited by the workspace plan and are served only through authenticated file routes.</p> : <p className="workspace-plan-note">* Customer-file storage code is staged behind a production gate. The existing OpenNext R2 cache is separate and does not count against customer storage.</p>}
         <div className="workspace-pricing-link"><Link className="workspace-button workspace-button-quiet" href="/pricing">Review public pricing <IconArrowRight size={16} aria-hidden="true" /></Link></div>
       </article>
     </section>

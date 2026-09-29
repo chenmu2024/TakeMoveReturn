@@ -28,3 +28,17 @@
 .pricing-storage-note{max-width:820px;margin:-50px auto 72px;color:var(--ink-soft);font-size:.82rem;line-height:1.55;text-align:center}.workspace-billing-notices{margin-bottom:13px}.workspace-billing-notices:empty{display:none}.workspace-plan-note{margin:12px 0 0!important;color:#7c8982!important;font-size:.74rem!important;line-height:1.5!important}@media(max-width:560px){.pricing-storage-note{margin-top:-38px;margin-bottom:55px;text-align:left}}
 
 .workspace-over-limit{margin-bottom:13px;padding:18px 20px;border:1px solid #dc9b76;border-radius:9px;background:#fff4ec;color:#70422f}.workspace-over-limit>div:first-child{display:grid;gap:4px}.workspace-over-limit strong{font-size:.88rem}.workspace-over-limit span{font-size:.77rem;line-height:1.45}.workspace-over-limit-usage{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}.workspace-over-limit-usage span{padding:7px 9px;border:1px solid #e7c8b5;border-radius:6px;background:#fff}.workspace-over-limit-usage span.over{border-color:#d17b5d;color:#923f29;font-weight:750}@media(max-width:640px){.workspace-over-limit{padding:16px}.workspace-over-limit-usage{display:grid}}
+
+.customer-files{margin-top:1rem;padding:1rem;border:1px solid rgba(17,24,39,.12);border-radius:14px;background:rgba(255,255,255,.7)}
+.customer-files.compact{padding:.75rem;margin-top:.75rem}
+.customer-files-heading{display:flex;justify-content:space-between;gap:1rem;align-items:baseline}
+.customer-files-heading span,.customer-file-list small,.customer-files-empty{font-size:.82rem;color:#667085}
+.customer-file-list{list-style:none;padding:0;margin:.75rem 0;display:grid;gap:.5rem}
+.customer-file-list li{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.65rem .75rem;border:1px solid rgba(17,24,39,.09);border-radius:10px;background:#fff}
+.customer-file-list li>div{display:grid;gap:.15rem;min-width:0}
+.customer-file-list a{font-weight:700;overflow-wrap:anywhere}
+.customer-file-list button{background:transparent;border:1px solid rgba(17,24,39,.16);border-radius:8px;padding:.4rem .65rem;cursor:pointer}
+.customer-file-upload{display:flex;flex-wrap:wrap;gap:.65rem;align-items:center;margin-top:.75rem}
+.customer-file-upload input[type=file]{max-width:100%}
+.customer-file-upload button{border:0;border-radius:9px;padding:.55rem .85rem;font-weight:800;cursor:pointer}
+@media(max-width:640px){.customer-file-list li{align-items:flex-start;flex-direction:column}.customer-files-heading{align-items:flex-start;flex-direction:column;gap:.25rem}}

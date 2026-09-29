@@ -45,3 +45,11 @@
 **Status:** LOCKED identity and payment-provider decisions. On 2026-09-28 the owner approved the current legal text for use, with 2026-09-28 as its effective date; this is owner approval, not a claim of external professional review. The owner authorized production registration after the initial signup/login evidence. Operational privacy and authenticated field-flow checks remain open.
 
 **2026-09-27 clarification:** `privacy@takemovereturn.com` is not configured. Use the already verified `contact@takemovereturn.com` for privacy correspondence. A limited signed-in account export and request queue are implemented, but deletion fulfilment and legal transfer review remain outstanding.
+
+## Customer file storage architecture
+
+**Decision:** Keep customer files in a dedicated private Cloudflare R2 bucket that is separate from the OpenNext incremental-cache bucket. Store tenant-scoped metadata and quota state in Supabase; serve files only through authenticated application routes.
+
+**Status:** LOCKED FOR IMPLEMENTATION — code is staged behind `CUSTOMER_FILES_ENABLED=false`. Production activation requires the `takemovereturn-files` bucket, `CUSTOMER_FILES_R2_BUCKET` binding, migration `202609290004_customer_files.sql`, rollback-only DB test, full release suite, and production upload/read/delete/quota verification.
+
+**Limits:** 10 MB per file. Tool and damage evidence allow JPEG/PNG/WebP; maintenance also allows PDF. Server validation checks both declared MIME type and file signature. Plan quotas remain 100 MB / 2 GB / 10 GB / 25 GB for Free / Starter / Growth / Pro.
