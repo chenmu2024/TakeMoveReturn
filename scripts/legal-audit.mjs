@@ -28,6 +28,7 @@ const checks = [
   ["active provider register", ["Cloudflare", "Supabase", "Resend", "Waffo"].every((name) => providers.includes(`name: "${name}"`))],
   ["import processing disclosure", providers.includes('service: "Workers, Queues and R2"') && documents.includes("Cloudflare Queues carries job and batch identifiers") && !documents.includes("Cloudflare Queues, Turnstile")],
   ["active Waffo billing disclosure", providers.includes('name: "Waffo"') && providers.includes('status: "active"') && documents.includes("Paid checkout is available through Waffo Pancake") && !documents.includes("Paid checkout is disabled") && !documents.includes("Paid checkout is not live") && !documents.includes("No paid purchases can currently be made")],
+  ["subscription lifecycle disclosure", documents.includes("can request plan changes, billing-interval changes, cancellation, or reactivation") && documents.includes("accepted signed Waffo subscription events as authoritative") && !documents.includes("self-service upgrade, downgrade and cancellation are not yet available")],
   ["no false organization schema", !schema.includes('"@type": "Organization"')],
   ["confirmed individual operator", config.includes('operatorType: "individual"') && config.includes('registeredBusinessName: null')],
   ["public content has no engineering placeholders", !/\b(?:DRAFT|TBD|LEGAL REVIEW REQUIRED|FAKE ADDRESS)\b/i.test(route + documents)],

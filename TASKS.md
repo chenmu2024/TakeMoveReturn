@@ -7,7 +7,7 @@ This section supersedes older status wording below when the two conflict. Histor
 - Public registration is open.
 - New paid checkout is enabled for eligible workspace owners through Waffo Pancake.
 - The owner reported a real payment, but a delivered, signed production webhook that automatically updates the workspace entitlement has **not yet been independently verified end-to-end**.
-- Existing paid subscriptions do not yet have self-service upgrade, downgrade or cancellation in the product. Billing support is the operational path for those changes.
+- Billing lifecycle code now supports owner-requested plan changes, billing-interval changes, cancellation and reactivation. Higher-capacity upgrades are submitted as immediate Waffo plan changes; downgrades and interval changes are submitted for the next period. Workspace entitlements change only after accepted signed Waffo events. Production provider verification of these flows is still required.
 - Waffo is active and disclosed in the provider register. Stripe is not an active provider.
 - CSV/XLSX import uses server-side revalidation, Supabase-staged jobs and Cloudflare Queue-backed 100-row batches.
 - R2 is used for the OpenNext cache only. Customer tool photos, damage photos, maintenance attachments and other customer-file uploads are not enabled.
@@ -22,22 +22,23 @@ This section supersedes older status wording below when the two conflict. Histor
 
 ### Current blockers / remaining work
 
-1. Verify a real Waffo signed webhook through `billing_subscriptions` and `companies.plan`.
-2. Verify renewal, past-due, recovery, canceling and canceled lifecycle events.
-3. Implement or formally specify self-service/operational upgrade, downgrade and cancellation.
-4. Implement membership/admin management and enforce admin limits on those mutations.
-5. Implement customer-file upload/storage quota/deletion before treating storage as an active file feature.
-6. Complete privacy deletion/rectification/restriction fulfilment and automated retention cleanup.
-7. Add credentialed browser E2E and run the full Supabase rollback-only security suite in CI. A source-level DB audit, local production runtime smoke, and baseline public-route load smoke now run in CI, but they do not replace those tests.
-8. Add production-scale load testing and Lighthouse/Core Web Vitals coverage; the current 100-request local load smoke is only a regression baseline.
-9. Finish remaining authenticated production browser verification.
-10. Complete US keyword/SERP verification before indexing pending SEO pages.
+1. Apply the billing-lifecycle migration, then verify a real Waffo activation webhook through `billing_subscriptions` and `companies.plan`.
+2. Verify plan-changed, plan-change-scheduled, plan-change-failed, renewal, past-due, recovery, canceling, uncanceled and canceled events against the production Waffo store.
+3. Implement membership/admin management and enforce admin limits on those mutations.
+4. Implement customer-file upload/storage quota/deletion before treating storage as an active file feature.
+5. Complete privacy deletion/rectification/restriction fulfilment and automated retention cleanup.
+6. Add credentialed browser E2E and run the full Supabase rollback-only security suite in CI. A source-level DB audit, local production runtime smoke, and baseline public-route load smoke now run in CI, but they do not replace those tests.
+7. Add production-scale load testing and Lighthouse/Core Web Vitals coverage; the current 100-request local load smoke is only a regression baseline.
+8. Finish remaining authenticated production browser verification.
+9. Complete US keyword/SERP verification before indexing pending SEO pages.
 
 ### Next exact task
 
-After this hardening branch passes all expanded CI checks, merge it to `main`. Then deploy through the normal Cloudflare release path, verify `/api/health`, public legal/provider/pricing pages, private-route cache/noindex headers and Billing UI in production, and verify one real Waffo webhook-to-entitlement event before describing paid billing as fully operational.
+Pass CI for the billing-lifecycle branch. Before deploying that code, apply migration `202609290002_billing_lifecycle.sql` to the linked Supabase project. Then deploy the Worker and verify one real owner flow for plan change, cancel/reactivate, and signed webhook-to-entitlement reconciliation. Do not describe billing lifecycle as production-verified until those provider events are observed.
 
 ## Completed
+
+- 2026-09-29: Implemented the code-side Waffo subscription lifecycle: authenticated new checkout identity, plan-change intents, immediate higher-capacity upgrades, next-period downgrades/interval changes, owner cancellation/reactivation routes, signed plan-change and recurring lifecycle webhook handling, provider-authoritative entitlement changes, pending-state Billing UI, RLS/service-role boundaries, and lifecycle unit/security audits. Production migration/deployment and real provider-event verification remain separate gates.
 
 - 2026-09-29: Expanded release hardening after the full-site audit. Added a minimal no-store health endpoint; production-server route smoke checks for public/auth/private/API/sitemap/robots/404 behavior; a 100-request public-route load baseline reporting success/error rate plus p50/p95/p99; Cloudflare deployment dry-run in CI; stronger COOP/CORP/DNS-prefetch browser headers; monthly scheduled SEO audit with GitHub issue reporting; Dependabot; and a private vulnerability-reporting policy. These checks improve regression detection but do not claim credentialed E2E, full database integration testing, Lighthouse, or production-scale load certification.
 

@@ -16,7 +16,7 @@ This document is an internal engineering/legal-consistency record, not professio
 | Files/storage | Customer tool photos, damage photos and maintenance attachments are not enabled. R2 is used for OpenNext cache, not customer uploads. | `wrangler.jsonc`, absence of customer-file upload route, public disclosures. |
 | Import | CSV/XLSX is parsed in-browser, then mapped rows are server-validated and persisted to Supabase import jobs; Cloudflare Queues carries job/batch identifiers for background processing. | Import API, queue consumer and migration `202609280004_import_jobs.sql`. |
 | Providers | Cloudflare, Supabase, Resend and Waffo are active. Turnstile, GA4, PostHog, Sentry and Stripe are not active integrations in the inspected application. | Package/config/source review and active provider register. |
-| Billing | New paid checkout is enabled through Waffo Pancake. Signed webhook verification, store validation and subscription-event persistence exist in code. A real payment was reported, but automatic entitlement from a delivered signed production webhook has not yet been independently verified end-to-end. Self-service upgrade/downgrade/cancel is not implemented. | `src/app/api/billing/*`, `src/lib/billing/waffo.ts`, billing migration, project delivery history. |
+| Billing | New paid checkout is enabled through Waffo Pancake. Code now supports owner-requested plan changes, billing-interval changes, cancellation and reactivation, with signed Waffo events authoritative for entitlement and lifecycle state. Higher-capacity upgrades are submitted immediately; downgrades and interval changes are scheduled for the next period. A real payment was reported, but activation and the new lifecycle flows have not yet been independently verified end-to-end against delivered production Waffo events. | `src/app/api/billing/*`, `src/lib/billing/*`, billing migrations and tests. |
 | Privacy | Own-account JSON export, owner/admin company CSV reports and privacy-request intake exist. Deletion fulfilment remains an operational process rather than an automated product feature. | Privacy/report routes and privacy migration. |
 | Retention | Internal targets exist but automated cleanup is not yet implemented for all categories. | `src/config/retention.ts`; no complete scheduled cleanup pipeline verified. |
 | Security | Authentication, role checks, tenant RLS, restricted writes, derived worker PIN storage, revocable field sessions and QR token rotation are implemented. Browser headers now also include HSTS, frame denial, nosniff, COOP, CORP and DNS-prefetch disabling, with no-store/noindex headers on sensitive routes. | Security code/migrations/tests and `next.config.ts`. This is not a SOC 2/ISO/PCI certification. |
@@ -27,13 +27,12 @@ This document is an internal engineering/legal-consistency record, not professio
 
 The repository should **not** be described as fully production-complete while these items remain open:
 
-1. verify a real Waffo signed webhook through entitlement;
-2. verify renewal/past-due/cancel lifecycle behavior;
-3. implement membership/admin management;
-4. implement customer-file upload/quota/deletion before treating storage as an active upload feature;
-5. operationalize privacy deletion/retention cleanup;
-6. add credentialed browser E2E and execute the full Supabase rollback-only suite in CI; the current source-level DB audit and local production runtime smoke do not replace them;
-7. add production-scale load and Lighthouse/Core Web Vitals coverage; the 100-request local public-route load smoke is only a regression baseline;
-8. finish remaining authenticated production workflow verification.
+1. apply the lifecycle migration and verify real Waffo activation/plan-change/lifecycle webhooks through entitlement;
+2. implement membership/admin management;
+3. implement customer-file upload/quota/deletion before treating storage as an active upload feature;
+4. operationalize privacy deletion/retention cleanup;
+5. add credentialed browser E2E and execute the full Supabase rollback-only suite in CI; the current source-level DB audit and local production runtime smoke do not replace them;
+6. add production-scale load and Lighthouse/Core Web Vitals coverage; the 100-request local public-route load smoke is only a regression baseline;
+7. finish remaining authenticated production workflow verification.
 
 Public copy should continue to describe only capabilities that exist now. Future provider or feature plans must not be presented as active.

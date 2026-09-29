@@ -43,9 +43,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const checkout = await client.checkout.createSession({
+    const checkout = await client.checkout.authenticated.create({
       productId,
       currency: "USD",
+      buyerIdentity: auth.user.email,
       buyerEmail: auth.user.email,
       successUrl: new URL("/app/settings/billing?notice=payment-pending", siteConfig.siteUrl).toString(),
       metadata: { checkoutIntentId: intentId },

@@ -20,6 +20,11 @@ const help = read("src/data/help-articles.ts");
 const gitignore = read(".gitignore");
 const robots = read("src/app/robots.ts");
 const nextConfig = read("next.config.ts");
+const billingWebhook = read("src/app/api/billing/webhook/route.ts");
+const billingChange = read("src/app/api/billing/change-plan/route.ts");
+const billingCancel = read("src/app/api/billing/cancel/route.ts");
+const billingReactivate = read("src/app/api/billing/reactivate/route.ts");
+const billingLifecycleMigration = read("supabase/migrations/202609290002_billing_lifecycle.sql");
 const packageJson = JSON.parse(read("package.json"));
 const ci = read(".github/workflows/ci.yml");
 const sourceFiles = [
@@ -48,6 +53,14 @@ pass("active runtime source has no legacy chatgpt.site canonical", !/chatgpt\.si
 pass("robots excludes auth and field surfaces", robots.includes('"/auth/"') && robots.includes('"/field/"') && robots.includes('"/app/"') && robots.includes('"/api/"'));
 pass("sensitive routes are no-store and noindex by header", nextConfig.includes('"Cache-Control", value: "private, no-store, max-age=0, must-revalidate"') && nextConfig.includes('"X-Robots-Tag", value: "noindex, nofollow, noarchive"') && ["/app/:path*", "/auth/:path*", "/field/:path*", "/q/:path*", "/api/:path*"].every((path) => nextConfig.includes(`source: "${path}"`)));
 pass("billing UI checks entitlement mismatch", workspace.includes("subscription plan does not match the workspace entitlement"));
+pass("billing UI exposes lifecycle actions without optimistic entitlement", workspace.includes('action="/api/billing/change-plan"') && workspace.includes('action="/api/billing/cancel"') && workspace.includes('action="/api/billing/reactivate"') && workspace.includes("signed Waffo webhook confirms the change"));
+pass("billing lifecycle routes remain owner-scoped", [billingChange, billingCancel, billingReactivate].every((source) => source.includes('.eq("role", "owner")')));
+pass("new checkout binds Waffo customer identity", read("src/app/api/billing/checkout/route.ts").includes("checkout.authenticated.create") && read("src/app/api/billing/checkout/route.ts").includes("buyerIdentity: auth.user.email"));
+pass("plan changes use provider timing and idempotency", billingChange.includes("createPlanChangeSession") || billingChange.includes("createPlanChange"));
+pass("webhook handles plan-change and recurring lifecycle events", ["subscription.plan_changed", "subscription.plan_change_scheduled", "subscription.plan_change_failed", "subscription.uncanceled", "subscription.past_due", "subscription.canceled"].every((event) => billingWebhook.includes(event)));
+pass("billing lifecycle migration is provider-authoritative and service-role only", billingLifecycleMigration.includes("create table public.billing_plan_change_intents") && billingLifecycleMigration.includes("apply_waffo_plan_change_event") && billingLifecycleMigration.includes("apply_waffo_subscription_lifecycle_event") && billingLifecycleMigration.includes("to service_role"));
+pass("rollback-only billing lifecycle database test exists", existsSync(new URL("../supabase/tests/billing_lifecycle.sql", import.meta.url)));
+pass("public billing copy no longer claims lifecycle self-service is absent", !legal.includes("self-service upgrade, downgrade and cancellation are not yet available") && !help.includes("require billing support for plan changes or cancellation"));
 pass("route error recovery boundary exists", existsSync(new URL("../src/app/error.tsx", import.meta.url)));
 pass("global error fallback exists", existsSync(new URL("../src/app/global-error.tsx", import.meta.url)));
 pass("health endpoint exists", existsSync(new URL("../src/app/api/health/route.ts", import.meta.url)));
