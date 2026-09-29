@@ -25,7 +25,7 @@ This section supersedes older status wording below when the two conflict. Histor
 1. Apply the billing-lifecycle migration, then verify a real Waffo activation webhook through `billing_subscriptions` and `companies.plan`.
 2. Verify plan-changed, plan-change-scheduled, plan-change-failed, renewal, past-due, recovery, canceling, uncanceled and canceled events against the production Waffo store.
 3. Apply and verify the workspace-member migration, Supabase invitation delivery, invitation acceptance, role changes, and deactivate/reactivate flows in production.
-4. Provision the dedicated `takemovereturn-files` R2 bucket and `CUSTOMER_FILES_R2_BUCKET` binding, apply `202609290004_customer_files.sql`, run the rollback-only storage test, then enable and production-verify customer-file upload/read/delete/quota.
+4. Provision the dedicated `takemovereturn-files` R2 bucket and `CUSTOMER_FILES_R2_BUCKET` binding, apply `202609290004_customer_files.sql` plus `202609300001_customer_file_lifecycle.sql`, run both rollback-only storage tests, then enable and production-verify customer-file upload/read/delete/quota and scheduled R2 cleanup.
 5. Complete privacy deletion/rectification/restriction fulfilment and automated retention cleanup.
 6. Add credentialed browser E2E and run the full Supabase rollback-only security suite in CI. A source-level DB audit, local production runtime smoke, and baseline public-route load smoke now run in CI, but they do not replace those tests.
 7. Add production-scale load testing and Lighthouse/Core Web Vitals coverage; the current 100-request local load smoke is only a regression baseline.
@@ -37,6 +37,9 @@ This section supersedes older status wording below when the two conflict. Histor
 Apply production migrations `202609290002_billing_lifecycle.sql` and `202609290003_workspace_member_management.sql` to the linked Supabase project, deploy the current main Worker, and verify signed Waffo lifecycle reconciliation plus one invitation/role/deactivate-reactivate flow. After those production gates pass, provision the separate customer-file R2 bucket/binding, apply `202609290004_customer_files.sql`, run its rollback-only test, set `CUSTOMER_FILES_ENABLED=true`, and verify upload/read/delete/quota before describing file storage as active.
 
 ## Completed
+
+- 2026-09-30: Added durable customer-file R2 cleanup before production activation. Deleted/stale file metadata now carries object-deletion state and retry history; a daily Worker schedule safely no-ops until the dedicated bucket binding exists, then processes cleanup through service-role-only RPCs. Company/tool/damage/maintenance hard deletes are blocked while R2 objects remain unpurged. Private file responses gained sandboxed CSP/CORP/noindex hardening, PDFs download as attachments, and Billing warns at 80% storage usage. Unit, SQL and release-audit coverage were added.
+
 
 - 2026-09-29: Implemented the code-side customer-file storage layer behind a disabled production gate. Added a separate metadata/RLS/quota migration, 10 MB per-file cap, JPEG/PNG/WebP and maintenance-PDF allowlists, file-signature sniffing, authenticated private download/delete routes, tool/damage/maintenance attachment UI, real plan usage wiring, rollback-only SQL coverage, and a dedicated storage activation/rollback runbook. The existing OpenNext cache bucket remains separate. Production bucket provisioning, migration application, binding, enablement and browser verification remain pending.
 
