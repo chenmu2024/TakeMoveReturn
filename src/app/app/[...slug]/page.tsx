@@ -75,18 +75,24 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       const [
         { data: company, error: companyError },
         { data: subscription, error: subscriptionError },
+        { data: pendingPlanChange, error: pendingPlanChangeError },
         { count: activeTools, error: toolCountError },
         { count: admins, error: adminCountError },
       ] = await Promise.all([
         supabase.from("companies").select("plan").eq("id", membership.company_id).single(),
         supabase.from("billing_subscriptions").select("plan,status,billing_interval,current_period_end")
           .eq("company_id", membership.company_id).maybeSingle(),
+        supabase.from("billing_plan_change_intents")
+          .select("to_plan,to_billing_interval,timing,status")
+          .eq("company_id", membership.company_id)
+          .in("status", ["pending", "session_created", "scheduled"])
+          .order("created_at", { ascending: false }).limit(1).maybeSingle(),
         supabase.from("tools").select("id", { count: "exact", head: true })
           .eq("company_id", membership.company_id).neq("status", "retired"),
         supabase.from("organization_members").select("id", { count: "exact", head: true })
           .eq("company_id", membership.company_id).eq("status", "active"),
       ]);
-      if (companyError || subscriptionError || toolCountError || adminCountError) throw new Error("Billing state could not be loaded.");
+      if (companyError || subscriptionError || pendingPlanChangeError || toolCountError || adminCountError) throw new Error("Billing state could not be loaded.");
       billing = {
         plan: company.plan as BillingState["plan"], subscriptionPlan: (subscription?.plan as BillingState["subscriptionPlan"]) ?? null, role: membership.role,
         status: subscription?.status ?? null, billingInterval: subscription?.billing_interval ?? null,
@@ -95,6 +101,12 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
         activeTools: activeTools ?? 0,
         admins: admins ?? 0,
         storageBytes: 0,
+        pendingPlanChange: pendingPlanChange ? {
+          plan: pendingPlanChange.to_plan as "starter" | "growth" | "pro",
+          billingInterval: pendingPlanChange.to_billing_interval as "month" | "year",
+          timing: pendingPlanChange.timing as "immediate" | "next_period",
+          status: pendingPlanChange.status,
+        } : null,
       };
     }
     if (key === "tools") {
