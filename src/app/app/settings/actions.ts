@@ -75,6 +75,7 @@ export async function inviteWorkspaceMember(form: FormData) {
   if (error || typeof invitationId !== "string") {
     if (/limit/i.test(error?.message ?? "")) redirect("/app/settings?notice=invite-limit");
     if (/already.*member/i.test(error?.message ?? "")) redirect("/app/settings?notice=invite-member");
+    if (/another workspace/i.test(error?.message ?? "")) redirect("/app/settings?notice=invite-workspace");
     if (/already pending/i.test(error?.message ?? "")) redirect("/app/settings?notice=invite-pending");
     redirect("/app/settings?notice=members-unavailable");
   }
