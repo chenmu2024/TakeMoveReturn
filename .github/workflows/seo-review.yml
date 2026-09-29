@@ -31,13 +31,13 @@ jobs:
             const fs = require('fs');
             const report = fs.readFileSync('seo-audit.txt', 'utf8').slice(-12000);
             const title = 'Scheduled SEO audit requires review';
-            const existing = await github.rest.issues.listForRepo({
+            const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
-              labels: 'seo-audit',
-              per_page: 20,
+              per_page: 50,
             });
+            const existing = issues.data.filter((issue) => issue.title === title);
             const body = [
               'The scheduled TakeMoveReturn SEO audit failed.',
               '',
@@ -60,7 +60,6 @@ jobs:
                 repo: context.repo.repo,
                 title,
                 body,
-                labels: ['seo-audit'],
               });
             }
             core.setFailed('Scheduled SEO audit failed.');
