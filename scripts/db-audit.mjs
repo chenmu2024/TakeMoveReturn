@@ -39,6 +39,15 @@ check("plan-change webhook RPC remains service-role only", /grant\s+execute\s+on
   && /revoke\s+all\s+on\s+function\s+public\.apply_waffo_plan_change_event[\s\S]*?from\s+public,\s*anon,\s*authenticated/i.test(combined));
 check("subscription lifecycle webhook RPC remains service-role only", /grant\s+execute\s+on\s+function\s+public\.apply_waffo_subscription_lifecycle_event[\s\S]*?to\s+service_role/i.test(combined)
   && /revoke\s+all\s+on\s+function\s+public\.apply_waffo_subscription_lifecycle_event[\s\S]*?from\s+public,\s*anon,\s*authenticated/i.test(combined));
+check("workspace invitation mutations are never granted to anon", [
+  "create_workspace_invitation",
+  "revoke_workspace_invitation",
+  "accept_workspace_invitation",
+  "update_workspace_member_role",
+  "set_workspace_member_active",
+].every((name) => new RegExp(`revoke\\s+all\\s+on\\s+function\\s+public\\.${name}[\\s\\S]*?from\\s+public,\\s*anon`, "i").test(combined)));
+check("member management keeps owner-only mutation guards", /create\s+function\s+public\.create_workspace_invitation[\s\S]*?m\.role\s*=\s*'owner'/i.test(combined)
+  && /create\s+function\s+public\.set_workspace_member_active[\s\S]*?Owner access cannot be removed here/i.test(combined));
 
 if (failures.length) {
   console.error(`\nDatabase audit failed: ${failures.join("; ")}`);

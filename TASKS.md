@@ -15,7 +15,7 @@ This section supersedes older status wording below when the two conflict. Histor
 - Shared-device worker PIN sign-in and QR TAKE → MOVE → RETURN have passed a production walkthrough; broader automated browser E2E is still missing.
 - Tenant RLS and database security tests exist, but GitHub CI does not yet run the full Supabase rollback-only suite.
 - Privacy export/request intake exists; deletion fulfilment and retention cleanup remain operational gaps.
-- Membership/admin self-service management is not yet implemented.
+- Workspace member management is now implemented in code: owner-created Admin/Manager invitations, plan-seat reservation, authenticated-email acceptance, role changes, non-owner deactivation/reactivation, and access audit records. Multi-workspace membership remains intentionally blocked until workspace switching exists. Production migration and browser/email verification are still required.
 - SEO keyword deployment is materially complete; pending Industry/Best/Guide routes remain noindex until US validation gates are passed.
 - The obsolete static `dist/` Fieldmark/chatgpt.site build is removed and ignored. The Next.js/OpenNext application is the only production codebase.
 - Current hardening includes release consistency checks, route/global error fallbacks, active-billing legal disclosure, stale-state cleanup, a minimal health endpoint, production-server runtime smoke checks, a repeatable public-route concurrency/load baseline, Cloudflare deployment dry-run, monthly scheduled SEO review, dependency update automation, and a private security-reporting policy.
@@ -24,7 +24,7 @@ This section supersedes older status wording below when the two conflict. Histor
 
 1. Apply the billing-lifecycle migration, then verify a real Waffo activation webhook through `billing_subscriptions` and `companies.plan`.
 2. Verify plan-changed, plan-change-scheduled, plan-change-failed, renewal, past-due, recovery, canceling, uncanceled and canceled events against the production Waffo store.
-3. Implement membership/admin management and enforce admin limits on those mutations.
+3. Apply and verify the workspace-member migration, Supabase invitation delivery, invitation acceptance, role changes, and deactivate/reactivate flows in production.
 4. Implement customer-file upload/storage quota/deletion before treating storage as an active file feature.
 5. Complete privacy deletion/rectification/restriction fulfilment and automated retention cleanup.
 6. Add credentialed browser E2E and run the full Supabase rollback-only security suite in CI. A source-level DB audit, local production runtime smoke, and baseline public-route load smoke now run in CI, but they do not replace those tests.
@@ -37,6 +37,8 @@ This section supersedes older status wording below when the two conflict. Histor
 Pass CI for the billing-lifecycle branch. Before deploying that code, apply migration `202609290002_billing_lifecycle.sql` to the linked Supabase project. Then deploy the Worker and verify one real owner flow for plan change, cancel/reactivate, and signed webhook-to-entitlement reconciliation. Do not describe billing lifecycle as production-verified until those provider events are observed.
 
 ## Completed
+
+- 2026-09-29: Implemented workspace management seats in code. Owners can create Admin/Manager invitations, pending invitations reserve plan capacity, invitees must authenticate with the invited email and accept current legal terms, owners can revoke invitations, change Admin/Manager roles, and deactivate/reactivate non-owner members without deleting history. Access changes are audited, Free/Starter/Growth/Pro admin limits are enforced transactionally in PostgreSQL, owner access cannot be removed through this flow, and ambiguous multi-workspace invitations are rejected until workspace switching exists. Production migration and email/browser verification remain pending.
 
 - 2026-09-29: Implemented the code-side Waffo subscription lifecycle: authenticated new checkout identity, plan-change intents, immediate higher-capacity upgrades, next-period downgrades/interval changes, owner cancellation/reactivation routes, signed plan-change and recurring lifecycle webhook handling, provider-authoritative entitlement changes, pending-state Billing UI, RLS/service-role boundaries, and lifecycle unit/security audits. Production migration/deployment and real provider-event verification remain separate gates.
 

@@ -25,6 +25,10 @@ const billingChange = read("src/app/api/billing/change-plan/route.ts");
 const billingCancel = read("src/app/api/billing/cancel/route.ts");
 const billingReactivate = read("src/app/api/billing/reactivate/route.ts");
 const billingLifecycleMigration = read("supabase/migrations/202609290002_billing_lifecycle.sql");
+const memberMigration = read("supabase/migrations/202609290003_workspace_member_management.sql");
+const authCallback = read("src/app/auth/callback/route.ts");
+const authActions = read("src/app/auth/actions.ts");
+const adminClient = read("src/lib/supabase/admin.ts");
 const packageJson = JSON.parse(read("package.json"));
 const ci = read(".github/workflows/ci.yml");
 const sourceFiles = [
@@ -61,6 +65,14 @@ pass("webhook handles plan-change and recurring lifecycle events", ["subscriptio
 pass("billing lifecycle migration is provider-authoritative and service-role only", billingLifecycleMigration.includes("create table public.billing_plan_change_intents") && billingLifecycleMigration.includes("apply_waffo_plan_change_event") && billingLifecycleMigration.includes("apply_waffo_subscription_lifecycle_event") && billingLifecycleMigration.includes("to service_role"));
 pass("rollback-only billing lifecycle database test exists", existsSync(new URL("../supabase/tests/billing_lifecycle.sql", import.meta.url)));
 pass("public billing copy no longer claims lifecycle self-service is absent", !legal.includes("self-service upgrade, downgrade and cancellation are not yet available") && !help.includes("require billing support for plan changes or cancellation"));
+pass("workspace member management replaces the placeholder", !workspace.includes("Membership management is not yet available") && workspace.includes("Create invitation") && workspace.includes("Deactivate") && workspace.includes("Reactivate"));
+pass("administrator limits are enforced in the database", ["when 'free' then 1", "when 'starter' then 2", "when 'growth' then 5", "when 'pro' then 10"].every((value) => memberMigration.includes(value)) && memberMigration.includes("Admin limit reached"));
+pass("pending invitations reserve seats and access changes are audited", memberMigration.includes("workspace_access_audit") && memberMigration.includes("v_active + v_pending >= v_limit") && memberMigration.includes("invitation_accepted") && memberMigration.includes("member_deactivated"));
+pass("workspace invitations require owner mutation authority and protect owner access", memberMigration.includes("role = 'owner'") && memberMigration.includes("Owner access cannot be removed here") && memberMigration.includes("User already belongs to another workspace"));
+pass("invitation acceptance is bound to authenticated email and legal consent", memberMigration.includes("Invitation email does not match this account") && memberMigration.includes("Current terms acceptance required"));
+pass("Supabase admin client is server-only and invitation callback supports invite tokens", adminClient.includes('import "server-only"') && authCallback.includes('tokenType === "invite"') && authActions.includes("update-password-invitation"));
+pass("member management rollback-only database test exists", existsSync(new URL("../supabase/tests/workspace_member_management.sql", import.meta.url)));
+pass("invitation acceptance page exists", existsSync(new URL("../src/app/app/invitations/page.tsx", import.meta.url)));
 pass("route error recovery boundary exists", existsSync(new URL("../src/app/error.tsx", import.meta.url)));
 pass("global error fallback exists", existsSync(new URL("../src/app/global-error.tsx", import.meta.url)));
 pass("health endpoint exists", existsSync(new URL("../src/app/api/health/route.ts", import.meta.url)));

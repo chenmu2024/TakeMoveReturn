@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { WorkspaceShell, type ActivityRecord, type BillingState, type DashboardStats, type PrivacyRequest, type SearchResult, type WorkspaceView } from "../../../components/workspace";
+import { WorkspaceShell, type ActivityRecord, type BillingState, type CompanySettings, type DashboardStats, type PrivacyRequest, type SearchResult, type WorkspaceInvitation, type WorkspaceMember, type WorkspaceView } from "../../../components/workspace";
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
 import "../service.css";
 
@@ -31,7 +31,9 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
   let dashboardStats = null;
   let activity: ActivityRecord[] | null = null;
   let attentionTools = null;
-  let companySettings = null;
+  let companySettings: CompanySettings | null = null;
+  let workspaceMembers: WorkspaceMember[] | null = null;
+  let workspaceInvitations: WorkspaceInvitation[] | null = null;
   let billing: BillingState | null = null;
   let privacyRequests: PrivacyRequest[] | null = null;
   let reportAccess = false;
@@ -69,7 +71,29 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       const { data: company, error: companyError } = await supabase.from("companies")
         .select("name,plan,timezone").eq("id", membership.company_id).single();
       if (companyError) throw new Error("Company settings could not be loaded.");
-      companySettings = { ...company, role: membership.role };
+      companySettings = {
+        name: company.name,
+        plan: company.plan as CompanySettings["plan"],
+        timezone: company.timezone,
+        role: membership.role,
+      };
+      if (membership.role === "owner" || membership.role === "admin") {
+        const { data: memberRows, error: memberError } = await supabase.rpc("list_workspace_members", {
+          p_company_id: membership.company_id,
+        });
+        if (memberError) throw new Error("Workspace members could not be loaded.");
+        workspaceMembers = (memberRows ?? []) as WorkspaceMember[];
+      }
+      if (membership.role === "owner") {
+        const { data: inviteRows, error: inviteError } = await supabase.from("workspace_invitations")
+          .select("id,email,role,status,expires_at,created_at")
+          .eq("company_id", membership.company_id)
+          .eq("status", "pending")
+          .gt("expires_at", new Date().toISOString())
+          .order("created_at", { ascending: false });
+        if (inviteError) throw new Error("Workspace invitations could not be loaded.");
+        workspaceInvitations = (inviteRows ?? []) as WorkspaceInvitation[];
+      }
     }
     if (key === "settings/billing") {
       const [
@@ -181,7 +205,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       };
     }
   }
-  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} activity={activity} attentionTools={attentionTools} companySettings={companySettings} billing={billing} privacyRequests={privacyRequests} reportAccess={reportAccess} reportConnected={reportConnected} searchConnected={searchConnected} searchQuery={searchQuery} searchResults={searchResults} notice={(await searchParams).notice} />;
+  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} activity={activity} attentionTools={attentionTools} companySettings={companySettings} workspaceMembers={workspaceMembers} workspaceInvitations={workspaceInvitations} billing={billing} privacyRequests={privacyRequests} reportAccess={reportAccess} reportConnected={reportConnected} searchConnected={searchConnected} searchQuery={searchQuery} searchResults={searchResults} notice={(await searchParams).notice} />;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
