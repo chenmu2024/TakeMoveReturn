@@ -52,7 +52,7 @@ pass("active billing has matching public disclosure", legal.includes("Paid check
 pass("Waffo appears in the active provider register", providers.includes('name: "Waffo"') && providers.includes('status: "active"'));
 pass("pricing storage copy follows the customer-file feature gate", pricing.includes("customerFilesEnabled") && pricing.includes("private file storage") && pricing.includes("feature remains disabled"));
 pass("workspace billing discloses pending webhook activation", workspace.includes('notice === "payment-pending"') && workspace.includes("pending a valid signed Waffo event"));
-pass("workspace billing follows the customer-file feature gate", workspace.includes("fileStorageActive") && workspace.includes("Private tool photos") && workspace.includes("customer-file storage code is staged"));
+pass("workspace billing follows the customer-file feature gate", workspace.includes("fileStorageActive") && workspace.includes("Private tool photos") && workspace.includes("Customer-file uploads are staged but not enabled"));
 pass("development secret template contains Waffo and no Stripe leftovers", devVars.includes("WAFFO_PRIVATE_KEY=") && !/STRIPE_/i.test(devVars));
 pass("help content does not claim billing is deferred", !/payment setup is deferred|paid changes remain unavailable/i.test(help));
 pass("legacy dist output is ignored", gitignore.split(/\r?\n/).includes("dist/"));
