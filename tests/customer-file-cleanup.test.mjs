@@ -21,7 +21,7 @@ test("customer file cleanup removes queued objects and records completion", asyn
       }]), { status: 200, headers: { "content-type": "application/json" } });
     }
     if (href.endsWith("/record_customer_file_object_cleanup")) {
-      return new Response("", { status: 204 });
+      return new Response(null, { status: 204 });
     }
     return new Response("not found", { status: 404 });
   };
