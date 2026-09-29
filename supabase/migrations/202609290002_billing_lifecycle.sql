@@ -156,6 +156,20 @@ end $$;
 revoke all on function public.mark_billing_plan_change_started(uuid,text) from public, anon;
 grant execute on function public.mark_billing_plan_change_started(uuid,text) to authenticated;
 
+create function public.fail_billing_plan_change_intent(p_intent_id uuid)
+returns void language plpgsql security definer set search_path = '' as $
+begin
+  if auth.uid() is null then raise exception 'Sign in required'; end if;
+  update public.billing_plan_change_intents
+    set status = 'failed', updated_at = now()
+    where id = p_intent_id
+      and user_id = auth.uid()
+      and status in ('pending', 'session_created');
+end $;
+
+revoke all on function public.fail_billing_plan_change_intent(uuid) from public, anon;
+grant execute on function public.fail_billing_plan_change_intent(uuid) to authenticated;
+
 create function public.apply_waffo_plan_change_event(
   p_event_type text,
   p_event_id text,
