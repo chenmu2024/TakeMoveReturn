@@ -294,6 +294,12 @@ begin
     raise exception 'Invitation expired';
   end if;
   if lower(v_invite.email) <> v_email then raise exception 'Invitation email does not match this account'; end if;
+  if exists (
+    select 1 from public.organization_members m
+    where m.user_id = auth.uid()
+      and m.company_id <> v_invite.company_id
+      and m.status = 'active'
+  ) then raise exception 'Account already belongs to another workspace'; end if;
 
   select plan into v_plan from public.companies where id = v_invite.company_id for update;
   v_limit := private.plan_admin_limit(v_plan);
@@ -389,6 +395,10 @@ begin
 
   if p_active then
     if v_target.status='active' then return; end if;
+    if exists (
+      select 1 from public.organization_members m
+      where m.user_id=p_user_id and m.company_id<>p_company_id and m.status='active'
+    ) then raise exception 'Account already belongs to another workspace'; end if;
     select plan into v_plan from public.companies where id=p_company_id for update;
     v_limit := private.plan_admin_limit(v_plan);
     update public.workspace_invitations
