@@ -20,6 +20,7 @@ Customer-file uploads are **not** enabled. R2 is currently used only for the Ope
 - **Resend via Supabase SMTP** for transactional account email.
 - **Waffo Pancake** for Merchant of Record checkout and subscription events.
 - **QR + shared-device worker sessions** for browser-based field handoffs.
+- **Workspace member invitations and roles** for owner-controlled Admin/Manager access, with plan capacity enforced separately from unlimited field workers.
 
 Tracked database migrations are under `supabase/migrations/`; rollback-only security and transaction checks are under `supabase/tests/`.
 
@@ -67,6 +68,12 @@ The locked plan capacities are:
 
 Monthly/annual prices and capacity limits come from `src/config/plans.ts`. Paid checkout is available for a free workspace owner when production billing is enabled. New checkout and plan-change sessions are bound to the signed-in owner identity. Active paid owners can request higher-capacity upgrades immediately, request downgrades or billing-interval changes for the next period, cancel, and reactivate a canceling subscription. The local workspace never changes entitlement optimistically: accepted signed Waffo webhook events remain authoritative for activation, plan changes and lifecycle state.
 
+## Workspace access management
+
+Workspace management accounts are separate from field workers. The owner can invite Admin or Manager users, revoke pending invitations, change Admin/Manager roles, and deactivate/reactivate non-owner members. Active management users plus pending invitations are checked against the current plan's administrator limit; downgrades do not randomly disable existing members. Deactivation preserves historical records. The current product intentionally prevents a single account from joining multiple active workspaces until workspace switching is implemented.
+
+Invitation acceptance is tied to the authenticated email and current legal acceptance. New-account invitation delivery uses Supabase Auth when the production service-role integration is available; an owner can also share the invitation sign-in path if provider delivery does not occur.
+
 ## SEO
 
 Public SEO metadata, canonical URLs, index gates and the keyword registry are centralized in `src/data/seo-keywords.ts`. Core verified money pages are indexable; unverified Industry / Best / Guide candidates remain noindex until their US keyword and SERP validation gates are complete.
@@ -78,10 +85,10 @@ The obsolete static `dist/` site is intentionally removed and ignored. The produ
 The repository must **not** be described as fully production-complete while these remain open:
 
 - verify real production Waffo activation, plan-change, renewal, past-due, recovery, canceling, uncanceled and canceled webhooks through workspace entitlement;
-- implement membership/admin management rather than only plan limits;
 - implement customer-file upload/storage quota/deletion before selling storage as an active feature;
 - complete privacy-request fulfilment and retention cleanup operations;
 - add credentialed browser E2E, execute the full Supabase rollback-only security suite in CI, and add production-scale load/Lighthouse coverage;
+- apply and production-verify the workspace membership migration, invitation email/acceptance flow, role changes and deactivation/reactivation;
 - complete remaining authenticated production browser verification;
 - validate US search demand before indexing pending SEO routes.
 
