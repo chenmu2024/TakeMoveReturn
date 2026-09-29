@@ -22,8 +22,9 @@ The owner-approved legal pages are public and noindex. Registration is enabled. 
 - [x] Duplicate/stale billing-event handling is implemented in the database function.
 - [ ] Independently verify a real production Waffo webhook delivery and resulting plan entitlement.
 - [ ] Verify renewal, recovery, past-due, canceling and canceled events in production or an authoritative provider test environment.
-- [ ] Implement or formally document the operational process for upgrade, downgrade and cancellation after a paid subscription exists.
-- [ ] Re-review refund/cancellation wording whenever self-service subscription management is added.
+- [x] Implement owner-requested plan changes, billing-interval changes, cancellation and reactivation with provider-authoritative webhook confirmation.
+- [x] Re-review the public Terms/Help wording for the implemented self-service subscription-management behavior.
+- [ ] Apply the billing-lifecycle migration and verify the self-service actions against the production Waffo store before treating them as production-verified.
 
 ## Data operations
 
