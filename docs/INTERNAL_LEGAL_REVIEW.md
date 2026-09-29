@@ -1,30 +1,38 @@
 # TakeMoveReturn internal legal consistency review
 
-Reviewed: 2026-09-27  
-Method: AI-assisted internal review of the current code, deployment configuration, database migrations and public copy.  
-External professional review of this exact revision: not obtained.
+Reviewed: 2026-09-29  
+Method: AI-assisted internal consistency review of the current repository, deployment configuration, billing implementation, database migrations and public copy.  
+External professional review of this exact revision: **not obtained**.
 
-This is an AI-assisted internal consistency review and does not constitute professional legal advice or external legal certification.
+This document is an internal engineering/legal-consistency record, not professional legal advice or certification.
 
 ## Scope and evidence
 
-| Area | Finding | Evidence / limitation |
+| Area | Current finding | Evidence / limitation |
 | --- | --- | --- |
-| Operator | TakeMoveReturn is an operating brand of Qiaosheng Zhong, an individual operating from the People's Republic of China. No registered business name, registration number or address is asserted. | `src/config/site.ts`, `docs/DECISIONS.md`; owner-supplied identity, not independently verified documentation. |
-| Privacy | Account, Supabase Auth/session, member, worker, tool, location, movement, manager-entered damage and maintenance, support and privacy-request data are described. GPS is excluded. | `src/lib/supabase`, `src/app/app`, SQL migrations through `202609270004`, `src/app/api/privacy/export/route.ts`. |
-| Files/import | Damage and maintenance text records are now supported; their photos/attachments and spreadsheet imports are not. No production customer-file upload route or processing queue is wired. R2 is OpenNext cache only. | `wrangler.jsonc`, `src/app/app/damage`, `src/app/app/maintenance`. |
-| Providers | Cloudflare, Supabase and Resend are active. Waffo is selected but disabled; no active Queues, Turnstile, GA4, PostHog, Sentry or Stripe integration found. | `wrangler.jsonc`, `package.json`, `src/data/subprocessors.ts`, authenticated email test recorded in `docs/DECISIONS.md`. |
-| Billing | Plan prices/limits come from `src/config/plans.ts`; Waffo checkout is behind `WAFFO_BILLING_ENABLED=false`. No renewal, cancellation, downgrade, payment-failure or grace-period implementation was verified. | `src/config/plans.ts`, `src/app/api/billing/checkout/route.ts`, `wrangler.jsonc`. |
-| Retention | `src/config/retention.ts` defines targets, but no automated cleanup jobs or provider-specific verified deletion schedule was found. Public policy does not present targets as achieved. | Code search and `src/config/retention.ts`; provider backup retention remains unverified. |
-| Export/deletion | Own-account JSON export and owner/admin company CSV reports exist; privacy requests are durable and access-controlled. Automatic account/workspace deletion is not implemented. | `src/app/api/privacy/export/route.ts`, `src/app/api/reports/[kind]/route.ts`, `supabase/migrations/202609270003_privacy_requests.sql`. |
-| Security | Authentication, tenant RLS, role checks and derived worker PINs are implemented. No SOC 2, ISO, PCI or absolute-security claim is made. | `src/lib/security/worker-pin.ts`, migrations, role-scoped routes. Field-worker/QR browser flows need further verification. |
-| DPA | Customer-controlled processing roles are conditional, not universally GDPR-defined; no signed DPA or transfer mechanism is inferred from this public page. | `src/data/legal-documents.ts`. |
-| Public presentation | Legal pages no longer expose draft/TBD/review banners. They remain footer-accessible and noindex. Internal release status is separate. | `src/app/[...slug]/page.tsx`, `src/components/marketing.tsx`, `src/config/legal-review.ts`. |
+| Operator | TakeMoveReturn is operated by Qiaosheng Zhong as an individual from the People's Republic of China. No registered corporation or registration number is asserted. | `src/config/site.ts`, `docs/DECISIONS.md`; identity is owner-supplied. |
+| Registration | Public registration and legal acceptance are enabled. | Auth actions/layout and prior production walkthroughs. |
+| Core product | Company-scoped tools, workers, locations, QR labels, TAKE/MOVE/RETURN, damage, maintenance, imports and reports exist. | Application code, migrations and tracked tests; broad automated browser E2E remains incomplete. |
+| Files/storage | Customer tool photos, damage photos and maintenance attachments are not enabled. R2 is used for OpenNext cache, not customer uploads. | `wrangler.jsonc`, absence of customer-file upload route, public disclosures. |
+| Import | CSV/XLSX is parsed in-browser, then mapped rows are server-validated and persisted to Supabase import jobs; Cloudflare Queues carries job/batch identifiers for background processing. | Import API, queue consumer and migration `202609280004_import_jobs.sql`. |
+| Providers | Cloudflare, Supabase, Resend and Waffo are active. Turnstile, GA4, PostHog, Sentry and Stripe are not active integrations in the inspected application. | Package/config/source review and active provider register. |
+| Billing | New paid checkout is enabled through Waffo Pancake. Signed webhook verification, store validation and subscription-event persistence exist in code. A real payment was reported, but automatic entitlement from a delivered signed production webhook has not yet been independently verified end-to-end. Self-service upgrade/downgrade/cancel is not implemented. | `src/app/api/billing/*`, `src/lib/billing/waffo.ts`, billing migration, project delivery history. |
+| Privacy | Own-account JSON export, owner/admin company CSV reports and privacy-request intake exist. Deletion fulfilment remains an operational process rather than an automated product feature. | Privacy/report routes and privacy migration. |
+| Retention | Internal targets exist but automated cleanup is not yet implemented for all categories. | `src/config/retention.ts`; no complete scheduled cleanup pipeline verified. |
+| Security | Authentication, role checks, tenant RLS, restricted writes, derived worker PIN storage, revocable field sessions and QR token rotation are implemented. | Security code/migrations/tests. This is not a SOC 2/ISO/PCI certification. |
+| Legal versioning | Effective legal acceptance version remains 2026-09-28. Public text was updated on 2026-09-29 to correct current operational facts about active billing. | `src/config/site.ts`; this does not assert external review of the revised wording. |
+| SEO | Legal pages remain noindex. Core SEO pages and index gates are separately controlled by the SEO registry/audit. | `src/app/[...slug]/page.tsx`, `src/data/seo-keywords.ts`. |
 
-## Release gate and remaining work
+## Current release gate
 
-The public pages state verified current facts without a fictitious corporation. On 2026-09-28 the owner approved the current legal text for use and the effective date was set to 2026-09-28; this is not evidence of external professional review. The owner authorized production registration, which is now enabled; two new accounts completed email confirmation and recorded the current legal version, and one entered the production workspace. `WAFFO_BILLING_ENABLED=false` remains unchanged. Authenticated product and field flows, older-account re-consent, privacy-request operations, provider retention and applicable transfer-law obligations still require verification. Do not set release-evidence flags merely to bypass the production audit.
+The repository should **not** be described as fully production-complete while these items remain open:
 
-The public Terms intentionally contain no unverified liability cap, refund promise, SLA or exclusive dispute venue. The public DPA is a processing framework, not a claim of a separately executed negotiated agreement. If paid billing or uploads launch, update the documents and provider register before enabling those flows.
+1. verify a real Waffo signed webhook through entitlement;
+2. verify renewal/past-due/cancel lifecycle behavior;
+3. implement membership/admin management;
+4. implement customer-file upload/quota/deletion before treating storage as an active upload feature;
+5. operationalize privacy deletion/retention cleanup;
+6. add broader automated browser E2E, database-security CI, load and Lighthouse coverage;
+7. finish remaining authenticated production workflow verification.
 
-The CuadraNómina main-branch pages, release configuration and internal reviews named in the owner's request were read at commit `3eda160e054289b9f86d9815fecf1d78cc4172f1`. We adopted the separation of product facts, central config, transparent public pages and internal review evidence. No CuadraNómina clause or product-specific claim was copied into TakeMoveReturn.
+Public copy should continue to describe only capabilities that exist now. Future provider or feature plans must not be presented as active.
