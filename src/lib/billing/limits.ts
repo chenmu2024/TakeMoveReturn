@@ -1,4 +1,4 @@
-import { plans, type PlanId } from "../../config/plans";
+import { plans, type PlanId } from "../../config/plans.ts";
 
 export type AccountUsage = { activeTools: number; admins: number; storageBytes: number };
 export type LimitStatus = { tools: boolean; admins: boolean; storage: boolean; overLimit: boolean };

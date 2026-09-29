@@ -18,6 +18,8 @@ const workspace = read("src/components/workspace.tsx");
 const devVars = read(".dev.vars.example");
 const help = read("src/data/help-articles.ts");
 const gitignore = read(".gitignore");
+const robots = read("src/app/robots.ts");
+const nextConfig = read("next.config.ts");
 const sourceFiles = [
   "src/app/page.tsx",
   "src/app/layout.tsx",
@@ -41,6 +43,9 @@ pass("legacy dist output is ignored", gitignore.split(/\r?\n/).includes("dist/")
 pass("legacy dist output is not tracked in the working tree", !existsSync(new URL("../dist", import.meta.url)));
 pass("active runtime source has no legacy Fieldmark brand", !/\bFieldmark\b/i.test(sourceFiles));
 pass("active runtime source has no legacy chatgpt.site canonical", !/chatgpt\.site/i.test(sourceFiles));
+pass("robots excludes auth and field surfaces", robots.includes('"/auth/"') && robots.includes('"/field/"') && robots.includes('"/app/"') && robots.includes('"/api/"'));
+pass("sensitive routes are no-store and noindex by header", nextConfig.includes('"Cache-Control", value: "private, no-store, max-age=0, must-revalidate"') && nextConfig.includes('"X-Robots-Tag", value: "noindex, nofollow, noarchive"') && ["/app/:path*", "/auth/:path*", "/field/:path*", "/q/:path*", "/api/:path*"].every((path) => nextConfig.includes(`source: "${path}"`)));
+pass("billing UI checks entitlement mismatch", workspace.includes("subscription plan does not match the workspace entitlement"));
 pass("route error recovery boundary exists", existsSync(new URL("../src/app/error.tsx", import.meta.url)));
 pass("global error fallback exists", existsSync(new URL("../src/app/global-error.tsx", import.meta.url)));
 

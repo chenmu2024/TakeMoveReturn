@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { WorkspaceShell, type ActivityRecord, type BillingState, type PrivacyRequest, type SearchResult, type WorkspaceView } from "../../../components/workspace";
+import { WorkspaceShell, type ActivityRecord, type BillingState, type DashboardStats, type PrivacyRequest, type SearchResult, type WorkspaceView } from "../../../components/workspace";
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
 import "../service.css";
 
@@ -72,17 +72,29 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       companySettings = { ...company, role: membership.role };
     }
     if (key === "settings/billing") {
-      const [{ data: company, error: companyError }, { data: subscription, error: subscriptionError }] = await Promise.all([
+      const [
+        { data: company, error: companyError },
+        { data: subscription, error: subscriptionError },
+        { count: activeTools, error: toolCountError },
+        { count: admins, error: adminCountError },
+      ] = await Promise.all([
         supabase.from("companies").select("plan").eq("id", membership.company_id).single(),
-        supabase.from("billing_subscriptions").select("status,billing_interval,current_period_end")
+        supabase.from("billing_subscriptions").select("plan,status,billing_interval,current_period_end")
           .eq("company_id", membership.company_id).maybeSingle(),
+        supabase.from("tools").select("id", { count: "exact", head: true })
+          .eq("company_id", membership.company_id).neq("status", "retired"),
+        supabase.from("organization_members").select("id", { count: "exact", head: true })
+          .eq("company_id", membership.company_id).eq("status", "active"),
       ]);
-      if (companyError || subscriptionError) throw new Error("Billing state could not be loaded.");
+      if (companyError || subscriptionError || toolCountError || adminCountError) throw new Error("Billing state could not be loaded.");
       billing = {
-        plan: company.plan as BillingState["plan"], role: membership.role,
+        plan: company.plan as BillingState["plan"], subscriptionPlan: (subscription?.plan as BillingState["subscriptionPlan"]) ?? null, role: membership.role,
         status: subscription?.status ?? null, billingInterval: subscription?.billing_interval ?? null,
         periodEnd: subscription?.current_period_end ?? null,
         enabled: process.env.WAFFO_BILLING_ENABLED === "true",
+        activeTools: activeTools ?? 0,
+        admins: admins ?? 0,
+        storageBytes: 0,
       };
     }
     if (key === "tools") {
@@ -135,13 +147,15 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       if (attentionError) throw new Error("Attention items could not be loaded.");
       attentionTools = attentionRows;
       const recentSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const [total, checkedOut, needsAttention, recentActivity] = await Promise.all([
+      const [total, checkedOut, needsAttention, recentActivity, companyPlan, adminCount] = await Promise.all([
         supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).neq("status", "retired"),
         supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("status", "checked_out"),
         supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).in("status", ["damaged", "maintenance", "missing"]),
         supabase.from("tool_transactions").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).gte("created_at", recentSince),
+        supabase.from("companies").select("plan").eq("id", membership.company_id).single(),
+        supabase.from("organization_members").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("status", "active"),
       ]);
-      if (total.error || checkedOut.error || needsAttention.error || recentActivity.error) {
+      if (total.error || checkedOut.error || needsAttention.error || recentActivity.error || companyPlan.error || adminCount.error) {
         throw new Error("Dashboard counts could not be loaded.");
       }
       dashboardStats = {
@@ -149,6 +163,9 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
         checkedOut: checkedOut.count ?? 0,
         needsAttention: needsAttention.count ?? 0,
         recentActivity: recentActivity.count ?? 0,
+        plan: companyPlan.data.plan as DashboardStats["plan"],
+        admins: adminCount.count ?? 0,
+        storageBytes: 0,
       };
     }
   }
