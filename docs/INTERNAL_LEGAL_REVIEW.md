@@ -19,7 +19,7 @@ This document is an internal engineering/legal-consistency record, not professio
 | Billing | New paid checkout is enabled through Waffo Pancake. Signed webhook verification, store validation and subscription-event persistence exist in code. A real payment was reported, but automatic entitlement from a delivered signed production webhook has not yet been independently verified end-to-end. Self-service upgrade/downgrade/cancel is not implemented. | `src/app/api/billing/*`, `src/lib/billing/waffo.ts`, billing migration, project delivery history. |
 | Privacy | Own-account JSON export, owner/admin company CSV reports and privacy-request intake exist. Deletion fulfilment remains an operational process rather than an automated product feature. | Privacy/report routes and privacy migration. |
 | Retention | Internal targets exist but automated cleanup is not yet implemented for all categories. | `src/config/retention.ts`; no complete scheduled cleanup pipeline verified. |
-| Security | Authentication, role checks, tenant RLS, restricted writes, derived worker PIN storage, revocable field sessions and QR token rotation are implemented. | Security code/migrations/tests. This is not a SOC 2/ISO/PCI certification. |
+| Security | Authentication, role checks, tenant RLS, restricted writes, derived worker PIN storage, revocable field sessions and QR token rotation are implemented. Browser headers now also include HSTS, frame denial, nosniff, COOP, CORP and DNS-prefetch disabling, with no-store/noindex headers on sensitive routes. | Security code/migrations/tests and `next.config.ts`. This is not a SOC 2/ISO/PCI certification. |
 | Legal versioning | Effective legal acceptance version remains 2026-09-28. Public text was updated on 2026-09-29 to correct current operational facts about active billing. | `src/config/site.ts`; this does not assert external review of the revised wording. |
 | SEO | Legal pages remain noindex. Core SEO pages and index gates are separately controlled by the SEO registry/audit. | `src/app/[...slug]/page.tsx`, `src/data/seo-keywords.ts`. |
 
@@ -32,7 +32,8 @@ The repository should **not** be described as fully production-complete while th
 3. implement membership/admin management;
 4. implement customer-file upload/quota/deletion before treating storage as an active upload feature;
 5. operationalize privacy deletion/retention cleanup;
-6. add broader automated browser E2E, database-security CI, load and Lighthouse coverage;
-7. finish remaining authenticated production workflow verification.
+6. add credentialed browser E2E and execute the full Supabase rollback-only suite in CI; the current source-level DB audit and local production runtime smoke do not replace them;
+7. add production-scale load and Lighthouse/Core Web Vitals coverage; the 100-request local public-route load smoke is only a regression baseline;
+8. finish remaining authenticated production workflow verification.
 
 Public copy should continue to describe only capabilities that exist now. Future provider or feature plans must not be presented as active.

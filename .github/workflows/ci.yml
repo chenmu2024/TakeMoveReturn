@@ -22,4 +22,7 @@ jobs:
       - run: npm run legal:audit
       - run: npm run release:audit
       - run: npm run build
+      - run: npm run runtime:smoke
+      - run: npm run load:smoke
       - run: npm run cf:build
+      - run: npm run cf:dry-run

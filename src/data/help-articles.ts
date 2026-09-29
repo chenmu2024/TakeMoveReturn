@@ -7,7 +7,7 @@ export type HelpArticle = {
   note: string;
 };
 
-export const helpContentUpdatedAt = "2026-09-28";
+export const helpContentUpdatedAt = "2026-09-29";
 
 export const helpArticles: HelpArticle[] = [
   { slug: "getting-started", category: "Getting Started", title: "Plan your first tool workflow", summary: "Choose a small group of reusable tools and agree on where each handoff should be recorded.", steps: ["Create an account, confirm your email, and name your company workspace.", "Add a location, a worker with a private PIN, and a reusable tool with a stable asset code.", "Enroll a shared field device as a manager, then have the worker sign in and scan the tool's QR label to record TAKE, MOVE, or RETURN."], note: "Registration and the field workflow are available. Each worker must use their own PIN; never put it on a QR label or in an employee code." },
