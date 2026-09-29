@@ -156,7 +156,7 @@ function SettingsContent({ view, company, members, invitations, notice }: { view
       <p className="workspace-eyebrow">ACCESS CONTROL</p><h2>Membership and roles</h2>
       <p>Management accounts consume the administrator capacity of the plan. Field workers are separate and remain unlimited.</p>
       <div className="workspace-form-placeholder"><span>Your role</span><strong>{company?.role ?? "Not connected"}</strong></div>
-      <div className="workspace-form-placeholder"><span>Administrator capacity</span><strong>{plan ? `${activeMembers.length} active · ${pendingInvites.length} invited / ${plan.adminLimit}` : "—"}</strong></div>
+      <div className="workspace-form-placeholder"><span>Administrator capacity</span><strong>{plan && members !== null ? `${activeMembers.length} active · ${pendingInvites.length} invited / ${plan.adminLimit}` : plan ? `Up to ${plan.adminLimit}` : "—"}</strong></div>
       {memberNotice && <p className="workspace-connection-banner" role={memberNotice.includes("created") || memberNotice.includes("updated") || memberNotice.includes("reactivated") || memberNotice.includes("deactivated") || memberNotice.includes("revoked") ? "status" : "alert"}>{memberNotice}</p>}
 
       {isOwner && <section className="workspace-member-invite">
