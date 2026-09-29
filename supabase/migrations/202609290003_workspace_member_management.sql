@@ -366,6 +366,7 @@ declare
   v_plan text;
   v_limit integer;
   v_active integer;
+  v_pending integer;
 begin
   if auth.uid() is null or not exists (
     select 1 from public.organization_members m
@@ -382,9 +383,14 @@ begin
     if v_target.status='active' then return; end if;
     select plan into v_plan from public.companies where id=p_company_id for update;
     v_limit := private.plan_admin_limit(v_plan);
+    update public.workspace_invitations
+      set status='expired',updated_at=now()
+      where company_id=p_company_id and status='pending' and expires_at <= now();
     select count(*) into v_active from public.organization_members
       where company_id=p_company_id and status='active';
-    if v_active >= v_limit then raise exception 'Admin limit reached'; end if;
+    select count(*) into v_pending from public.workspace_invitations
+      where company_id=p_company_id and status='pending' and expires_at > now();
+    if v_active + v_pending >= v_limit then raise exception 'Admin limit reached'; end if;
     update public.organization_members set status='active',updated_at=now() where id=v_target.id;
     insert into public.workspace_access_audit(company_id,actor_user_id,subject_user_id,event_type,new_role)
       values(p_company_id,auth.uid(),p_user_id,'member_reactivated',v_target.role);
