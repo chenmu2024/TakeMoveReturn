@@ -48,6 +48,10 @@ The owner-approved legal pages are public and noindex. Registration is enabled. 
 
 `npm run legal:audit` checks route/content and consent wiring.
 
-`npm run release:audit` checks production-state consistency including active Waffo disclosure, removal of legacy `dist/`, storage transparency, provider state and legacy-brand leakage.
+`npm run release:audit` checks production-state consistency including active Waffo disclosure, removal of legacy `dist/`, storage transparency, provider state, legacy-brand leakage, health/error fallbacks and CI verification wiring.
+
+`npm run runtime:smoke` starts the built production server and checks representative public, auth, private, API, sitemap, robots and 404 behavior. `npm run load:smoke` is a small local concurrency regression baseline; it is not evidence of production load capacity.
+
+The monthly scheduled SEO workflow, Dependabot and `SECURITY.md` add maintenance and reporting guardrails. They do not replace authenticated production tests, incident procedures or professional review.
 
 `npm run legal:audit -- --production` still requires external evidence flags. It is a guardrail, not a substitute for operational evidence or professional legal review. Do not set flags merely to make the command pass.
