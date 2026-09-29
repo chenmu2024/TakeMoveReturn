@@ -40,7 +40,7 @@ create index customer_files_maintenance_idx on public.customer_files(maintenance
 alter table public.customer_files enable row level security;
 create policy "members read ready customer files" on public.customer_files
   for select to authenticated
-  using (status = 'ready' and private.is_active_member(company_id));
+  using (status = 'ready' and public.is_active_member(company_id));
 
 revoke all on public.customer_files from public, anon, authenticated;
 grant select on public.customer_files to authenticated;
