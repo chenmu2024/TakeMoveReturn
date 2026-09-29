@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   const nextParam = request.nextUrl.searchParams.get("next");
   const next = nextParam === "update-password"
     ? "/auth/update-password"
-    : nextParam === "invitation"
+    : nextParam === "update-password-invitation" || nextParam === "invitation"
       ? "/auth/update-password?next=invitation"
       : "/app/dashboard";
   if (isSupabaseConfigured() && (code || (tokenHash && (tokenType === "email" || tokenType === "recovery" || tokenType === "invite")))) {
