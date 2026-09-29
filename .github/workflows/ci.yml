@@ -17,7 +17,9 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      - run: npm run db:audit
       - run: npm run seo:audit
       - run: npm run legal:audit
+      - run: npm run release:audit
       - run: npm run build
       - run: npm run cf:build

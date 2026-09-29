@@ -1,24 +1,53 @@
 # Legal commercial-launch gate
 
-Status: **REGISTRATION_OPEN_WITH_OPERATIONAL_FOLLOW_UP**. The owner-approved legal pages are public and noindex; new account registration and acceptance are enabled. This checklist records remaining data-operations work and is not a claim of external professional review. See `docs/INTERNAL_LEGAL_REVIEW.md` for evidence and limits.
+Status: **REGISTRATION_AND_NEW_CHECKOUT_OPEN_WITH_OPERATIONAL_FOLLOW_UP**.
+
+The owner-approved legal pages are public and noindex. Registration is enabled. New paid checkout is enabled through Waffo Pancake for eligible workspace owners. This checklist records remaining operational and legal-review work; it is not evidence of external professional review.
 
 ## Operator and contract
 
-- [x] Owner confirmed legal operator Qiaosheng Zhong, individual based in China; TakeMoveReturn is only the brand.
-- [x] Owner confirmed no registered company or sole proprietorship; do not invent registration details.
-- [x] Support and privacy email addresses receive mail; verify production configuration again at launch.
-- [x] On 2026-09-28 the owner approved the current Privacy, Terms, DPA and provider-register text for use. This is owner sign-off, not evidence of external professional review; do not claim lawyer approval on the site.
-- [x] Set the owner-approved legal effective date to 2026-09-28. Two new test accounts confirmed email and recorded the current Terms/Privacy versions; one logged into the production workspace. Older-account re-consent needs browser verification.
-- [x] Waffo.com Limited is the selected future Merchant of Record; paid checkout remains disabled. Current public Terms do not promise an unimplemented refund workflow.
-- [x] Use verified `contact@takemovereturn.com` for privacy requests; `privacy@` is not configured.
+- [x] Operator identity remains Qiaosheng Zhong, an individual operating from the People's Republic of China; TakeMoveReturn is a brand, not a registered corporation.
+- [x] `contact@takemovereturn.com`, `support@takemovereturn.com`, and `billing@takemovereturn.com` are the published contact channels.
+- [x] Current Privacy, Terms, DPA and provider-register copy is published without claiming lawyer approval.
+- [x] Current legal acceptance version remains `2026-09-28`; public copy was factually updated on 2026-09-29 to reflect active Waffo checkout. This update does not by itself claim a new externally reviewed legal version.
+- [x] Waffo Pancake is disclosed as the active Merchant of Record for paid checkout and payment-related processing.
+- [x] Public legal copy no longer states that paid checkout is disabled.
+- [x] Customer-file uploads are explicitly described as unavailable.
+
+## Billing operations
+
+- [x] Owner-only new paid checkout route exists.
+- [x] Server-side product IDs and signed Waffo client requests are used.
+- [x] Signed webhook verification and store-ID validation are implemented in code.
+- [x] Duplicate/stale billing-event handling is implemented in the database function.
+- [ ] Independently verify a real production Waffo webhook delivery and resulting plan entitlement.
+- [ ] Verify renewal, recovery, past-due, canceling and canceled events in production or an authoritative provider test environment.
+- [ ] Implement or formally document the operational process for upgrade, downgrade and cancellation after a paid subscription exists.
+- [ ] Re-review refund/cancellation wording whenever self-service subscription management is added.
 
 ## Data operations
 
-- [ ] Confirm all active-provider subprocessor locations and applicable DPA terms. Verified on 2026-09-27: Supabase project `xcdhhxyqdlorxztafpee` reports `us-west-1` via `supabase projects list`; the Cloudflare R2 cache bucket reports `WNAM` via `wrangler r2 bucket info`; Resend's DPA states its primary processing is in the United States. These facts do not establish a legal transfer mechanism or guarantee all processing stays in one region.
-- [ ] Review applicable international transfer mechanism(s), if any, with counsel.
-- [ ] Approve retention periods for every category in `src/config/retention.ts` and implement deletion/backup cleanup.
-- [ ] Complete verified privacy-request handling, company-scoped export and deletion. The signed-in request queue and limited personal account export are implemented; manual review and deletion execution are not.
-- [ ] Verify security/incident procedures before describing them as contractual controls.
-- [ ] Re-review legal copy after QR field flow, uploads, imports, analytics or billing launch.
+- [x] Limited signed-in account export exists.
+- [x] Owner/admin company CSV reports exist.
+- [x] Privacy requests are stored and tenant-scoped.
+- [x] Cloudflare Queues is disclosed for import batch delivery.
+- [x] Waffo is listed in the active provider register.
+- [ ] Complete verified privacy-request fulfilment, including deletion/rectification/restriction procedures.
+- [ ] Approve and implement retention cleanup for the categories in `src/config/retention.ts`.
+- [ ] Review provider backup/deletion behavior and applicable international-transfer mechanism(s).
+- [ ] Re-review data-processing language before enabling customer-file uploads, analytics or additional monitoring providers.
 
-`npm run legal:audit` checks route/content and consent wiring. `npm run legal:audit -- --production` additionally checks launch evidence flags; it is a guardrail, **not** a substitute for evidence or legal review. Do not set flags merely to pass the script. Final human sign-off is required.
+## Product capability disclosures
+
+- [x] Public pages do not claim live GPS, RFID, Bluetooth beacon, ERP or full CMMS behavior.
+- [x] Pricing now states that plan storage allowances do not mean customer-file uploads are currently available.
+- [ ] Implement customer-file upload/storage/quota/deletion before presenting storage as an active upload feature.
+- [ ] Implement membership/admin management before treating admin-count limits as a complete self-service feature.
+
+## Release evidence
+
+`npm run legal:audit` checks route/content and consent wiring.
+
+`npm run release:audit` checks production-state consistency including active Waffo disclosure, removal of legacy `dist/`, storage transparency, provider state and legacy-brand leakage.
+
+`npm run legal:audit -- --production` still requires external evidence flags. It is a guardrail, not a substitute for operational evidence or professional legal review. Do not set flags merely to make the command pass.

@@ -8,3 +8,4 @@ tsconfig.tsbuildinfo
 .dev.vars
 .env.local
 supabase/.temp/
+dist/
