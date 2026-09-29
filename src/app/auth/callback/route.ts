@@ -5,14 +5,17 @@ export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
   const tokenHash = request.nextUrl.searchParams.get("token_hash");
   const tokenType = request.nextUrl.searchParams.get("type");
-  const next = request.nextUrl.searchParams.get("next") === "update-password"
+  const nextParam = request.nextUrl.searchParams.get("next");
+  const next = nextParam === "update-password"
     ? "/auth/update-password"
-    : "/app/dashboard";
-  if (isSupabaseConfigured() && (code || (tokenHash && (tokenType === "email" || tokenType === "recovery")))) {
+    : nextParam === "invitation"
+      ? "/auth/update-password?next=invitation"
+      : "/app/dashboard";
+  if (isSupabaseConfigured() && (code || (tokenHash && (tokenType === "email" || tokenType === "recovery" || tokenType === "invite")))) {
     const supabase = await createClient();
     const { error } = code
       ? await supabase.auth.exchangeCodeForSession(code)
-      : await supabase.auth.verifyOtp({ token_hash: tokenHash!, type: tokenType as "email" | "recovery" });
+      : await supabase.auth.verifyOtp({ token_hash: tokenHash!, type: tokenType as "email" | "recovery" | "invite" });
     if (!error) return NextResponse.redirect(new URL(next, request.url));
   }
   return NextResponse.redirect(new URL("/auth/login?notice=callback-error", request.url));
