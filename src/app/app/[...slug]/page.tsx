@@ -79,7 +79,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
         { count: admins, error: adminCountError },
       ] = await Promise.all([
         supabase.from("companies").select("plan").eq("id", membership.company_id).single(),
-        supabase.from("billing_subscriptions").select("status,billing_interval,current_period_end")
+        supabase.from("billing_subscriptions").select("plan,status,billing_interval,current_period_end")
           .eq("company_id", membership.company_id).maybeSingle(),
         supabase.from("tools").select("id", { count: "exact", head: true })
           .eq("company_id", membership.company_id).neq("status", "retired"),
@@ -88,7 +88,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       ]);
       if (companyError || subscriptionError || toolCountError || adminCountError) throw new Error("Billing state could not be loaded.");
       billing = {
-        plan: company.plan as BillingState["plan"], role: membership.role,
+        plan: company.plan as BillingState["plan"], subscriptionPlan: (subscription?.plan as BillingState["subscriptionPlan"]) ?? null, role: membership.role,
         status: subscription?.status ?? null, billingInterval: subscription?.billing_interval ?? null,
         periodEnd: subscription?.current_period_end ?? null,
         enabled: process.env.WAFFO_BILLING_ENABLED === "true",
