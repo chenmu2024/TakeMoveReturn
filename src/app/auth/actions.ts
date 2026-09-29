@@ -12,6 +12,10 @@ function requireConnection() {
   if (!isSupabaseConfigured()) redirect("/auth/login?notice=unavailable");
 }
 
+function nextDestination(form: FormData) {
+  return form.get("next") === "invitation" ? "invitation" : null;
+}
+
 export async function signIn(form: FormData) {
   requireConnection();
   const email = value(form, "email");
@@ -19,8 +23,8 @@ export async function signIn(form: FormData) {
   if (!email || !password) redirect("/auth/login?notice=required");
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) redirect("/auth/login?notice=invalid");
-  redirect("/app/dashboard");
+  if (error) redirect(`/auth/login?notice=invalid${nextDestination(form) ? "&next=invitation" : ""}`);
+  redirect(nextDestination(form) ? "/auth/accept-terms?next=invitation" : "/app/dashboard");
 }
 
 export async function signUp(form: FormData) {
@@ -63,7 +67,7 @@ export async function requestPasswordReset(form: FormData) {
   const supabase = await createClient();
   const siteUrl = process.env.NODE_ENV === "production" ? siteConfig.siteUrl : (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000");
   await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: new URL("/auth/callback", siteUrl).toString(),
+    redirectTo: new URL("/auth/callback?next=update-password", siteUrl).toString(),
   });
   redirect("/auth/forgot-password?notice=reset-sent");
 }
@@ -76,8 +80,8 @@ export async function updatePassword(form: FormData) {
   const { data } = await supabase.auth.getClaims();
   if (!data?.claims) redirect("/auth/login?notice=session-expired");
   const { error } = await supabase.auth.updateUser({ password });
-  if (error) redirect("/auth/update-password?notice=update-error");
-  redirect("/app/dashboard");
+  if (error) redirect(`/auth/update-password?notice=update-error${nextDestination(form) ? "&next=invitation" : ""}`);
+  redirect(nextDestination(form) ? "/auth/accept-terms?next=invitation" : "/app/dashboard");
 }
 
 export async function signOut() {
