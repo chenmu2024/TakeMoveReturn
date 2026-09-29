@@ -66,10 +66,11 @@ export async function requestPasswordReset(form: FormData) {
   if (!email) redirect("/auth/forgot-password?notice=required");
   const supabase = await createClient();
   const siteUrl = process.env.NODE_ENV === "production" ? siteConfig.siteUrl : (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000");
+  const invitationFlow = nextDestination(form) === "invitation";
   await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: new URL("/auth/callback?next=update-password", siteUrl).toString(),
+    redirectTo: new URL(invitationFlow ? "/auth/callback?next=update-password-invitation" : "/auth/callback?next=update-password", siteUrl).toString(),
   });
-  redirect("/auth/forgot-password?notice=reset-sent");
+  redirect(`/auth/forgot-password?notice=reset-sent${invitationFlow ? "&next=invitation" : ""}`);
 }
 
 export async function updatePassword(form: FormData) {
