@@ -411,13 +411,13 @@ function arrayField(block, field) {
 for (const [path, title] of Object.entries(expectedTitles)) {
   const page = pageByPath.get(path);
   if (!page) continue;
-  if (page.title !== title) failures.push(\`Master Title mismatch: \${path} -> "\${page.title}"\`);
+  if (page.title !== title) failures.push(`Master Title mismatch: ${path} -> "${page.title}"`);
 }
 
 for (const [path, h1] of Object.entries(expectedH1)) {
   const page = pageByPath.get(path);
   if (!page) continue;
-  if (page.h1 !== h1) failures.push(\`Master H1 mismatch: \${path} -> "\${page.h1}"\`);
+  if (page.h1 !== h1) failures.push(`Master H1 mismatch: ${path} -> "${page.h1}"`);
 }
 
 for (const [path, headings] of Object.entries(expectedHeadings)) {
@@ -425,7 +425,7 @@ for (const [path, headings] of Object.entries(expectedHeadings)) {
   if (!page) continue;
   const actual = arrayField(page.block, "headings");
   if (JSON.stringify(actual) !== JSON.stringify(headings)) {
-    failures.push(\`Master H2 map mismatch: \${path}\`);
+    failures.push(`Master H2 map mismatch: ${path}`);
   }
 }
 
@@ -458,7 +458,7 @@ for (const [path, keywords] of Object.entries(requiredSecondary)) {
   const page = pageByPath.get(path);
   if (!page) continue;
   const actual = new Set(arrayField(page.block, "secondaryKeywords"));
-  for (const keyword of keywords) if (!actual.has(keyword)) failures.push(\`Missing Master secondary keyword: "\${keyword}" -> \${path}\`);
+  for (const keyword of keywords) if (!actual.has(keyword)) failures.push(`Missing Master secondary keyword: "${keyword}" -> ${path}`);
 }
 
 const strictMetaPrimaryPaths = new Set([
@@ -494,7 +494,7 @@ for (const path of strictMetaPrimaryPaths) {
   const page = pageByPath.get(path);
   if (!page?.primaryKeyword || !page.description) continue;
   if (!page.description.toLowerCase().includes(page.primaryKeyword.toLowerCase())) {
-    failures.push(\`Primary keyword missing from meta description: "\${page.primaryKeyword}" -> \${path}\`);
+    failures.push(`Primary keyword missing from meta description: "${page.primaryKeyword}" -> ${path}`);
   }
 }
 
@@ -510,7 +510,7 @@ const staticRelatedPaths = new Set([
 for (const page of pages) {
   for (const relatedPath of arrayField(page.block, "relatedPaths")) {
     if (!pageByPath.has(relatedPath) && !staticRelatedPaths.has(relatedPath)) {
-      failures.push(\`Broken related SEO link: \${page.path} -> \${relatedPath}\`);
+      failures.push(`Broken related SEO link: ${page.path} -> ${relatedPath}`);
     }
   }
 }
@@ -530,7 +530,7 @@ const masterHomeLinks = [
 ];
 const homeRelated = new Set(arrayField(pageByPath.get("/")?.block ?? "", "relatedPaths"));
 for (const relatedPath of masterHomeLinks) {
-  if (!homeRelated.has(relatedPath)) failures.push(\`Homepage final internal-link structure missing: \${relatedPath}\`);
+  if (!homeRelated.has(relatedPath)) failures.push(`Homepage final internal-link structure missing: ${relatedPath}`);
 }
 
 const funnelLinks = {
@@ -543,7 +543,7 @@ for (const [path, requiredLinks] of Object.entries(funnelLinks)) {
   const page = pageByPath.get(path);
   if (!page) continue;
   const related = new Set(arrayField(page.block, "relatedPaths"));
-  for (const requiredLink of requiredLinks) if (!related.has(requiredLink)) failures.push(\`Guide funnel link missing: \${path} -> \${requiredLink}\`);
+  for (const requiredLink of requiredLinks) if (!related.has(requiredLink)) failures.push(`Guide funnel link missing: ${path} -> ${requiredLink}`);
 }
 
 const unsupportedPositiveClaims = [
