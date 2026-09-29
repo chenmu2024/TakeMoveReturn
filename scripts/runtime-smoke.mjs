@@ -78,7 +78,19 @@ try {
   assert((dashboard.headers.get("cache-control") ?? "").includes("no-store"), "workspace redirect must be no-store");
   assert((dashboard.headers.get("x-robots-tag") ?? "").includes("noindex"), "workspace must be noindex");
 
-  for (const path of ["/login", "/signup", "/forgot-password"]) {
+  const authAliases = [
+    ["/login", "/auth/login"],
+    ["/signup", "/auth/signup"],
+    ["/forgot-password", "/auth/forgot-password"],
+  ];
+  for (const [alias, destination] of authAliases) {
+    const response = await request(alias);
+    assert([303, 307, 308].includes(response.status), `${alias} expected redirect, got ${response.status}`);
+    assert((response.headers.get("location") ?? "").includes(destination), `${alias} must redirect to ${destination}`);
+    assert((response.headers.get("cache-control") ?? "").includes("no-store"), `${alias} must be no-store`);
+    assert((response.headers.get("x-robots-tag") ?? "").includes("noindex"), `${alias} must be noindex`);
+  }
+  for (const path of ["/auth/login", "/auth/signup", "/auth/forgot-password"]) {
     const response = await request(path);
     assert(response.status === 200, `${path} expected 200, got ${response.status}`);
     assert((response.headers.get("cache-control") ?? "").includes("no-store"), `${path} must be no-store`);
