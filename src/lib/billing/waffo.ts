@@ -17,5 +17,5 @@ export function waffoClient() {
   if (!rawKey.includes("-----BEGIN PRIVATE KEY-----") && !/^[A-Za-z0-9+/]+=*$/.test(rawKey)) return null;
   const privateKey = rawKey.includes("-----BEGIN PRIVATE KEY-----") ? rawKey :
     `-----BEGIN PRIVATE KEY-----\n${rawKey.match(/.{1,64}/g)!.join("\n")}\n-----END PRIVATE KEY-----`;
-  return new WaffoPancake({ merchantId, privateKey });
+  return new WaffoPancake({ merchantId, privateKey, environment: "prod" });
 }
