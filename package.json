@@ -12,7 +12,8 @@
     "cf:build": "opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare deploy",
-    "release:audit": "node scripts/release-audit.mjs"
+    "release:audit": "node scripts/release-audit.mjs",
+    "db:audit": "node scripts/db-audit.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
