@@ -32,6 +32,7 @@ Tracked database migrations are under `supabase/migrations/`; rollback-only secu
 5. Before a release, run:
    - `npm run typecheck`
    - `npm test`
+   - `npm run db:audit`
    - `npm run seo:audit`
    - `npm run legal:audit`
    - `npm run release:audit`
