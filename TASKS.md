@@ -18,7 +18,7 @@ This section supersedes older status wording below when the two conflict. Histor
 - Membership/admin self-service management is not yet implemented.
 - SEO keyword deployment is materially complete; pending Industry/Best/Guide routes remain noindex until US validation gates are passed.
 - The obsolete static `dist/` Fieldmark/chatgpt.site build is removed and ignored. The Next.js/OpenNext application is the only production codebase.
-- Current hardening work adds a release consistency audit, error fallbacks, active-billing legal disclosure, and stale-state cleanup.
+- Current hardening includes release consistency checks, route/global error fallbacks, active-billing legal disclosure, stale-state cleanup, a minimal health endpoint, production-server runtime smoke checks, a repeatable public-route concurrency/load baseline, Cloudflare deployment dry-run, monthly scheduled SEO review, dependency update automation, and a private security-reporting policy.
 
 ### Current blockers / remaining work
 
@@ -28,15 +28,19 @@ This section supersedes older status wording below when the two conflict. Histor
 4. Implement membership/admin management and enforce admin limits on those mutations.
 5. Implement customer-file upload/storage quota/deletion before treating storage as an active file feature.
 6. Complete privacy deletion/rectification/restriction fulfilment and automated retention cleanup.
-7. Add automated browser E2E, database-security CI, load testing and Lighthouse coverage.
-8. Finish remaining authenticated production browser verification.
-9. Complete US keyword/SERP verification before indexing pending SEO pages.
+7. Add credentialed browser E2E and run the full Supabase rollback-only security suite in CI. A source-level DB audit, local production runtime smoke, and baseline public-route load smoke now run in CI, but they do not replace those tests.
+8. Add production-scale load testing and Lighthouse/Core Web Vitals coverage; the current 100-request local load smoke is only a regression baseline.
+9. Finish remaining authenticated production browser verification.
+10. Complete US keyword/SERP verification before indexing pending SEO pages.
 
 ### Next exact task
 
-After this hardening branch passes CI, merge it to `main`, deploy it to production, verify the public legal/provider/pricing pages and Billing UI, then verify one real Waffo webhook-to-entitlement event before describing paid billing as fully operational.
+After this hardening branch passes all expanded CI checks, merge it to `main`. Then deploy through the normal Cloudflare release path, verify `/api/health`, public legal/provider/pricing pages, private-route cache/noindex headers and Billing UI in production, and verify one real Waffo webhook-to-entitlement event before describing paid billing as fully operational.
 
 ## Completed
+
+- 2026-09-29: Expanded release hardening after the full-site audit. Added a minimal no-store health endpoint; production-server route smoke checks for public/auth/private/API/sitemap/robots/404 behavior; a 100-request public-route load baseline reporting success/error rate plus p50/p95/p99; Cloudflare deployment dry-run in CI; stronger COOP/CORP/DNS-prefetch browser headers; monthly scheduled SEO audit with GitHub issue reporting; Dependabot; and a private vulnerability-reporting policy. These checks improve regression detection but do not claim credentialed E2E, full database integration testing, Lighthouse, or production-scale load certification.
+
 
 - 2026-09-29: Repaired Billing Plan Options presentation: three separate responsive plan cards, readable monthly/annual prices and features from central Plan Config, one checkout CTA per plan, and a wider right panel. The missing workspace stylesheet import caused the production layout regression. The Waffo-specific display copy was made provider-neutral; checkout, webhook, entitlements and public pricing were not changed. The Waffo copy first appeared in commit `d15661d`; Waffo remains the locked production provider, not Stripe. Typecheck, 17 unit tests, Next production build, and visual/overflow checks at 1920/1440/1280/1024/768/390 px passed.
 - 2026-09-28: The owner reported a real Waffo payment and explicitly requested opening the production revenue entry. Enabled the Waffo checkout gate for workspace owners. The six product IDs, production secret and webhook endpoint were configured previously. Waffo's webhook detail page displayed zero deliveries during this check; therefore automatic entitlement for the reported payment remains unverified and must not be claimed as passed.
