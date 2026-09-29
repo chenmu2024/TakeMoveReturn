@@ -6,10 +6,11 @@ import { isSupabaseConfigured } from "../../../lib/supabase/server";
 
 const variants = new Set<AuthVariant>(["login", "signup", "forgot-password", "update-password"]);
 
-export default async function AuthPage({ params, searchParams }: { params: Promise<{ slug: string[] }>; searchParams: Promise<{ notice?: string }> }) {
+export default async function AuthPage({ params, searchParams }: { params: Promise<{ slug: string[] }>; searchParams: Promise<{ notice?: string; next?: string }> }) {
   const key = (await params).slug.join("/") as AuthVariant;
   if (!variants.has(key)) notFound();
-  return <AuthShell variant={key} notice={(await searchParams).notice} connected={isSupabaseConfigured()}
+  const query = await searchParams;
+  return <AuthShell variant={key} notice={query.notice} next={query.next === "invitation" ? "invitation" : undefined} connected={isSupabaseConfigured()}
     registrationOpen={siteConfig.legal.legalReviewStatus === "effective" && Boolean(siteConfig.legal.effectiveDate)} />;
 }
 
