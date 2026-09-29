@@ -1,5 +1,5 @@
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
-import { customerFilesEnabled, getCustomerFilesBucket, validateCustomerFile, type CustomerFileKind } from "../../../lib/files/customer-files";
+import { customerFilesEnabled, detectCustomerFileType, getCustomerFilesBucket, validateCustomerFile, type CustomerFileKind } from "../../../lib/files/customer-files";
 
 const kinds = new Set<CustomerFileKind>(["tool_photo", "damage_photo", "maintenance_attachment"]);
 
@@ -34,6 +34,11 @@ export async function POST(request: Request) {
   const validated = validateCustomerFile({ kind, name: file.name, type: file.type, size: file.size });
   if (!validated.ok) return redirectTarget(kind, subjectId, `file-${validated.reason}`, request);
 
+  const bytes = await file.arrayBuffer();
+  if (detectCustomerFileType(bytes) !== validated.type) {
+    return redirectTarget(kind, subjectId, "file-invalid-type", request);
+  }
+
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
   if (!claims?.claims) return new Response("Authentication required", { status: 401 });
@@ -55,7 +60,7 @@ export async function POST(request: Request) {
   const objectKey = reservation.object_key as string;
 
   try {
-    await bucket.put(objectKey, await file.arrayBuffer(), {
+    await bucket.put(objectKey, bytes, {
       httpMetadata: { contentType: validated.type },
       customMetadata: {
         fileId,
