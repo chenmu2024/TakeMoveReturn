@@ -59,6 +59,7 @@ pass("new checkout binds Waffo customer identity", read("src/app/api/billing/che
 pass("plan changes use provider timing and idempotency", billingChange.includes("createPlanChangeSession") || billingChange.includes("createPlanChange"));
 pass("webhook handles plan-change and recurring lifecycle events", ["subscription.plan_changed", "subscription.plan_change_scheduled", "subscription.plan_change_failed", "subscription.uncanceled", "subscription.past_due", "subscription.canceled"].every((event) => billingWebhook.includes(event)));
 pass("billing lifecycle migration is provider-authoritative and service-role only", billingLifecycleMigration.includes("create table public.billing_plan_change_intents") && billingLifecycleMigration.includes("apply_waffo_plan_change_event") && billingLifecycleMigration.includes("apply_waffo_subscription_lifecycle_event") && billingLifecycleMigration.includes("to service_role"));
+pass("rollback-only billing lifecycle database test exists", existsSync(new URL("../supabase/tests/billing_lifecycle.sql", import.meta.url)));
 pass("public billing copy no longer claims lifecycle self-service is absent", !legal.includes("self-service upgrade, downgrade and cancellation are not yet available") && !help.includes("require billing support for plan changes or cancellation"));
 pass("route error recovery boundary exists", existsSync(new URL("../src/app/error.tsx", import.meta.url)));
 pass("global error fallback exists", existsSync(new URL("../src/app/global-error.tsx", import.meta.url)));
