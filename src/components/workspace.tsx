@@ -21,7 +21,7 @@ export type WorkspaceView = {
 export type ToolSummary = { id: string; name: string; asset_code: string; status: string; updated_at: string };
 export type LocationSummary = { id: string; name: string; type: string; address: string | null; active: boolean; updated_at: string };
 export type WorkerSummary = { id: string; name: string; employee_code: string | null; status: string; updated_at: string };
-export type DashboardStats = { totalTools: number; checkedOut: number; needsAttention: number; recentActivity: number };
+export type DashboardStats = { totalTools: number; checkedOut: number; needsAttention: number; recentActivity: number; plan: "free" | "starter" | "growth" | "pro"; admins: number; storageBytes: number };
 export type CompanySettings = { name: string; plan: string; timezone: string; role: string };
 export type BillingState = { plan: "free" | "starter" | "growth" | "pro"; role: string; status: string | null; billingInterval: string | null; periodEnd: string | null; enabled: boolean; activeTools: number; admins: number; storageBytes: number };
 export type ActivityRecord = { id: string; toolId: string; toolName: string; assetCode: string; type: string; notes: string | null; createdAt: string };
@@ -66,6 +66,12 @@ function SearchContent({ query, results }: { query: string; results: SearchResul
 }
 
 function DashboardContent({ stats, activity, attentionTools }: { stats: DashboardStats | null; activity: ActivityRecord[] | null; attentionTools: ToolSummary[] | null }) {
+  const dashboardPlan = stats ? plans[stats.plan] : null;
+  const accountOverLimit = Boolean(stats && dashboardPlan && (
+    stats.totalTools > dashboardPlan.toolLimit ||
+    stats.admins > dashboardPlan.adminLimit ||
+    stats.storageBytes > dashboardPlan.storageLimitBytes
+  ));
   const cards = [
     { label: "Active tools", value: stats?.totalTools, note: "Excludes retired tools" },
     { label: "Checked out", value: stats?.checkedOut, note: "Currently with workers" },
@@ -73,6 +79,7 @@ function DashboardContent({ stats, activity, attentionTools }: { stats: Dashboar
     { label: "Recent activity", value: stats?.recentActivity, note: "Events in the last 7 days" },
   ];
   return <>
+    {accountOverLimit && <section className="workspace-over-limit" role="alert"><div><strong>Your workspace is above the limits of the {dashboardPlan?.name} plan.</strong><span>Existing tools, history and core tracking remain available. Reduce usage where possible or review a larger plan before adding more capacity.</span></div><div className="workspace-over-limit-usage"><span className={stats && dashboardPlan && stats.totalTools > dashboardPlan.toolLimit ? "over" : ""}>Tools: {stats?.totalTools ?? 0} / {dashboardPlan?.toolLimit ?? "—"}</span><span className={stats && dashboardPlan && stats.admins > dashboardPlan.adminLimit ? "over" : ""}>Admins: {stats?.admins ?? 0} / {dashboardPlan?.adminLimit ?? "—"}</span></div><div className="workspace-action-row"><Link className="workspace-button workspace-button-quiet" href="/app/tools">Manage usage</Link><Link className="workspace-button" href="/app/settings/billing">Review plan</Link></div></section>}
     <section className="workspace-stat-grid" aria-label="Workspace overview">
       {cards.map((card) => <article className="workspace-stat" key={card.label}><span>{card.label}</span><strong>{card.value ?? "—"}</strong><small>{stats ? card.note : "Awaiting workspace data"}</small></article>)}
     </section>
