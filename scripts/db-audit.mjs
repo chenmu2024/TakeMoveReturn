@@ -1,0 +1,40 @@
+import { readdirSync, readFileSync } from "node:fs";
+
+const dir = new URL("../supabase/migrations/", import.meta.url);
+const files = readdirSync(dir).filter((name) => name.endsWith(".sql")).sort();
+const sources = files.map((name) => ({ name, text: readFileSync(new URL(name, dir), "utf8") }));
+const combined = sources.map(({ name, text }) => `-- ${name}\n${text}`).join("\n");
+
+const failures = [];
+function check(label, ok) {
+  console.log(`${ok ? "PASS" : "FAIL"} ${label}`);
+  if (!ok) failures.push(label);
+}
+
+const tables = [...combined.matchAll(/create\s+table(?:\s+if\s+not\s+exists)?\s+public\.([a-z0-9_]+)/gi)].map((m) => m[1]);
+for (const table of [...new Set(tables)]) {
+  const rls = new RegExp(`alter\\s+table\\s+public\\.${table}\\s+enable\\s+row\\s+level\\s+security`, "i");
+  check(`RLS enabled for public.${table}`, rls.test(combined));
+}
+
+const functionBlocks = [...combined.matchAll(/create(?:\s+or\s+replace)?\s+function\s+public\.([a-z0-9_]+)\s*\([^;]*?\)[\s\S]*?\$\$;/gi)];
+for (const match of functionBlocks) {
+  const name = match[1];
+  const block = match[0];
+  if (/security\s+definer/i.test(block)) {
+    check(`SECURITY DEFINER ${name} fixes search_path`, /set\s+search_path\s*=\s*''/i.test(block));
+  }
+}
+
+check("no migration grants table-wide ALL to anon", !/grant\s+all\s+on\s+(?:table\s+)?public\.[^;]+\s+to\s+anon\b/i.test(combined));
+check("no migration grants table-wide ALL to authenticated", !/grant\s+all\s+on\s+(?:table\s+)?public\.[^;]+\s+to\s+authenticated\b/i.test(combined));
+check("billing event RPC remains service-role only", /grant\s+execute\s+on\s+function\s+public\.apply_waffo_subscription_event[\s\S]*?to\s+service_role/i.test(combined)
+  && /revoke\s+all\s+on\s+function\s+public\.apply_waffo_subscription_event[\s\S]*?from\s+public,\s*anon,\s*authenticated/i.test(combined));
+check("import batch RPC remains service-role only", /grant\s+execute\s+on\s+function\s+public\.process_import_batch[\s\S]*?to\s+service_role/i.test(combined)
+  && /revoke\s+all\s+on\s+function\s+public\.process_import_batch[\s\S]*?from\s+public,\s*anon,\s*authenticated/i.test(combined));
+
+if (failures.length) {
+  console.error(`\nDatabase audit failed: ${failures.join("; ")}`);
+  process.exit(1);
+}
+console.log(`\nDatabase audit passed across ${files.length} migrations and ${new Set(tables).size} public tables.`);
