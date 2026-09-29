@@ -15,7 +15,8 @@
     "release:audit": "node scripts/release-audit.mjs",
     "db:audit": "node scripts/db-audit.mjs",
     "runtime:smoke": "node scripts/runtime-smoke.mjs",
-    "cf:dry-run": "wrangler deploy --dry-run"
+    "cf:dry-run": "wrangler deploy --dry-run",
+    "load:smoke": "node scripts/load-smoke.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
