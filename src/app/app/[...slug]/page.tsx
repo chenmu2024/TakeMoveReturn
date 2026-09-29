@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { WorkspaceShell, type ActivityRecord, type BillingState, type CompanySettings, type DashboardStats, type PrivacyRequest, type SearchResult, type WorkspaceInvitation, type WorkspaceMember, type WorkspaceView } from "../../../components/workspace";
+import { customerFilesEnabled } from "../../../lib/files/customer-files";
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
 import "../service.css";
 
@@ -117,6 +118,12 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
           .eq("company_id", membership.company_id).eq("status", "active"),
       ]);
       if (companyError || subscriptionError || pendingPlanChangeError || toolCountError || adminCountError) throw new Error("Billing state could not be loaded.");
+      let storageBytes = 0;
+      if (customerFilesEnabled()) {
+        const { data: usage, error: usageError } = await supabase.rpc("customer_file_usage", { p_company_id: membership.company_id });
+        if (usageError) throw new Error("Storage usage could not be loaded.");
+        storageBytes = Number(usage ?? 0);
+      }
       billing = {
         plan: company.plan as BillingState["plan"], subscriptionPlan: (subscription?.plan as BillingState["subscriptionPlan"]) ?? null, role: membership.role,
         status: subscription?.status ?? null, billingInterval: subscription?.billing_interval ?? null,
@@ -124,7 +131,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
         enabled: process.env.WAFFO_BILLING_ENABLED === "true",
         activeTools: activeTools ?? 0,
         admins: admins ?? 0,
-        storageBytes: 0,
+        storageBytes,
         pendingPlanChange: pendingPlanChange ? {
           plan: pendingPlanChange.to_plan as "starter" | "growth" | "pro",
           billingInterval: pendingPlanChange.to_billing_interval as "month" | "year",
@@ -194,6 +201,12 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       if (total.error || checkedOut.error || needsAttention.error || recentActivity.error || companyPlan.error || adminCount.error) {
         throw new Error("Dashboard counts could not be loaded.");
       }
+      let storageBytes = 0;
+      if (customerFilesEnabled()) {
+        const { data: usage, error: usageError } = await supabase.rpc("customer_file_usage", { p_company_id: membership.company_id });
+        if (usageError) throw new Error("Storage usage could not be loaded.");
+        storageBytes = Number(usage ?? 0);
+      }
       dashboardStats = {
         totalTools: total.count ?? 0,
         checkedOut: checkedOut.count ?? 0,
@@ -201,7 +214,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
         recentActivity: recentActivity.count ?? 0,
         plan: companyPlan.data.plan as DashboardStats["plan"],
         admins: adminCount.count ?? 0,
-        storageBytes: 0,
+        storageBytes,
       };
     }
   }
