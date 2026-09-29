@@ -204,6 +204,14 @@ begin
   ) then raise exception 'User is already an active member'; end if;
 
   if exists (
+    select 1 from public.organization_members m
+    join auth.users u on u.id = m.user_id
+    where m.company_id <> p_company_id
+      and m.status = 'active'
+      and lower(coalesce(u.email, '')) = v_email
+  ) then raise exception 'User already belongs to another workspace'; end if;
+
+  if exists (
     select 1 from public.workspace_invitations i
     where i.company_id = p_company_id and i.status = 'pending'
       and i.expires_at > now() and lower(i.email) = v_email
