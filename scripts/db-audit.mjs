@@ -35,6 +35,10 @@ check("billing event RPC remains service-role only", /grant\s+execute\s+on\s+fun
   && /revoke\s+all\s+on\s+function\s+public\.apply_waffo_subscription_event[\s\S]*?from\s+public,\s*anon,\s*authenticated/i.test(combined));
 check("import batch RPC remains service-role only", /grant\s+execute\s+on\s+function\s+public\.process_import_batch[\s\S]*?to\s+service_role/i.test(combined)
   && /revoke\s+all\s+on\s+function\s+public\.process_import_batch[\s\S]*?from\s+public,\s*anon,\s*authenticated/i.test(combined));
+check("plan-change webhook RPC remains service-role only", /grant\s+execute\s+on\s+function\s+public\.apply_waffo_plan_change_event[\s\S]*?to\s+service_role/i.test(combined)
+  && /revoke\s+all\s+on\s+function\s+public\.apply_waffo_plan_change_event[\s\S]*?from\s+public,\s*anon,\s*authenticated/i.test(combined));
+check("subscription lifecycle webhook RPC remains service-role only", /grant\s+execute\s+on\s+function\s+public\.apply_waffo_subscription_lifecycle_event[\s\S]*?to\s+service_role/i.test(combined)
+  && /revoke\s+all\s+on\s+function\s+public\.apply_waffo_subscription_lifecycle_event[\s\S]*?from\s+public,\s*anon,\s*authenticated/i.test(combined));
 
 if (failures.length) {
   console.error(`\nDatabase audit failed: ${failures.join("; ")}`);
