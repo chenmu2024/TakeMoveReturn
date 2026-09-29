@@ -72,17 +72,29 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       companySettings = { ...company, role: membership.role };
     }
     if (key === "settings/billing") {
-      const [{ data: company, error: companyError }, { data: subscription, error: subscriptionError }] = await Promise.all([
+      const [
+        { data: company, error: companyError },
+        { data: subscription, error: subscriptionError },
+        { count: activeTools, error: toolCountError },
+        { count: admins, error: adminCountError },
+      ] = await Promise.all([
         supabase.from("companies").select("plan").eq("id", membership.company_id).single(),
         supabase.from("billing_subscriptions").select("status,billing_interval,current_period_end")
           .eq("company_id", membership.company_id).maybeSingle(),
+        supabase.from("tools").select("id", { count: "exact", head: true })
+          .eq("company_id", membership.company_id).neq("status", "retired"),
+        supabase.from("organization_members").select("id", { count: "exact", head: true })
+          .eq("company_id", membership.company_id).eq("status", "active"),
       ]);
-      if (companyError || subscriptionError) throw new Error("Billing state could not be loaded.");
+      if (companyError || subscriptionError || toolCountError || adminCountError) throw new Error("Billing state could not be loaded.");
       billing = {
         plan: company.plan as BillingState["plan"], role: membership.role,
         status: subscription?.status ?? null, billingInterval: subscription?.billing_interval ?? null,
         periodEnd: subscription?.current_period_end ?? null,
         enabled: process.env.WAFFO_BILLING_ENABLED === "true",
+        activeTools: activeTools ?? 0,
+        admins: admins ?? 0,
+        storageBytes: 0,
       };
     }
     if (key === "tools") {
