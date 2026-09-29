@@ -23,7 +23,8 @@ export type LocationSummary = { id: string; name: string; type: string; address:
 export type WorkerSummary = { id: string; name: string; employee_code: string | null; status: string; updated_at: string };
 export type DashboardStats = { totalTools: number; checkedOut: number; needsAttention: number; recentActivity: number; plan: "free" | "starter" | "growth" | "pro"; admins: number; storageBytes: number };
 export type CompanySettings = { name: string; plan: string; timezone: string; role: string };
-export type BillingState = { plan: "free" | "starter" | "growth" | "pro"; subscriptionPlan: "starter" | "growth" | "pro" | null; role: string; status: string | null; billingInterval: string | null; periodEnd: string | null; enabled: boolean; activeTools: number; admins: number; storageBytes: number };
+export type BillingPlanChange = { plan: "starter" | "growth" | "pro"; billingInterval: "month" | "year"; timing: "immediate" | "next_period"; status: string };
+export type BillingState = { plan: "free" | "starter" | "growth" | "pro"; subscriptionPlan: "starter" | "growth" | "pro" | null; role: string; status: string | null; billingInterval: string | null; periodEnd: string | null; enabled: boolean; activeTools: number; admins: number; storageBytes: number; pendingPlanChange: BillingPlanChange | null };
 export type ActivityRecord = { id: string; toolId: string; toolName: string; assetCode: string; type: string; notes: string | null; createdAt: string };
 export type PrivacyRequest = { id: string; request_type: string; status: string; created_at: string; completed_at: string | null };
 export type SearchResult = { result_type: "tool" | "worker" | "location"; result_id: string; title: string; detail: string };
@@ -129,7 +130,84 @@ function BillingContent({ billing, notice }: { billing: BillingState | null; not
   const overLimit = overTools || overAdmins || overStorage;
   const billingMismatch = Boolean(billing?.subscriptionPlan && billing.status !== "canceled" && billing.subscriptionPlan !== billing.plan);
   const storageUsage = billing ? billing.storageBytes < 1024 ** 2 ? `${Math.round(billing.storageBytes / 1024)} KB` : `${(billing.storageBytes / (1024 ** 2)).toFixed(1)} MB` : "—";
-  return <><section className="workspace-billing-notices">{notice === "payment-pending" && <p className="workspace-connection-banner" role="status"><span>Checkout returned successfully. Subscription activation is pending a valid signed Waffo event. If the plan does not update, contact billing@takemovereturn.com with the order reference.</span></p>}{billingMismatch && <p className="workspace-connection-banner" role="alert"><span>Billing records need review: the subscription plan does not match the workspace entitlement. Core data remains available; contact billing@takemovereturn.com before making another purchase.</span></p>}{overLimit && <div className="workspace-over-limit" role="alert"><div><strong>Your workspace is above one or more limits of the current plan.</strong><span>Existing records remain available. New additions that exceed an enforced limit are restricted until usage is reduced or the plan is upgraded.</span></div><div className="workspace-over-limit-usage"><span className={overTools ? "over" : ""}>Tools: {billing?.activeTools ?? 0} / {current?.toolLimit ?? "—"}</span><span className={overAdmins ? "over" : ""}>Admins: {billing?.admins ?? 0} / {current?.adminLimit ?? "—"}</span><span className={overStorage ? "over" : ""}>Storage: {storageUsage} / {current ? current.id === "free" ? `${current.storageLimitBytes / (1024 ** 2)} MB` : `${current.storageLimitBytes / (1024 ** 3)} GB` : "—"}</span></div><div className="workspace-action-row"><Link className="workspace-button workspace-button-quiet" href="/app/tools">Review tools</Link><Link className="workspace-button" href="/pricing">Review plans</Link></div></div>}</section><section className="workspace-billing"><article className="workspace-panel workspace-plan-card"><p className="workspace-eyebrow">CURRENT PLAN</p><h2>{current ? `${current.name} plan` : "Plan unavailable"}</h2><p>{billing?.status ? `Subscription: ${billing.status.replaceAll("_", " ")}.` : "No paid subscription is connected to this workspace."}</p><div className="workspace-plan-line"><span>Active tools</span><strong>{billing && current ? `${billing.activeTools.toLocaleString("en-US")} / ${current.toolLimit.toLocaleString("en-US")}` : "—"}</strong></div><div className="workspace-plan-line"><span>Administrators</span><strong>{billing && current ? `${billing.admins} / ${current.adminLimit}` : "—"}</strong></div><div className="workspace-plan-line"><span>Storage allowance</span><strong>{billing && current ? `${storageUsage} / ${current.id === "free" ? `${current.storageLimitBytes / (1024 ** 2)} MB` : `${current.storageLimitBytes / (1024 ** 3)} GB`}` : "—"}</strong></div><p className="workspace-plan-note">Customer-file uploads are not yet enabled. Tool records, QR tracking and imports do not depend on file storage.</p><div className="workspace-plan-line"><span>Billing interval</span><strong>{billing?.billingInterval ?? "—"}</strong></div>{billing?.periodEnd && <div className="workspace-plan-line"><span>Current period ends</span><strong>{billing.periodEnd.slice(0, 10)}</strong></div>}{billing?.status === "canceling" && <p>Access remains until the current period ends. Contact billing if this date is incorrect.</p>}{!billing?.enabled && <div className="workspace-blocked"><IconLock size={16} aria-hidden="true" />Paid checkout remains closed until production verification is complete.</div>}</article><article className="workspace-panel workspace-plan-options"><p className="workspace-eyebrow">PLAN OPTIONS</p><h2>Choose capacity by tools, not people.</h2><p>Field workers are unlimited on every plan. Prices are charged in USD.</p>{billing?.enabled && billing.role === "owner" && billing.plan === "free" ? <div className="workspace-billing-options">{(["starter", "growth", "pro"] as const).map((plan) => <article key={plan} className="workspace-billing-option"><header><h3>{plans[plan].name}</h3><span>{plans[plan].toolLimit.toLocaleString("en-US")} tools</span></header><div className="workspace-billing-prices"><p><strong>${plans[plan].monthlyPrice}</strong><span> / month</span></p><p>${plans[plan].annualPrice} / year <small>Save 2 months</small></p></div><ul><li>{plans[plan].toolLimit.toLocaleString("en-US")} active tools</li><li>{plans[plan].adminLimit} administrators</li><li>Unlimited field workers</li><li>{plans[plan].storageLimitBytes / (1024 ** 3)} GB storage allowance*</li></ul><form method="post" action="/api/billing/checkout"><input type="hidden" name="plan" value={plan} /><label htmlFor={`billing-interval-${plan}`}>Billing interval</label><select id={`billing-interval-${plan}`} name="billing_interval" defaultValue="month"><option value="month">Monthly</option><option value="year">Annual · Save 2 months</option></select><button className="workspace-button" type="submit">Upgrade to {plans[plan].name}</button></form></article>)}</div> : billing?.plan !== "free" ? <p>For cancellation or plan changes, contact <a href="mailto:billing@takemovereturn.com">billing@takemovereturn.com</a>. We will confirm the effective date before changing access.</p> : <p>Only the workspace owner can start a paid subscription when checkout is open.</p>}<p className="workspace-plan-note">* Customer-file uploads are not yet enabled. Storage allowances are reserved for that future capability.</p><div className="workspace-pricing-link"><Link className="workspace-button workspace-button-quiet" href="/pricing">Review public pricing <IconArrowRight size={16} aria-hidden="true" /></Link></div></article></section></>;
+  const pendingChange = billing?.pendingPlanChange ?? null;
+  const paidOwner = Boolean(billing && billing.role === "owner" && billing.plan !== "free");
+
+  const noticeText = notice === "payment-pending"
+    ? "Checkout returned successfully. Subscription activation is pending a valid signed Waffo event."
+    : notice === "plan-change-pending"
+      ? "Plan change was submitted to Waffo. Your current entitlement stays authoritative until the signed plan-change event arrives."
+      : notice === "cancel-pending"
+        ? "Cancellation was requested. The Billing status and current period end will update only after Waffo confirms it."
+        : notice === "reactivation-pending"
+          ? "Reactivation was requested. The subscription remains canceling until Waffo confirms the change."
+          : notice === "already-canceling"
+            ? "This subscription is already scheduled to cancel. You can reactivate it before the period ends."
+            : null;
+
+  return <>
+    <section className="workspace-billing-notices">
+      {noticeText && <p className="workspace-connection-banner" role="status"><span>{noticeText} If the status does not update, contact billing@takemovereturn.com with the order reference.</span></p>}
+      {pendingChange && <p className="workspace-connection-banner" role="status"><span>
+        {pendingChange.status === "scheduled" ? "Scheduled change" : "Plan change pending"}: {plans[pendingChange.plan].name} · {pendingChange.billingInterval === "year" ? "annual" : "monthly"}.
+        {pendingChange.timing === "immediate" ? " Waffo will apply it after confirmation." : " It is set for the next billing period."}
+      </span></p>}
+      {billing?.status === "past_due" && <p className="workspace-connection-banner" role="alert"><span>Payment is past due. Existing data remains available. Resolve billing through Waffo or contact billing@takemovereturn.com; plan changes are paused until the subscription returns to active.</span></p>}
+      {billingMismatch && <p className="workspace-connection-banner" role="alert"><span>Billing records need review: the subscription plan does not match the workspace entitlement. Core data remains available; contact billing@takemovereturn.com before making another purchase.</span></p>}
+      {overLimit && <div className="workspace-over-limit" role="alert"><div><strong>Your workspace is above one or more limits of the current plan.</strong><span>Existing records remain available. New additions that exceed an enforced limit are restricted until usage is reduced or the plan is upgraded.</span></div><div className="workspace-over-limit-usage"><span className={overTools ? "over" : ""}>Tools: {billing?.activeTools ?? 0} / {current?.toolLimit ?? "—"}</span><span className={overAdmins ? "over" : ""}>Admins: {billing?.admins ?? 0} / {current?.adminLimit ?? "—"}</span><span className={overStorage ? "over" : ""}>Storage: {storageUsage} / {current ? current.id === "free" ? `${current.storageLimitBytes / (1024 ** 2)} MB` : `${current.storageLimitBytes / (1024 ** 3)} GB` : "—"}</span></div><div className="workspace-action-row"><Link className="workspace-button workspace-button-quiet" href="/app/tools">Review tools</Link><Link className="workspace-button" href="/pricing">Review plans</Link></div></div>}
+    </section>
+
+    <section className="workspace-billing">
+      <article className="workspace-panel workspace-plan-card">
+        <p className="workspace-eyebrow">CURRENT PLAN</p>
+        <h2>{current ? `${current.name} plan` : "Plan unavailable"}</h2>
+        <p>{billing?.status ? `Subscription: ${billing.status.replaceAll("_", " ")}.` : "No paid subscription is connected to this workspace."}</p>
+        <div className="workspace-plan-line"><span>Active tools</span><strong>{billing && current ? `${billing.activeTools.toLocaleString("en-US")} / ${current.toolLimit.toLocaleString("en-US")}` : "—"}</strong></div>
+        <div className="workspace-plan-line"><span>Administrators</span><strong>{billing && current ? `${billing.admins} / ${current.adminLimit}` : "—"}</strong></div>
+        <div className="workspace-plan-line"><span>Storage allowance</span><strong>{billing && current ? `${storageUsage} / ${current.id === "free" ? `${current.storageLimitBytes / (1024 ** 2)} MB` : `${current.storageLimitBytes / (1024 ** 3)} GB`}` : "—"}</strong></div>
+        <p className="workspace-plan-note">Customer-file uploads are not yet enabled. Tool records, QR tracking and imports do not depend on file storage.</p>
+        <div className="workspace-plan-line"><span>Billing interval</span><strong>{billing?.billingInterval === "year" ? "Annual" : billing?.billingInterval === "month" ? "Monthly" : "—"}</strong></div>
+        {billing?.periodEnd && <div className="workspace-plan-line"><span>Current period ends</span><strong>{billing.periodEnd.slice(0, 10)}</strong></div>}
+        {billing?.status === "canceling" && <p>Cancellation is scheduled. Access remains until the current period ends unless Waffo reports otherwise.</p>}
+        {!billing?.enabled && <div className="workspace-blocked"><IconLock size={16} aria-hidden="true" />Paid billing actions are temporarily unavailable.</div>}
+
+        {billing?.enabled && paidOwner && (billing?.status === "active" || billing?.status === "past_due") && <form className="workspace-billing-danger" method="post" action="/api/billing/cancel">
+          <strong>Cancel subscription</strong>
+          <p>{billing.status === "past_due" ? "A past-due subscription may stop immediately under the provider's billing state." : "Cancellation is requested for the end of the current billing period. Existing data is not deleted."}</p>
+          <button className="workspace-button workspace-button-quiet" type="submit">{billing.status === "past_due" ? "Request cancellation" : "Cancel at period end"}</button>
+        </form>}
+        {billing?.enabled && paidOwner && billing?.status === "canceling" && <form className="workspace-billing-danger" method="post" action="/api/billing/reactivate">
+          <strong>Keep subscription</strong>
+          <p>Withdraw the pending cancellation before the subscription ends. Entitlement changes only after Waffo confirms reactivation.</p>
+          <button className="workspace-button" type="submit">Reactivate subscription</button>
+        </form>}
+      </article>
+
+      <article className="workspace-panel workspace-plan-options">
+        <p className="workspace-eyebrow">PLAN OPTIONS</p>
+        <h2>Choose capacity by tools, not people.</h2>
+        <p>Field workers are unlimited on every plan. Prices are charged in USD.</p>
+
+        {billing?.enabled && billing.role === "owner" && billing.plan === "free" ? <div className="workspace-billing-options">{(["starter", "growth", "pro"] as const).map((plan) => <article key={plan} className="workspace-billing-option"><header><h3>{plans[plan].name}</h3><span>{plans[plan].toolLimit.toLocaleString("en-US")} tools</span></header><div className="workspace-billing-prices"><p><strong>${plans[plan].monthlyPrice}</strong><span> / month</span></p><p>${plans[plan].annualPrice} / year <small>Save 2 months</small></p></div><ul><li>{plans[plan].toolLimit.toLocaleString("en-US")} active tools</li><li>{plans[plan].adminLimit} administrators</li><li>Unlimited field workers</li><li>{plans[plan].storageLimitBytes / (1024 ** 3)} GB storage allowance*</li></ul><form method="post" action="/api/billing/checkout"><input type="hidden" name="plan" value={plan} /><label htmlFor={`billing-interval-${plan}`}>Billing interval</label><select id={`billing-interval-${plan}`} name="billing_interval" defaultValue="month"><option value="month">Monthly</option><option value="year">Annual · Save 2 months</option></select><button className="workspace-button" type="submit">Upgrade to {plans[plan].name}</button></form></article>)}</div>
+        : billing?.enabled && paidOwner ? <div className="workspace-billing-management">
+          <h3>Change subscription</h3>
+          <p>Upgrades to a higher capacity are submitted as immediate changes. Downgrades and billing-interval switches are submitted for the next billing period. Your current limits stay authoritative until a signed Waffo webhook confirms the change.</p>
+          {pendingChange ? <div className="workspace-blocked"><IconLock size={16} aria-hidden="true" />A plan change is already {pendingChange.status === "scheduled" ? "scheduled" : "in progress"}. Wait for it to resolve before starting another.</div>
+          : billing.status === "active" ? <form method="post" action="/api/billing/change-plan">
+            <div><label htmlFor="target-plan">Target plan</label><select id="target-plan" name="plan" defaultValue={billing.plan}><option value="starter">Starter · 200 tools</option><option value="growth">Growth · 600 tools</option><option value="pro">Pro · 2,000 tools</option></select></div>
+            <div><label htmlFor="target-interval">Billing interval</label><select id="target-interval" name="billing_interval" defaultValue={billing.billingInterval === "year" ? "year" : "month"}><option value="month">Monthly</option><option value="year">Annual · Save 2 months</option></select></div>
+            <button className="workspace-button" type="submit">Review change with Waffo</button>
+          </form>
+          : <div className="workspace-blocked"><IconLock size={16} aria-hidden="true" />Plan changes require an active subscription. Resolve {billing.status ?? "the current billing state"} first.</div>}
+        </div>
+        : billing?.plan !== "free" ? <p>Only the workspace owner can manage the paid subscription.</p>
+        : <p>Only the workspace owner can start a paid subscription when checkout is open.</p>}
+
+        <p className="workspace-plan-note">* Customer-file uploads are not yet enabled. Storage allowances are reserved for that future capability.</p>
+        <div className="workspace-pricing-link"><Link className="workspace-button workspace-button-quiet" href="/pricing">Review public pricing <IconArrowRight size={16} aria-hidden="true" /></Link></div>
+      </article>
+    </section>
+  </>;
 }
 
 function PrivacyContent({ requests }: { requests: PrivacyRequest[] | null }) {
