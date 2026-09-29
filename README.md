@@ -65,7 +65,7 @@ The locked plan capacities are:
 - Growth: 600 active tools, 5 admins, unlimited field workers
 - Pro: 2,000 active tools, 10 admins, unlimited field workers
 
-Monthly/annual prices and capacity limits come from `src/config/plans.ts`. Paid checkout is available for a free workspace owner when production billing is enabled. Subscription state is designed to update from accepted signed Waffo webhook events. Self-service plan changes and cancellation after activation remain an implementation gap.
+Monthly/annual prices and capacity limits come from `src/config/plans.ts`. Paid checkout is available for a free workspace owner when production billing is enabled. New checkout and plan-change sessions are bound to the signed-in owner identity. Active paid owners can request higher-capacity upgrades immediately, request downgrades or billing-interval changes for the next period, cancel, and reactivate a canceling subscription. The local workspace never changes entitlement optimistically: accepted signed Waffo webhook events remain authoritative for activation, plan changes and lifecycle state.
 
 ## SEO
 
@@ -77,8 +77,7 @@ The obsolete static `dist/` site is intentionally removed and ignored. The produ
 
 The repository must **not** be described as fully production-complete while these remain open:
 
-- verify a real Waffo signed webhook through subscription entitlement;
-- implement or formally define upgrade, downgrade, cancellation and failed-payment operations;
+- verify real production Waffo activation, plan-change, renewal, past-due, recovery, canceling, uncanceled and canceled webhooks through workspace entitlement;
 - implement membership/admin management rather than only plan limits;
 - implement customer-file upload/storage quota/deletion before selling storage as an active feature;
 - complete privacy-request fulfilment and retention cleanup operations;
