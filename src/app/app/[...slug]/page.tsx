@@ -147,13 +147,15 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       if (attentionError) throw new Error("Attention items could not be loaded.");
       attentionTools = attentionRows;
       const recentSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const [total, checkedOut, needsAttention, recentActivity] = await Promise.all([
+      const [total, checkedOut, needsAttention, recentActivity, companyPlan, adminCount] = await Promise.all([
         supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).neq("status", "retired"),
         supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("status", "checked_out"),
         supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).in("status", ["damaged", "maintenance", "missing"]),
         supabase.from("tool_transactions").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).gte("created_at", recentSince),
+        supabase.from("companies").select("plan").eq("id", membership.company_id).single(),
+        supabase.from("organization_members").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("status", "active"),
       ]);
-      if (total.error || checkedOut.error || needsAttention.error || recentActivity.error) {
+      if (total.error || checkedOut.error || needsAttention.error || recentActivity.error || companyPlan.error || adminCount.error) {
         throw new Error("Dashboard counts could not be loaded.");
       }
       dashboardStats = {
@@ -161,6 +163,9 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
         checkedOut: checkedOut.count ?? 0,
         needsAttention: needsAttention.count ?? 0,
         recentActivity: recentActivity.count ?? 0,
+        plan: companyPlan.data.plan as DashboardStats["plan"],
+        admins: adminCount.count ?? 0,
+        storageBytes: 0,
       };
     }
   }
