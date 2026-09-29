@@ -93,7 +93,9 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
         : "CONSTRUCTION TOOL TRACKING";
   const relatedPaths = seoPage?.relatedPaths?.length ? seoPage.relatedPaths : defaultRelatedPaths;
   const sectionCopy = seoPage
-    ? [seoPage.pain, seoPage.scenario, seoPage.comparison, seoPage.audience].filter((value): value is string => Boolean(value))
+    ? (seoPage.sectionCopy?.length
+      ? seoPage.sectionCopy
+      : [seoPage.pain, seoPage.scenario, seoPage.comparison, seoPage.audience].filter((value): value is string => Boolean(value)))
     : [];
 
   return (
@@ -112,7 +114,7 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
           <>
             <section className="direct-answer">
               <h2>A practical tool-tracking workflow for construction crews.</h2>
-              <p>TakeMoveReturn gives small crews a simple QR-based way to record where reusable tools are, who has them, and what happened next.</p>
+              <p>{seoPage.directAnswer ?? "TakeMoveReturn gives small crews a simple QR-based way to record where reusable tools are, who has them, and what happened next."}</p>
               <ul>
                 <li><IconCheck size={18} aria-hidden="true" />No GPS or expensive hardware required</li>
                 <li><IconCheck size={18} aria-hidden="true" />Works from a phone browser</li>
