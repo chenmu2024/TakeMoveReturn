@@ -73,10 +73,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const session = await client.checkout.createPlanChangeSession({
+    const session = await client.checkout.authenticated.createPlanChange({
       originOrderId: subscription.order_id,
       productId,
       currency: "USD",
+      buyerIdentity: auth.user.email,
       changeTiming: timing === "immediate" ? ChangeTiming.Immediate : ChangeTiming.NextPeriod,
       successUrl: new URL("/app/settings/billing?notice=plan-change-pending", siteConfig.siteUrl).toString(),
       metadata: { billingPlanChangeIntentId: intentId },
