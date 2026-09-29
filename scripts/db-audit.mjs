@@ -48,6 +48,14 @@ check("workspace invitation mutations are never granted to anon", [
 ].every((name) => new RegExp(`revoke\\s+all\\s+on\\s+function\\s+public\\.${name}[\\s\\S]*?from\\s+public,\\s*anon`, "i").test(combined)));
 check("member management keeps owner-only mutation guards", /create\s+function\s+public\.create_workspace_invitation[\s\S]*?m\.role\s*=\s*'owner'/i.test(combined)
   && /create\s+function\s+public\.set_workspace_member_active[\s\S]*?Owner access cannot be removed here/i.test(combined));
+check("customer-file cleanup RPCs remain service-role only", ["customer_file_cleanup_batch", "record_customer_file_object_cleanup"].every((name) =>
+  new RegExp(`grant\\s+execute\\s+on\\s+function\\s+public\\.${name}[\\s\\S]*?to\\s+service_role`, "i").test(combined)
+  && new RegExp(`revoke\\s+all\\s+on\\s+function\\s+public\\.${name}[\\s\\S]*?from\\s+public,\\s*anon,\\s*authenticated`, "i").test(combined)));
+check("customer-file parents are protected until R2 objects are purged", /prevent_parent_delete_with_live_customer_files/i.test(combined)
+  && /companies_customer_file_delete_guard/i.test(combined)
+  && /tools_customer_file_delete_guard/i.test(combined)
+  && /damage_reports_customer_file_delete_guard/i.test(combined)
+  && /maintenance_events_customer_file_delete_guard/i.test(combined));
 
 if (failures.length) {
   console.error(`\nDatabase audit failed: ${failures.join("; ")}`);
