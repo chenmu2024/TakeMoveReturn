@@ -54,6 +54,10 @@ pass("health endpoint exists", existsSync(new URL("../src/app/api/health/route.t
 pass("runtime smoke audit exists", existsSync(new URL("../scripts/runtime-smoke.mjs", import.meta.url)) && packageJson.scripts?.["runtime:smoke"] === "node scripts/runtime-smoke.mjs");
 pass("CI runs production runtime smoke after build", ci.includes("npm run build") && ci.includes("npm run runtime:smoke") && ci.indexOf("npm run runtime:smoke") > ci.indexOf("npm run build"));
 pass("CI runs Cloudflare deployment dry-run", ci.includes("npm run cf:dry-run") && packageJson.scripts?.["cf:dry-run"] === "wrangler deploy --dry-run");
+pass("CI runs baseline public load smoke", ci.includes("npm run load:smoke") && packageJson.scripts?.["load:smoke"] === "node scripts/load-smoke.mjs" && existsSync(new URL("../scripts/load-smoke.mjs", import.meta.url)));
+pass("scheduled SEO review workflow exists", existsSync(new URL("../.github/workflows/seo-review.yml", import.meta.url)));
+pass("dependency update automation exists", existsSync(new URL("../.github/dependabot.yml", import.meta.url)));
+pass("security reporting policy exists", existsSync(new URL("../SECURITY.md", import.meta.url)));
 pass("browser hardening headers include COOP and CORP", nextConfig.includes("Cross-Origin-Opener-Policy") && nextConfig.includes("Cross-Origin-Resource-Policy") && nextConfig.includes("X-DNS-Prefetch-Control"));
 
 if (failures.length) {
