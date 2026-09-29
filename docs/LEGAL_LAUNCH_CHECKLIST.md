@@ -43,7 +43,8 @@ The owner-approved legal pages are public and noindex. Registration is enabled. 
 - [x] Public pages do not claim live GPS, RFID, Bluetooth beacon, ERP or full CMMS behavior.
 - [x] Pricing now states that plan storage allowances do not mean customer-file uploads are currently available.
 - [ ] Implement customer-file upload/storage/quota/deletion before presenting storage as an active upload feature.
-- [ ] Implement membership/admin management before treating admin-count limits as a complete self-service feature.
+- [x] Implement owner-controlled Admin/Manager invitations, role changes and non-owner deactivate/reactivate behavior with plan-limit enforcement and audit records.
+- [ ] Apply the member-management migration and verify invitation delivery/acceptance and access changes in production before describing the flow as production-verified.
 
 ## Release evidence
 
