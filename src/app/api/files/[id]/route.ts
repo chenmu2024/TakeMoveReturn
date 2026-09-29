@@ -32,11 +32,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (!object) return new Response("Not found", { status: 404 });
 
   const name = safeFileName(record.original_name);
+  const disposition = record.content_type === "application/pdf" ? "attachment" : "inline";
   const headers = new Headers({
     "Content-Type": record.content_type,
-    "Content-Disposition": `inline; filename="${name}"`,
+    "Content-Disposition": `${disposition}; filename="${name}"`,
     "Cache-Control": "private, no-store, max-age=0",
+    "Content-Security-Policy": "default-src 'none'; sandbox",
+    "Cross-Origin-Resource-Policy": "same-origin",
     "X-Content-Type-Options": "nosniff",
+    "X-Robots-Tag": "noindex, nofollow, noarchive",
   });
   if (record.size_bytes) headers.set("Content-Length", String(record.size_bytes));
 
