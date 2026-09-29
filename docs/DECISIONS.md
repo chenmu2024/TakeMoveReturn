@@ -28,13 +28,13 @@
 
 ## Production domain and public email addresses
 
-**Decision:** Use `takemovereturn.com` as the canonical site domain. Use `contact@takemovereturn.com` for general/privacy contact, `support@takemovereturn.com` for help, and reserve `billing@takemovereturn.com` for future billing communication.
+**Decision:** Use `takemovereturn.com` as the canonical site domain. Use `contact@takemovereturn.com` for general/privacy contact, `support@takemovereturn.com` for help, and `billing@takemovereturn.com` for active billing and subscription-support communication.
 
 **Status:** LOCKED — the root domain routes to the existing Cloudflare Worker. The user confirms receipt through Cloudflare Email Routing and sending from an email client for all three addresses. Cloudflare Email Sending is unavailable on the current free plan; the user selected Resend's free plan for automated Auth mail. The domain is verified in Resend, and Supabase custom SMTP is configured with a domain-restricted sending-only key. Two new accounts received and confirmed real signup mail on 2026-09-28; both recorded the current legal version, and one logged into the production workspace. Production public Auth is now enabled. Payment remains gated off.
 
 ## Payment provider
 
-**Decision:** Waffo Pancake is the sole selected provider for production subscriptions. Waffo.com Limited is Merchant of Record for applicable transactions. Work on billing now, but do not enable paid actions before production products, checkout API, signatures and webhook behavior are verified.
+**Decision:** Waffo Pancake is the sole selected provider for production subscriptions. Waffo.com Limited is Merchant of Record for applicable transactions. Waffo remains the sole production subscription provider. New paid checkout is enabled; do not describe automatic entitlement or the full subscription lifecycle as verified until signed production webhook delivery and lifecycle events are exercised end-to-end.
 
 **Status:** LOCKED — production checkout is enabled at the owner's direction on 2026-09-28. A real payment was reported by the owner, but signed Webhook delivery and automatic entitlement for that payment have not yet been independently verified.
 
