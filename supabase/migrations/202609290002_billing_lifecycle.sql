@@ -261,3 +261,74 @@ revoke all on function public.apply_waffo_plan_change_event(text,text,text,times
   from public, anon, authenticated;
 grant execute on function public.apply_waffo_plan_change_event(text,text,text,timestamptz,timestamptz)
   to service_role;
+
+
+create function public.apply_waffo_subscription_lifecycle_event(
+  p_event_type text,
+  p_event_id text,
+  p_order_id text,
+  p_occurred_at timestamptz,
+  p_period_end timestamptz
+) returns text language plpgsql security definer set search_path = '' as $$
+declare
+  v_subscription public.billing_subscriptions%rowtype;
+  v_status text;
+begin
+  if auth.role() <> 'service_role' then raise exception 'Forbidden'; end if;
+  if p_event_type not in (
+      'subscription.renewed',
+      'subscription.recovered',
+      'subscription.canceling',
+      'subscription.uncanceled',
+      'subscription.past_due',
+      'subscription.canceled'
+    )
+    or p_event_id is null or length(p_event_id) not between 1 and 200
+    or p_order_id is null or length(p_order_id) not between 1 and 200
+    or p_occurred_at is null then
+    raise exception 'Invalid subscription lifecycle event';
+  end if;
+
+  if exists (
+    select 1 from public.billing_webhook_events
+    where event_type = p_event_type and event_id = p_event_id
+  ) then return 'duplicate'; end if;
+
+  select * into v_subscription from public.billing_subscriptions
+    where order_id = p_order_id for update;
+  if not found then raise exception 'Unknown subscription order'; end if;
+
+  if p_occurred_at < v_subscription.last_event_at then
+    insert into public.billing_webhook_events(event_type,event_id,order_id)
+      values(p_event_type,p_event_id,p_order_id);
+    return 'stale';
+  end if;
+
+  v_status := case p_event_type
+    when 'subscription.canceling' then 'canceling'
+    when 'subscription.past_due' then 'past_due'
+    when 'subscription.canceled' then 'canceled'
+    else 'active'
+  end;
+
+  update public.billing_subscriptions
+    set status = v_status,
+        current_period_end = coalesce(p_period_end, current_period_end),
+        last_event_at = p_occurred_at,
+        updated_at = now()
+    where company_id = v_subscription.company_id;
+
+  update public.companies
+    set plan = case when v_status = 'canceled' then 'free' else v_subscription.plan end,
+        updated_at = now()
+    where id = v_subscription.company_id;
+
+  insert into public.billing_webhook_events(event_type,event_id,order_id)
+    values(p_event_type,p_event_id,p_order_id);
+  return 'applied';
+end $$;
+
+revoke all on function public.apply_waffo_subscription_lifecycle_event(text,text,text,timestamptz,timestamptz)
+  from public, anon, authenticated;
+grant execute on function public.apply_waffo_subscription_lifecycle_event(text,text,text,timestamptz,timestamptz)
+  to service_role;
