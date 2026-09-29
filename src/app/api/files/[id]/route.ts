@@ -5,6 +5,14 @@ function safeFileName(value: string) {
   return value.replace(/[\r\n"\\]/g, "_").slice(0, 180) || "attachment";
 }
 
+function contentDisposition(value: string, disposition: "inline" | "attachment") {
+  const safe = safeFileName(value);
+  const ascii = safe.replace(/[^\x20-\x7E]/g, "_");
+  const encoded = encodeURIComponent(safe).replace(/['()*]/g, (char) =>
+    `%${char.charCodeAt(0).toString(16).toUpperCase()}`);
+  return `${disposition}; filename="${ascii}"; filename*=UTF-8''${encoded}`;
+}
+
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!customerFilesEnabled()) return new Response("Not found", { status: 404 });
   if (!isSupabaseConfigured()) return new Response("Storage unavailable", { status: 503 });
@@ -31,12 +39,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const object = await bucket.get(record.object_key);
   if (!object) return new Response("Not found", { status: 404 });
 
-  const name = safeFileName(record.original_name);
+  const disposition = record.content_type === "application/pdf" ? "attachment" : "inline";
   const headers = new Headers({
     "Content-Type": record.content_type,
-    "Content-Disposition": `inline; filename="${name}"`,
+    "Content-Disposition": contentDisposition(record.original_name, disposition),
     "Cache-Control": "private, no-store, max-age=0",
+    "Content-Security-Policy": "default-src 'none'; sandbox",
+    "Cross-Origin-Resource-Policy": "same-origin",
     "X-Content-Type-Options": "nosniff",
+    "X-Robots-Tag": "noindex, nofollow, noarchive",
   });
   if (record.size_bytes) headers.set("Content-Length", String(record.size_bytes));
 

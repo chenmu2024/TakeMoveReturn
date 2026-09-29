@@ -8,7 +8,7 @@ The public site and registration are available at `https://takemovereturn.com/`.
 
 Waffo Pancake is the active Merchant of Record integration for paid subscriptions. Checkout is owner-only and uses server-side product IDs and signed Waffo API requests. The codebase supports owner-requested plan changes, billing-interval changes, cancellation and reactivation, but a delivered signed production webhook that reconciles those lifecycle events to workspace entitlement has not yet been independently verified end-to-end.
 
-Customer-file storage code is now staged behind `CUSTOMER_FILES_ENABLED`, but production uploads remain **disabled**. R2 is currently active only for the OpenNext incremental cache. The staged file layer adds company-scoped metadata, quota reservations, authenticated read/delete routes, tool photos, damage photos and maintenance attachments; it still requires a separate private `takemovereturn-files` bucket/binding, migration application and production verification before the gate can be enabled.
+Customer-file storage code is now staged behind `CUSTOMER_FILES_ENABLED`, but production uploads remain **disabled**. R2 is currently active only for the OpenNext incremental cache. The staged file layer adds company-scoped metadata, quota reservations, authenticated read/delete routes, tool photos, damage photos and maintenance attachments, plus durable R2-delete tracking, daily orphan cleanup and hard-delete guards; it still requires a separate private `takemovereturn-files` bucket/binding, migration application and production verification before the gate can be enabled.
 
 ## Architecture
 

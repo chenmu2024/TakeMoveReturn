@@ -19,7 +19,17 @@ export async function POST(request: Request) {
   const bucket = getCustomerFilesBucket();
   if (!bucket) return new Response("Customer file storage is not provisioned", { status: 503 });
 
-  const form = await request.formData();
+  const contentLength = Number(request.headers.get("content-length") ?? "0");
+  if (Number.isFinite(contentLength) && contentLength > 11 * 1024 * 1024) {
+    return new Response("Upload too large", { status: 413 });
+  }
+
+  let form: FormData;
+  try {
+    form = await request.formData();
+  } catch {
+    return new Response("Invalid multipart upload", { status: 400 });
+  }
   const kindValue = form.get("kind");
   const subjectId = form.get("subjectId");
   const file = form.get("file");
@@ -34,7 +44,12 @@ export async function POST(request: Request) {
   const validated = validateCustomerFile({ kind, name: file.name, type: file.type, size: file.size });
   if (!validated.ok) return redirectTarget(kind, subjectId, `file-${validated.reason}`, request);
 
-  const bytes = await file.arrayBuffer();
+  let bytes: ArrayBuffer;
+  try {
+    bytes = await file.arrayBuffer();
+  } catch {
+    return redirectTarget(kind, subjectId, "file-unavailable", request);
+  }
   if (detectCustomerFileType(bytes) !== validated.type) {
     return redirectTarget(kind, subjectId, "file-invalid-type", request);
   }

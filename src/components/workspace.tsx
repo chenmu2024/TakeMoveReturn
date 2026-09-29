@@ -200,6 +200,8 @@ function BillingContent({ billing, notice }: { billing: BillingState | null; not
   const pendingChange = billing?.pendingPlanChange ?? null;
   const paidOwner = Boolean(billing && billing.role === "owner" && billing.plan !== "free");
   const fileStorageActive = process.env.CUSTOMER_FILES_ENABLED === "true";
+  const storageRatio = billing && current && current.storageLimitBytes > 0 ? billing.storageBytes / current.storageLimitBytes : 0;
+  const storageWarning = fileStorageActive && storageRatio >= 0.8 && storageRatio <= 1;
 
   const noticeText = notice === "payment-pending"
     ? "Checkout returned successfully. Subscription activation is pending a valid signed Waffo event."
@@ -223,6 +225,7 @@ function BillingContent({ billing, notice }: { billing: BillingState | null; not
       {billing?.status === "past_due" && <p className="workspace-connection-banner" role="alert"><span>Payment is past due. Existing data remains available. Resolve billing through Waffo or contact billing@takemovereturn.com; plan changes are paused until the subscription returns to active.</span></p>}
       {billingMismatch && <p className="workspace-connection-banner" role="alert"><span>Billing records need review: the subscription plan does not match the workspace entitlement. Core data remains available; contact billing@takemovereturn.com before making another purchase.</span></p>}
       {overLimit && <div className="workspace-over-limit" role="alert"><div><strong>Your workspace is above one or more limits of the current plan.</strong><span>Existing records remain available. New additions that exceed an enforced limit are restricted until usage is reduced or the plan is upgraded.</span></div><div className="workspace-over-limit-usage"><span className={overTools ? "over" : ""}>Tools: {billing?.activeTools ?? 0} / {current?.toolLimit ?? "—"}</span><span className={overAdmins ? "over" : ""}>Admins: {billing?.admins ?? 0} / {current?.adminLimit ?? "—"}</span><span className={overStorage ? "over" : ""}>Storage: {storageUsage} / {current ? current.id === "free" ? `${current.storageLimitBytes / (1024 ** 2)} MB` : `${current.storageLimitBytes / (1024 ** 3)} GB` : "—"}</span></div><div className="workspace-action-row"><Link className="workspace-button workspace-button-quiet" href="/app/tools">Review tools</Link><Link className="workspace-button" href="/pricing">Review plans</Link></div></div>}
+      {storageWarning && <p className="workspace-connection-banner" role="status"><span>Storage is at {Math.floor(storageRatio * 100)}% of the {current?.name} allowance. Delete unused files or review a larger plan before uploads are blocked.</span></p>}
     </section>
 
     <section className="workspace-billing">

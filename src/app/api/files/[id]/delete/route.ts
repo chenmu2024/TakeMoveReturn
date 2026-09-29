@@ -1,3 +1,4 @@
+import { createAdminClient } from "../../../../../lib/supabase/admin";
 import { createClient, isSupabaseConfigured } from "../../../../../lib/supabase/server";
 import { customerFilesEnabled, getCustomerFilesBucket } from "../../../../../lib/files/customer-files";
 
@@ -20,16 +21,25 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (lookupError) return new Response("Storage unavailable", { status: 503 });
   if (!record) return new Response("Not found", { status: 404 });
 
+  const bucket = getCustomerFilesBucket();
+  if (!bucket) return new Response("Storage unavailable", { status: 503 });
+
   const { data: objectKey, error: deleteError } = await supabase.rpc("delete_customer_file", { p_file_id: id });
   if (deleteError || typeof objectKey !== "string") return new Response("Delete failed", { status: 403 });
 
-  const bucket = getCustomerFilesBucket();
-  if (bucket) {
-    try {
-      await bucket.delete(objectKey);
-    } catch {
-      console.error(JSON.stringify({ event: "customer_file_r2_delete_failed", fileId: id }));
+  try {
+    await bucket.delete(objectKey);
+    const admin = createAdminClient();
+    if (admin) {
+      const { error: cleanupStateError } = await admin.rpc("record_customer_file_object_cleanup", {
+        p_file_id: id,
+        p_succeeded: true,
+        p_error: null,
+      });
+      if (cleanupStateError) console.error(JSON.stringify({ event: "customer_file_cleanup_state_failed", fileId: id }));
     }
+  } catch {
+    console.error(JSON.stringify({ event: "customer_file_r2_delete_failed", fileId: id }));
   }
 
   const path = record.kind === "tool_photo" && record.tool_id ? `/app/tools/${record.tool_id}`

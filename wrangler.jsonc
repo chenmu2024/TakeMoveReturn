@@ -20,6 +20,7 @@
     { "pattern": "www.takemovereturn.com", "custom_domain": true }
   ],
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "takemovereturn" }],
+  "triggers": { "crons": ["17 4 * * *"] },
   "queues": {
     "producers": [{ "binding": "IMPORT_QUEUE", "queue": "takemovereturn-import" }],
     "consumers": [{ "queue": "takemovereturn-import", "max_batch_size": 1, "max_batch_timeout": 5, "max_retries": 5 }]
