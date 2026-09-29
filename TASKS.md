@@ -1,5 +1,41 @@
 # TakeMoveReturn delivery tracker
 
+## Current source of truth — 2026-09-29
+
+This section supersedes older status wording below when the two conflict. Historical entries are retained as an audit trail.
+
+- Public registration is open.
+- New paid checkout is enabled for eligible workspace owners through Waffo Pancake.
+- The owner reported a real payment, but a delivered, signed production webhook that automatically updates the workspace entitlement has **not yet been independently verified end-to-end**.
+- Existing paid subscriptions do not yet have self-service upgrade, downgrade or cancellation in the product. Billing support is the operational path for those changes.
+- Waffo is active and disclosed in the provider register. Stripe is not an active provider.
+- CSV/XLSX import uses server-side revalidation, Supabase-staged jobs and Cloudflare Queue-backed 100-row batches.
+- R2 is used for the OpenNext cache only. Customer tool photos, damage photos, maintenance attachments and other customer-file uploads are not enabled.
+- Pricing may show plan storage allowances, but the UI must explicitly state that customer-file uploads are not yet available.
+- Shared-device worker PIN sign-in and QR TAKE → MOVE → RETURN have passed a production walkthrough; broader automated browser E2E is still missing.
+- Tenant RLS and database security tests exist, but GitHub CI does not yet run the full Supabase rollback-only suite.
+- Privacy export/request intake exists; deletion fulfilment and retention cleanup remain operational gaps.
+- Membership/admin self-service management is not yet implemented.
+- SEO keyword deployment is materially complete; pending Industry/Best/Guide routes remain noindex until US validation gates are passed.
+- The obsolete static `dist/` Fieldmark/chatgpt.site build is removed and ignored. The Next.js/OpenNext application is the only production codebase.
+- Current hardening work adds a release consistency audit, error fallbacks, active-billing legal disclosure, and stale-state cleanup.
+
+### Current blockers / remaining work
+
+1. Verify a real Waffo signed webhook through `billing_subscriptions` and `companies.plan`.
+2. Verify renewal, past-due, recovery, canceling and canceled lifecycle events.
+3. Implement or formally specify self-service/operational upgrade, downgrade and cancellation.
+4. Implement membership/admin management and enforce admin limits on those mutations.
+5. Implement customer-file upload/storage quota/deletion before treating storage as an active file feature.
+6. Complete privacy deletion/rectification/restriction fulfilment and automated retention cleanup.
+7. Add automated browser E2E, database-security CI, load testing and Lighthouse coverage.
+8. Finish remaining authenticated production browser verification.
+9. Complete US keyword/SERP verification before indexing pending SEO pages.
+
+### Next exact task
+
+After this hardening branch passes CI, merge it to `main`, deploy it to production, verify the public legal/provider/pricing pages and Billing UI, then verify one real Waffo webhook-to-entitlement event before describing paid billing as fully operational.
+
 ## Completed
 
 - 2026-09-29: Repaired Billing Plan Options presentation: three separate responsive plan cards, readable monthly/annual prices and features from central Plan Config, one checkout CTA per plan, and a wider right panel. The missing workspace stylesheet import caused the production layout regression. The Waffo-specific display copy was made provider-neutral; checkout, webhook, entitlements and public pricing were not changed. The Waffo copy first appeared in commit `d15661d`; Waffo remains the locked production provider, not Stripe. Typecheck, 17 unit tests, Next production build, and visual/overflow checks at 1920/1440/1280/1024/768/390 px passed.
