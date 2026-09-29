@@ -56,8 +56,13 @@ export async function POST(request: Request) {
     return redirectTarget(kind, subjectId, reason, request);
   }
 
-  const fileId = reservation.file_id as string;
-  const objectKey = reservation.object_key as string;
+  const reservationRecord = reservation as Record<string, unknown>;
+  const fileId = reservationRecord.file_id;
+  const objectKey = reservationRecord.object_key;
+  if (typeof fileId !== "string" || !/^[0-9a-f-]{36}$/i.test(fileId) ||
+      typeof objectKey !== "string" || !objectKey.includes("/")) {
+    return redirectTarget(kind, subjectId, "file-unavailable", request);
+  }
 
   try {
     await bucket.put(objectKey, bytes, {
