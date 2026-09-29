@@ -4,6 +4,8 @@
 
 This section supersedes older status wording below when the two conflict. Historical entries are retained as an audit trail.
 
+2026-09-30 follow-up: The already-deployed production baseline received corrected Waffo/Queues legal copy and distinct checkout-failure notices in Worker `a2959207-dbab-427c-a69c-ab9bfeac9a00`; public legal pages and guest gates passed live smoke checks. This newer main branch already contains fuller active-payment disclosures, so only the missing checkout feedback and stale Import status labels were carried forward here. Do not deploy this newer branch until its pending billing/member migrations and release gates are verified; the production Worker is intentionally based on the previous stable deployment line.
+
 - Public registration is open.
 - New paid checkout is enabled for eligible workspace owners through Waffo Pancake.
 - The owner reported a real payment, but a delivered, signed production webhook that automatically updates the workspace entitlement has **not yet been independently verified end-to-end**.

@@ -39,7 +39,12 @@ export async function POST(request: Request) {
     p_product_id: productId,
   });
   if (intentError || typeof intentId !== "string") {
-    return new Response("Checkout is unavailable for this workspace. Check your current subscription and terms acceptance.", { status: 409 });
+    const notice = intentError?.message === "Current terms acceptance required" ? "checkout-terms"
+      : intentError?.message === "Subscription already exists" ? "checkout-subscribed"
+      : intentError?.message === "Checkout already in progress" ? "checkout-in-progress"
+      : "checkout-temporary";
+    if (notice === "checkout-temporary") console.error("Billing checkout intent failed", intentError?.code ?? "missing intent");
+    return Response.redirect(new URL(`/app/settings/billing?notice=${notice}`, siteConfig.siteUrl), 303);
   }
 
   try {
