@@ -12,6 +12,14 @@ test("published prices and annual billing stay aligned", () => {
   }
 });
 
+test("administrator capacities match the locked product tiers", () => {
+  assert.deepEqual(
+    [plans.free.adminLimit, plans.starter.adminLimit, plans.growth.adminLimit, plans.pro.adminLimit],
+    [1, 2, 5, 10],
+  );
+  for (const plan of Object.values(plans)) assert.equal(plan.fieldWorkerLimit, "unlimited");
+});
+
 test("individual operator is not represented as a company", () => {
   assert.equal(siteConfig.legal.legalOperatorName, "Qiaosheng Zhong");
   assert.equal(siteConfig.legal.operatorType, "individual");
