@@ -16,6 +16,7 @@ const providers = read("src/data/subprocessors.ts");
 const pricing = read("src/components/pricing-cards.tsx");
 const workspace = read("src/components/workspace.tsx");
 const devVars = read(".dev.vars.example");
+const help = read("src/data/help-articles.ts");
 const gitignore = read(".gitignore");
 const sourceFiles = [
   "src/app/page.tsx",
@@ -35,6 +36,7 @@ pass("pricing discloses unavailable customer-file uploads", pricing.includes("cu
 pass("workspace billing discloses pending webhook activation", workspace.includes('notice === "payment-pending"') && workspace.includes("pending a valid signed Waffo event"));
 pass("workspace billing discloses current file-upload limitation", workspace.includes("Customer-file uploads are not yet enabled"));
 pass("development secret template contains Waffo and no Stripe leftovers", devVars.includes("WAFFO_PRIVATE_KEY=") && !/STRIPE_/i.test(devVars));
+pass("help content does not claim billing is deferred", !/payment setup is deferred|paid changes remain unavailable/i.test(help));
 pass("legacy dist output is ignored", gitignore.split(/\r?\n/).includes("dist/"));
 pass("legacy dist output is not tracked in the working tree", !existsSync(new URL("../dist", import.meta.url)));
 pass("active runtime source has no legacy Fieldmark brand", !/\bFieldmark\b/i.test(sourceFiles));
