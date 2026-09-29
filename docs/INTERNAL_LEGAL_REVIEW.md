@@ -19,7 +19,7 @@ This document is an internal engineering/legal-consistency record, not professio
 | Billing | New paid checkout is enabled through Waffo Pancake. Code now supports owner-requested plan changes, billing-interval changes, cancellation and reactivation, with signed Waffo events authoritative for entitlement and lifecycle state. Higher-capacity upgrades are submitted immediately; downgrades and interval changes are scheduled for the next period. A real payment was reported, but activation and the new lifecycle flows have not yet been independently verified end-to-end against delivered production Waffo events. | `src/app/api/billing/*`, `src/lib/billing/*`, billing migrations and tests. |
 | Privacy | Own-account JSON export, owner/admin company CSV reports and privacy-request intake exist. Deletion fulfilment remains an operational process rather than an automated product feature. | Privacy/report routes and privacy migration. |
 | Retention | Internal targets exist but automated cleanup is not yet implemented for all categories. | `src/config/retention.ts`; no complete scheduled cleanup pipeline verified. |
-| Security | Authentication, role checks, tenant RLS, restricted writes, derived worker PIN storage, revocable field sessions and QR token rotation are implemented. Browser headers now also include HSTS, frame denial, nosniff, COOP, CORP and DNS-prefetch disabling, with no-store/noindex headers on sensitive routes. | Security code/migrations/tests and `next.config.ts`. This is not a SOC 2/ISO/PCI certification. |
+| Security | Authentication, role checks, tenant RLS, restricted writes, derived worker PIN storage, revocable field sessions and QR token rotation are implemented. Workspace member changes are owner-controlled, plan-limited, auditable, and preserve history through deactivation instead of deletion. Browser headers include HSTS, frame denial, nosniff, COOP, CORP and DNS-prefetch disabling, with no-store/noindex headers on sensitive routes. | Security code/migrations/tests and `next.config.ts`. Production verification of the new invitation flow is still pending. This is not a SOC 2/ISO/PCI certification. |
 | Legal versioning | Effective legal acceptance version remains 2026-09-28. Public text was updated on 2026-09-29 to correct current operational facts about active billing. | `src/config/site.ts`; this does not assert external review of the revised wording. |
 | SEO | Legal pages remain noindex. Core SEO pages and index gates are separately controlled by the SEO registry/audit. | `src/app/[...slug]/page.tsx`, `src/data/seo-keywords.ts`. |
 
@@ -28,7 +28,7 @@ This document is an internal engineering/legal-consistency record, not professio
 The repository should **not** be described as fully production-complete while these items remain open:
 
 1. apply the lifecycle migration and verify real Waffo activation/plan-change/lifecycle webhooks through entitlement;
-2. implement membership/admin management;
+2. apply and production-verify the member-management migration and invitation/access workflows;
 3. implement customer-file upload/quota/deletion before treating storage as an active upload feature;
 4. operationalize privacy deletion/retention cleanup;
 5. add credentialed browser E2E and execute the full Supabase rollback-only suite in CI; the current source-level DB audit and local production runtime smoke do not replace them;
