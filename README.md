@@ -37,11 +37,14 @@ Tracked database migrations are under `supabase/migrations/`; rollback-only secu
    - `npm run legal:audit`
    - `npm run release:audit`
    - `npm run build`
+   - `npm run runtime:smoke`
+   - `npm run load:smoke`
    - `npm run cf:build`
+   - `npm run cf:dry-run`
 
 Database migrations must be applied through the tracked Supabase CLI workflow. Review `npx supabase db push --dry-run` and a recoverable backup before `npx supabase db push`. Never paste service-role keys, worker PIN peppers or payment private keys into chat or committed files.
 
-The Cloudflare bundle is produced with `npm run cf:build`. Production metadata and sitemap entries use `https://takemovereturn.com` as the canonical origin.
+The Cloudflare bundle is produced with `npm run cf:build`. `npm run runtime:smoke` starts the built Next.js production server and verifies representative public, auth, private, API, sitemap, robots and 404 behavior. `npm run load:smoke` runs a small repeatable public-route concurrency baseline and reports request count, success/error rate, p50, p95 and p99 latency without pretending to be a full production load test. `npm run cf:dry-run` validates the Worker deployment bundle without publishing it. Production metadata and sitemap entries use `https://takemovereturn.com` as the canonical origin.
 
 ## Security and data boundaries
 
@@ -79,8 +82,10 @@ The repository must **not** be described as fully production-complete while thes
 - implement membership/admin management rather than only plan limits;
 - implement customer-file upload/storage quota/deletion before selling storage as an active feature;
 - complete privacy-request fulfilment and retention cleanup operations;
-- add automated browser E2E, database-security CI, load and Lighthouse coverage;
+- add credentialed browser E2E, execute the full Supabase rollback-only security suite in CI, and add production-scale load/Lighthouse coverage;
 - complete remaining authenticated production browser verification;
 - validate US search demand before indexing pending SEO routes.
+
+Operational maintenance now also includes a monthly scheduled SEO audit that opens or updates a GitHub issue on failure, Dependabot for npm/GitHub Actions updates, a minimal `/api/health` endpoint, route/global error fallbacks, hardened browser headers, and a private security-reporting policy in `SECURITY.md`.
 
 See `TASKS.md` for the detailed history and current blockers.
