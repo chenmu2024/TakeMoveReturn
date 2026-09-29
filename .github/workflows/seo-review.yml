@@ -1,0 +1,66 @@
+name: Scheduled SEO Review
+
+on:
+  schedule:
+    - cron: "17 3 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - id: audit
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm run seo:audit 2>&1 | tee seo-audit.txt
+      - if: steps.audit.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('seo-audit.txt', 'utf8').slice(-12000);
+            const title = 'Scheduled SEO audit requires review';
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'seo-audit',
+              per_page: 20,
+            });
+            const body = [
+              'The scheduled TakeMoveReturn SEO audit failed.',
+              '',
+              'Review the report below before changing index gates or dateModified values.',
+              '',
+              '```text',
+              report,
+              '```',
+            ].join('\n');
+            if (existing.data.length) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.data[0].number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['seo-audit'],
+              });
+            }
+            core.setFailed('Scheduled SEO audit failed.');
