@@ -36,7 +36,7 @@ const helpFaqs = [
   { question: "Does TakeMoveReturn require a native app?", answer: "The field workflow is designed for a phone browser. A native app is not required for the QR-based product direction." },
   { question: "Does it provide GPS or live fleet tracking?", answer: "No. TakeMoveReturn records authenticated custody and location events for reusable tools; it is not a GPS, telematics, or fleet platform." },
   { question: "What belongs in a tool record?", answer: "A reusable tool or piece of equipment, its QR label, current holder, location, condition, and movement history. Consumable materials belong in a separate inventory process." },
-  { question: "How should I prepare an import?", answer: "Start with one stable identifier per reusable tool, a clear name, and any current holder or location notes. Production import will validate rows before creating records." },
+  { question: "How should I prepare an import?", answer: "Start with one stable identifier per reusable tool, a clear name, and any current holder or location notes. The import flow validates mapped rows, company duplicates and plan capacity before creating records in background batches." },
   { question: "Can my crew use the workspace now?", answer: "Yes. You can register, create a company workspace, add tools and locations, record authorized QR handoffs, and import a reviewed CSV or XLSX tool list in background batches." },
   { question: "Is the support channel live?", answer: "Yes. The published support address receives mail. Please do not include passwords or worker PINs." },
 ];
