@@ -20,6 +20,8 @@ const help = read("src/data/help-articles.ts");
 const gitignore = read(".gitignore");
 const robots = read("src/app/robots.ts");
 const nextConfig = read("next.config.ts");
+const packageJson = JSON.parse(read("package.json"));
+const ci = read(".github/workflows/ci.yml");
 const sourceFiles = [
   "src/app/page.tsx",
   "src/app/layout.tsx",
@@ -48,6 +50,11 @@ pass("sensitive routes are no-store and noindex by header", nextConfig.includes(
 pass("billing UI checks entitlement mismatch", workspace.includes("subscription plan does not match the workspace entitlement"));
 pass("route error recovery boundary exists", existsSync(new URL("../src/app/error.tsx", import.meta.url)));
 pass("global error fallback exists", existsSync(new URL("../src/app/global-error.tsx", import.meta.url)));
+pass("health endpoint exists", existsSync(new URL("../src/app/api/health/route.ts", import.meta.url)));
+pass("runtime smoke audit exists", existsSync(new URL("../scripts/runtime-smoke.mjs", import.meta.url)) && packageJson.scripts?.["runtime:smoke"] === "node scripts/runtime-smoke.mjs");
+pass("CI runs production runtime smoke after build", ci.includes("npm run build") && ci.includes("npm run runtime:smoke") && ci.indexOf("npm run runtime:smoke") > ci.indexOf("npm run build"));
+pass("CI runs Cloudflare deployment dry-run", ci.includes("npm run cf:dry-run") && packageJson.scripts?.["cf:dry-run"] === "wrangler deploy --dry-run");
+pass("browser hardening headers include COOP and CORP", nextConfig.includes("Cross-Origin-Opener-Policy") && nextConfig.includes("Cross-Origin-Resource-Policy") && nextConfig.includes("X-DNS-Prefetch-Control"));
 
 if (failures.length) {
   console.error(`\nRelease audit failed: ${failures.join("; ")}`);
