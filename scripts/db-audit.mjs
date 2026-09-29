@@ -22,7 +22,10 @@ for (const match of functionBlocks) {
   const name = match[1];
   const block = match[0];
   if (/security\s+definer/i.test(block)) {
-    check(`SECURITY DEFINER ${name} fixes search_path`, /set\s+search_path\s*=\s*''/i.test(block));
+    const hardenedInDefinition = /set\s+search_path\s*=\s*''/i.test(block);
+    const hardenedByLaterMigration = new RegExp(`alter\\s+function\\s+public\\.${name}\\s*\\([^;]*?\\)\\s*set\\s+search_path\\s*=\\s*''`, "i").test(combined);
+    const replacedByInvoker = new RegExp(`create\\s+or\\s+replace\\s+function\\s+public\\.${name}\\s*\\([^;]*?\\)[\\s\\S]*?security\\s+invoker[\\s\\S]*?set\\s+search_path\\s*=\\s*''`, "i").test(combined);
+    check(`SECURITY DEFINER ${name} final search_path is hardened`, hardenedInDefinition || hardenedByLaterMigration || replacedByInvoker);
   }
 }
 
