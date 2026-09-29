@@ -1,5 +1,5 @@
-import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
-import { customerFilesEnabled, detectCustomerFileType, getCustomerFilesBucket, validateCustomerFile, type CustomerFileKind } from "../../../lib/files/customer-files";
+import { createClient, isSupabaseConfigured } from "../../../../lib/supabase/server";
+import { customerFilesEnabled, detectCustomerFileType, getCustomerFilesBucket, validateCustomerFile, type CustomerFileKind } from "../../../../lib/files/customer-files";
 
 const kinds = new Set<CustomerFileKind>(["tool_photo", "damage_photo", "maintenance_attachment"]);
 
