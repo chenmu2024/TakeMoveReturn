@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { WorkspaceShell, type ActivityRecord, type BillingState, type PrivacyRequest, type SearchResult, type WorkspaceView } from "../../../components/workspace";
+import { WorkspaceShell, type ActivityRecord, type BillingState, type DashboardStats, type PrivacyRequest, type SearchResult, type WorkspaceView } from "../../../components/workspace";
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
 import "../service.css";
 
