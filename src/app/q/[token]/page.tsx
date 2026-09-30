@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
 import { fieldDb, fieldDevice, fieldWorker } from "../../../lib/field/server";
@@ -29,6 +30,13 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
       .eq("qr_token", token).eq("company_id", fieldSession.device.company_id).maybeSingle();
     fieldTool = ownTool;
     if (ownTool) {
+      const requestHeaders = await headers();
+      if (requestHeaders.get("next-router-prefetch") !== "1" && requestHeaders.get("purpose") !== "prefetch") {
+        const { error: scanError } = await db.rpc("record_first_authenticated_scan", {
+          p_session_hash: fieldSession.hash, p_device_hash: fieldSession.device.hash, p_qr_token: token,
+        });
+        if (scanError) console.error("First authenticated scan could not be recorded", { code: scanError.code });
+      }
       const { data: locations } = await db.from("locations").select("id,name,active")
         .eq("company_id", fieldSession.device.company_id).order("name");
       fieldLocations = (locations ?? []).filter((location) => location.active);

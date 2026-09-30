@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { WorkspaceShell, type ActivityRecord, type BillingState, type CompanySettings, type DashboardStats, type PrivacyRequest, type SearchResult, type WorkspaceInvitation, type WorkspaceMember, type WorkspaceView } from "../../../components/workspace";
+import { WorkspaceShell, type ActivityRecord, type BillingState, type CompanySettings, type DashboardStats, type OverdueTool, type PrivacyRequest, type SearchResult, type WorkspaceInvitation, type WorkspaceMember, type WorkspaceView } from "../../../components/workspace";
 import { customerFilesEnabled } from "../../../lib/files/customer-files";
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
 import "../service.css";
@@ -32,6 +32,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
   let dashboardStats = null;
   let activity: ActivityRecord[] | null = null;
   let attentionTools = null;
+  let overdueTools: OverdueTool[] | null = null;
   let companySettings: CompanySettings | null = null;
   let workspaceMembers: WorkspaceMember[] | null = null;
   let workspaceInvitations: WorkspaceInvitation[] | null = null;
@@ -183,6 +184,13 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       }));
     }
     if (key === "dashboard") {
+      const { data: overdueRows, error: overdueError } = await supabase.from("tools")
+        .select("id,name,asset_code,expected_return_at").eq("company_id", membership.company_id)
+        .eq("status", "checked_out").not("expected_return_at", "is", null)
+        .lt("expected_return_at", new Date().toISOString())
+        .order("expected_return_at", { ascending: true }).limit(10);
+      if (overdueError) console.error("Overdue returns unavailable", { code: overdueError.code });
+      else overdueTools = (overdueRows ?? []).filter((row): row is OverdueTool => row.expected_return_at !== null);
       const { data: attentionRows, error: attentionError } = await supabase.from("tools")
         .select("id,name,asset_code,status,updated_at").eq("company_id", membership.company_id)
         .in("status", ["damaged", "maintenance", "missing"])
@@ -207,6 +215,11 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       }
       const setupAvailable = !activeLocations.error && !activeWorkers.error && !firstFieldTake.error && !firstFieldReturn.error;
       if (!setupAvailable) console.error("Setup progress unavailable", { codes: [activeLocations.error?.code, activeWorkers.error?.code, firstFieldTake.error?.code, firstFieldReturn.error?.code] });
+      const [{ data: activation, error: activationError }, { data: firstScan, error: firstScanError }] = await Promise.all([
+        supabase.from("companies").select("activation_started_at").eq("id", membership.company_id).maybeSingle(),
+        supabase.from("first_authenticated_scans").select("scanned_at").eq("company_id", membership.company_id).maybeSingle(),
+      ]);
+      if (activationError || firstScanError) console.error("First scan measurement unavailable", { codes: [activationError?.code, firstScanError?.code] });
       let storageBytes: number | null = customerFilesEnabled() ? null : 0;
       if (customerFilesEnabled()) {
         const { data: usage, error: usageError } = await supabase.rpc("customer_file_usage", { p_company_id: membership.company_id });
@@ -226,10 +239,12 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
         activeWorkers: activeWorkers.count ?? 0,
         firstFieldTake: (firstFieldTake.count ?? 0) > 0,
         firstFieldReturn: (firstFieldReturn.count ?? 0) > 0,
+        activationStartedAt: activationError || firstScanError ? null : activation?.activation_started_at ?? null,
+        firstScanAt: firstScanError ? null : firstScan?.scanned_at ?? null,
       };
     }
   }
-  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} activity={activity} attentionTools={attentionTools} companySettings={companySettings} workspaceMembers={workspaceMembers} workspaceInvitations={workspaceInvitations} billing={billing} privacyRequests={privacyRequests} reportAccess={reportAccess} reportConnected={reportConnected} searchConnected={searchConnected} searchQuery={searchQuery} searchResults={searchResults} notice={(await searchParams).notice} />;
+  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} activity={activity} attentionTools={attentionTools} overdueTools={overdueTools} companySettings={companySettings} workspaceMembers={workspaceMembers} workspaceInvitations={workspaceInvitations} billing={billing} privacyRequests={privacyRequests} reportAccess={reportAccess} reportConnected={reportConnected} searchConnected={searchConnected} searchQuery={searchQuery} searchResults={searchResults} notice={(await searchParams).notice} />;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
