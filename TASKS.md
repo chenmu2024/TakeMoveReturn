@@ -19,6 +19,12 @@ Do not reopen payment investigation in this workstream unless the owner explicit
 
 Current product boundary remains: reusable construction tools/equipment, QR identity, holder, recorded location, TAKE/MOVE/RETURN, damage, lightweight maintenance, and history. Do not expand into GPS/BLE/RFID, fleet telematics, ERP, consumables inventory, or full CMMS merely to chase keywords.
 
+## 2026-10-01 workspace usability update — in progress
+
+- The expected-return and first authenticated QR-open changes described as a pending candidate below were released in commit `78e65de`; linked migrations, GitHub database/verify jobs and Cloudflare deployment passed. Authenticated browser verification of those flows is still pending.
+- Workspace tools, workers, locations and activity now have 50-record server-side pages instead of silently stopping after 100 rows. The dashboard's overdue preview shows the total and links to a paginated full list. A separate `/api/ready` checks Supabase Data API availability; `/api/health` remains a lightweight liveness endpoint. Typecheck, 33 unit tests, production and OpenNext builds, release/DB/SEO/legal audits and Wrangler dry-run passed. The owner confirmed preview login, all four paginated views and the overdue “View all” link. Preview `/api/ready` returned 200; disabled local configuration returned 503.
+- Still open: privacy-request fulfilment and retention cleanup; authenticated customer-file upload/read/delete/quota, bulk-label and responsive browser verification. Do not claim those are complete or automatically delete customer data.
+
 ## 2026-09-30 product activation plan — current update
 
 **2026-09-30 next candidate (not yet released):** Added a manager-only expected-return date on checked-out tools, correction audit entries for changes, automatic clearing when custody ends, and a workspace overdue list (in-app follow-up only; no email/SMS). Added first authenticated QR-open recording for valid worker/device sessions, with a per-company activation baseline and idempotent first-event measurement. Existing companies start measurement at migration application, not signup. Anonymous QR views are not counted. Typecheck, 33 unit tests, and production Next build pass locally; the new SQL rollback tests, linked migration application, Cloudflare deployment and authenticated browser checks are still pending. Payment was not touched.

@@ -21,11 +21,19 @@ const views: Record<string, WorkspaceView> = {
   "settings/privacy": { key: "settings/privacy", title: "Privacy", summary: "Request personal-data export, account deletion, and privacy workflow status.", eyebrow: "PRIVACY", kind: "privacy" },
 };
 
-export default async function WorkspacePage({ params, searchParams }: { params: Promise<{ slug: string[] }>; searchParams: Promise<{ notice?: string; q?: string | string[] }> }) {
+export default async function WorkspacePage({ params, searchParams }: { params: Promise<{ slug: string[] }>; searchParams: Promise<{ notice?: string; q?: string | string[]; page?: string | string[]; overdue?: string }> }) {
   const path = "/app/" + (await params).slug.join("/");
   const key = path.replace(/^\/app\//, "");
-  const view = views[key];
+  const queryParams = await searchParams;
+  const overdueOnly = key === "tools" && queryParams.overdue === "1";
+  const view = overdueOnly ? { ...views.tools, title: "Overdue tools", summary: "Checked-out tools past their expected return date. Open a tool to review its holder and follow up.", columns: ["Tool", "Asset code", "Status", "Expected return"] } : views[key];
   if (!view) notFound();
+  const pageValue = queryParams.page;
+  const page = typeof pageValue === "string" && /^[1-9]\d{0,3}$/.test(pageValue) ? Number(pageValue) : 1;
+  const pageSize = 50;
+  const offset = (page - 1) * pageSize;
+  let pageCount = 1;
+  let recordCount = 0;
   let tools = null;
   let locations = null;
   let workers = null;
@@ -33,6 +41,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
   let activity: ActivityRecord[] | null = null;
   let attentionTools = null;
   let overdueTools: OverdueTool[] | null = null;
+  let overdueCount = 0;
   let companySettings: CompanySettings | null = null;
   let workspaceMembers: WorkspaceMember[] | null = null;
   let workspaceInvitations: WorkspaceInvitation[] | null = null;
@@ -42,7 +51,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
   let reportConnected = false;
   let searchConnected = false;
   let searchResults: SearchResult[] | null = null;
-  const queryValue = (await searchParams).q;
+  const queryValue = queryParams.q;
   const searchQuery = typeof queryValue === "string" ? queryValue.trim() : "";
   if (isSupabaseConfigured()) {
     const supabase = await createClient();
@@ -142,31 +151,40 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       };
     }
     if (key === "tools") {
-      const { data: toolRows, error: toolError } = await supabase.from("tools")
-        .select("id,name,asset_code,status,updated_at").eq("company_id", membership.company_id)
-        .order("updated_at", { ascending: false }).limit(100);
+      let toolQuery = supabase.from("tools")
+        .select("id,name,asset_code,status,updated_at,expected_return_at", { count: "exact" }).eq("company_id", membership.company_id);
+      if (overdueOnly) toolQuery = toolQuery.eq("status", "checked_out").lt("expected_return_at", new Date().toISOString());
+      const { data: toolRows, count, error: toolError } = await toolQuery
+        .order(overdueOnly ? "expected_return_at" : "updated_at", { ascending: overdueOnly })
+        .order("id", { ascending: true }).range(offset, offset + pageSize - 1);
       if (toolError) throw new Error("Tools could not be loaded.");
       tools = toolRows;
+      recordCount = count ?? 0;
     }
     if (key === "locations") {
-      const { data: locationRows, error: locationError } = await supabase.from("locations")
-        .select("id,name,type,address,active,updated_at").eq("company_id", membership.company_id)
-        .order("updated_at", { ascending: false }).limit(100);
+      const { data: locationRows, count, error: locationError } = await supabase.from("locations")
+        .select("id,name,type,address,active,updated_at", { count: "exact" }).eq("company_id", membership.company_id)
+        .order("updated_at", { ascending: false }).order("id", { ascending: true }).range(offset, offset + pageSize - 1);
       if (locationError) throw new Error("Locations could not be loaded.");
       locations = locationRows;
+      recordCount = count ?? 0;
     }
     if (key === "workers") {
-      const { data: workerRows, error: workerError } = await supabase.from("workers")
-        .select("id,name,employee_code,status,updated_at").eq("company_id", membership.company_id)
-        .order("updated_at", { ascending: false }).limit(100);
+      const { data: workerRows, count, error: workerError } = await supabase.from("workers")
+        .select("id,name,employee_code,status,updated_at", { count: "exact" }).eq("company_id", membership.company_id)
+        .order("updated_at", { ascending: false }).order("id", { ascending: true }).range(offset, offset + pageSize - 1);
       if (workerError) throw new Error("Workers could not be loaded.");
       workers = workerRows;
+      recordCount = count ?? 0;
     }
     if (key === "activity" || key === "dashboard") {
-      const { data: events, error: eventError } = await supabase.from("tool_transactions")
-        .select("id,tool_id,transaction_type,notes,created_at").eq("company_id", membership.company_id)
-        .order("created_at", { ascending: false }).limit(key === "dashboard" ? 5 : 100);
+      const { data: events, count, error: eventError } = await supabase.from("tool_transactions")
+        .select("id,tool_id,transaction_type,notes,created_at", key === "activity" ? { count: "exact" } : {})
+        .eq("company_id", membership.company_id)
+        .order("created_at", { ascending: false }).order("id", { ascending: true })
+        .range(key === "dashboard" ? 0 : offset, key === "dashboard" ? 4 : offset + pageSize - 1);
       if (eventError) throw new Error("Tool activity could not be loaded.");
+      if (key === "activity") recordCount = count ?? 0;
       const toolIds = [...new Set((events ?? []).map((event) => event.tool_id))];
       const { data: eventTools, error: eventToolError } = toolIds.length
         ? await supabase.from("tools").select("id,name,asset_code").eq("company_id", membership.company_id).in("id", toolIds)
@@ -183,14 +201,21 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
         createdAt: event.created_at,
       }));
     }
+    if (["tools", "locations", "workers", "activity"].includes(key)) {
+      pageCount = Math.max(1, Math.ceil(recordCount / pageSize));
+      if (page > pageCount) notFound();
+    }
     if (key === "dashboard") {
-      const { data: overdueRows, error: overdueError } = await supabase.from("tools")
-        .select("id,name,asset_code,expected_return_at").eq("company_id", membership.company_id)
+      const { data: overdueRows, count, error: overdueError } = await supabase.from("tools")
+        .select("id,name,asset_code,expected_return_at", { count: "exact" }).eq("company_id", membership.company_id)
         .eq("status", "checked_out").not("expected_return_at", "is", null)
         .lt("expected_return_at", new Date().toISOString())
         .order("expected_return_at", { ascending: true }).limit(10);
       if (overdueError) console.error("Overdue returns unavailable", { code: overdueError.code });
-      else overdueTools = (overdueRows ?? []).filter((row): row is OverdueTool => row.expected_return_at !== null);
+      else {
+        overdueTools = (overdueRows ?? []).filter((row): row is OverdueTool => row.expected_return_at !== null);
+        overdueCount = count ?? 0;
+      }
       const { data: attentionRows, error: attentionError } = await supabase.from("tools")
         .select("id,name,asset_code,status,updated_at").eq("company_id", membership.company_id)
         .in("status", ["damaged", "maintenance", "missing"])
@@ -244,7 +269,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       };
     }
   }
-  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} activity={activity} attentionTools={attentionTools} overdueTools={overdueTools} companySettings={companySettings} workspaceMembers={workspaceMembers} workspaceInvitations={workspaceInvitations} billing={billing} privacyRequests={privacyRequests} reportAccess={reportAccess} reportConnected={reportConnected} searchConnected={searchConnected} searchQuery={searchQuery} searchResults={searchResults} notice={(await searchParams).notice} />;
+  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} activity={activity} attentionTools={attentionTools} overdueTools={overdueTools} overdueCount={overdueCount} overdueOnly={overdueOnly} page={page} pageCount={pageCount} recordCount={recordCount} companySettings={companySettings} workspaceMembers={workspaceMembers} workspaceInvitations={workspaceInvitations} billing={billing} privacyRequests={privacyRequests} reportAccess={reportAccess} reportConnected={reportConnected} searchConnected={searchConnected} searchQuery={searchQuery} searchResults={searchResults} notice={queryParams.notice} />;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
