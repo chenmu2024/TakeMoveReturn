@@ -14,12 +14,14 @@ jobs:
         with:
           version: 2.118.0
       - run: supabase db start
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
       - name: Run rollback-only database security tests
         run: |
           set -euo pipefail
+          db_url="$(supabase status -o json | jq -er '.DB_URL')"
           for test_file in supabase/tests/*.sql; do
             echo "Running ${test_file}"
-            supabase db query --local --file "${test_file}"
+            psql "${db_url}" -v ON_ERROR_STOP=1 -f "${test_file}"
           done
   verify:
     runs-on: ubuntu-latest

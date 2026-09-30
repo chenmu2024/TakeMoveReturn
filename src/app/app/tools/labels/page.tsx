@@ -53,7 +53,7 @@ export default async function LabelsPage({ searchParams }: { searchParams: Promi
   const base = `/app/tools/labels${params.job ? `?job=${params.job}&` : "?"}page=`;
 
   return <main className="batch-label-page"><header><Link href={params.job ? "/app/import" : "/app/tools"}>← Back to {params.job ? "import" : "tools"}</Link><span>TakeMoveReturn</span></header>
-    <div className="batch-label-intro"><p className="workspace-eyebrow">QR LABELS</p><h1>Print tool labels</h1><p>{total.toLocaleString("en-US")} tools available · page {page} of {pageCount || 1}. Select labels, preview the sheet, then print or choose “Save as PDF” in your browser.</p><p>Each QR identifies a tool; worker sign-in is still required to change custody.</p></div>
+    <div className="batch-label-intro"><p className="workspace-eyebrow">QR LABELS</p><h1>Print tool labels</h1><p>{total.toLocaleString("en-US")} {total === 1 ? "tool" : "tools"} available · page {page} of {pageCount || 1}. Select labels, preview the sheet, then print or choose “Save as PDF” in your browser.</p><p>Each QR identifies a tool; worker sign-in is still required to change custody.</p></div>
     <BatchLabels tools={ordered} siteUrl={siteConfig.siteUrl} />
     <nav className="batch-label-pages" aria-label="Label pages">{page > 1 && <Link href={`${base}${page - 1}`}>Previous 200</Link>}{page < pageCount && <Link href={`${base}${page + 1}`}>Next 200</Link>}</nav>
   </main>;

@@ -190,13 +190,14 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       if (attentionError) throw new Error("Attention items could not be loaded.");
       attentionTools = attentionRows;
       const recentSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const [total, checkedOut, needsAttention, recentActivity, companyPlan, adminCount, activeWorkers, firstFieldTake, firstFieldReturn] = await Promise.all([
+      const [total, checkedOut, needsAttention, recentActivity, companyPlan, adminCount, activeLocations, activeWorkers, firstFieldTake, firstFieldReturn] = await Promise.all([
         supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).neq("status", "retired"),
         supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("status", "checked_out"),
         supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).in("status", ["damaged", "maintenance", "missing"]),
         supabase.from("tool_transactions").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).gte("created_at", recentSince),
         supabase.from("companies").select("plan").eq("id", membership.company_id).single(),
         supabase.from("organization_members").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("status", "active"),
+        supabase.from("locations").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("active", true),
         supabase.from("workers").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("status", "active"),
         supabase.from("tool_transactions").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("transaction_type", "checkout").not("performed_by_worker_id", "is", null),
         supabase.from("tool_transactions").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("transaction_type", "return").not("performed_by_worker_id", "is", null),
@@ -204,8 +205,8 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       if (total.error || checkedOut.error || needsAttention.error || recentActivity.error || companyPlan.error || adminCount.error) {
         throw new Error("Dashboard counts could not be loaded.");
       }
-      const setupAvailable = !activeWorkers.error && !firstFieldTake.error && !firstFieldReturn.error;
-      if (!setupAvailable) console.error("Setup progress unavailable", { codes: [activeWorkers.error?.code, firstFieldTake.error?.code, firstFieldReturn.error?.code] });
+      const setupAvailable = !activeLocations.error && !activeWorkers.error && !firstFieldTake.error && !firstFieldReturn.error;
+      if (!setupAvailable) console.error("Setup progress unavailable", { codes: [activeLocations.error?.code, activeWorkers.error?.code, firstFieldTake.error?.code, firstFieldReturn.error?.code] });
       let storageBytes: number | null = customerFilesEnabled() ? null : 0;
       if (customerFilesEnabled()) {
         const { data: usage, error: usageError } = await supabase.rpc("customer_file_usage", { p_company_id: membership.company_id });
@@ -221,6 +222,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
         admins: adminCount.count ?? 0,
         storageBytes,
         setupAvailable,
+        activeLocations: activeLocations.count ?? 0,
         activeWorkers: activeWorkers.count ?? 0,
         firstFieldTake: (firstFieldTake.count ?? 0) > 0,
         firstFieldReturn: (firstFieldReturn.count ?? 0) > 0,
