@@ -1,5 +1,24 @@
 # TakeMoveReturn delivery tracker
 
+## 2026-10-01 Finish Mode — LOCKED
+
+TakeMoveReturn is no longer in project-selection mode. The product already exists and the owner has explicitly required that it be finished. Do not pause, downgrade, replace, or restart the product based on competitor density alone.
+
+Execution order is now locked:
+
+1. Production correctness and authenticated verification.
+2. Core TAKE → MOVE → RETURN reliability and activation.
+3. Customer-file upload/read/delete/quota verification.
+4. 200-label import → QR → print verification.
+5. Workspace/member/security and privacy operations.
+6. Production load/Lighthouse/error hardening.
+7. SEO execution from the final Keyword Placement Master and GSC feedback.
+8. Only after the above: optional product expansion.
+
+Do not reopen payment investigation in this workstream unless the owner explicitly requests it; the owner has already confirmed a real payment test.
+
+Current product boundary remains: reusable construction tools/equipment, QR identity, holder, recorded location, TAKE/MOVE/RETURN, damage, lightweight maintenance, and history. Do not expand into GPS/BLE/RFID, fleet telematics, ERP, consumables inventory, or full CMMS merely to chase keywords.
+
 ## 2026-09-30 product activation plan — current update
 
 **2026-09-30 next candidate (not yet released):** Added a manager-only expected-return date on checked-out tools, correction audit entries for changes, automatic clearing when custody ends, and a workspace overdue list (in-app follow-up only; no email/SMS). Added first authenticated QR-open recording for valid worker/device sessions, with a per-company activation baseline and idempotent first-event measurement. Existing companies start measurement at migration application, not signup. Anonymous QR views are not counted. Typecheck, 33 unit tests, and production Next build pass locally; the new SQL rollback tests, linked migration application, Cloudflare deployment and authenticated browser checks are still pending. Payment was not touched.
