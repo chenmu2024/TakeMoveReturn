@@ -78,6 +78,14 @@ try {
   assert((dashboard.headers.get("cache-control") ?? "").includes("no-store"), "workspace redirect must be no-store");
   assert((dashboard.headers.get("x-robots-tag") ?? "").includes("noindex"), "workspace must be noindex");
 
+  const fieldFind = await request("/field/find?code=TM-0184");
+  assert([303, 307, 308].includes(fieldFind.status), `guest tool-code lookup expected redirect, got ${fieldFind.status}`);
+  assert((fieldFind.headers.get("location") ?? "").includes("/field"), "guest tool-code lookup must require field access");
+
+  const labels = await request("/app/tools/labels");
+  assert([303, 307, 308].includes(labels.status), `guest batch labels expected redirect, got ${labels.status}`);
+  assert((labels.headers.get("location") ?? "").includes("/auth/signup"), "guest batch labels must require workspace access");
+
   const authAliases = [
     ["/login", "/auth/login"],
     ["/signup", "/auth/signup"],

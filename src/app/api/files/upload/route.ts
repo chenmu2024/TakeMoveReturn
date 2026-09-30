@@ -24,6 +24,10 @@ export async function POST(request: Request) {
     return new Response("Upload too large", { status: 413 });
   }
 
+  const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  if (!claims?.claims) return new Response("Authentication required", { status: 401 });
+
   let form: FormData;
   try {
     form = await request.formData();
@@ -53,10 +57,6 @@ export async function POST(request: Request) {
   if (detectCustomerFileType(bytes) !== validated.type) {
     return redirectTarget(kind, subjectId, "file-invalid-type", request);
   }
-
-  const supabase = await createClient();
-  const { data: claims } = await supabase.auth.getClaims();
-  if (!claims?.claims) return new Response("Authentication required", { status: 401 });
 
   const { data: reservation, error: reserveError } = await supabase.rpc("reserve_customer_file", {
     p_kind: kind,

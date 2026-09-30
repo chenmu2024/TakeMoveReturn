@@ -1,5 +1,11 @@
 # Architecture decisions
 
+## Field activation over feature breadth
+
+**Decision:** Prioritize the shortest secure path from spreadsheet or first tool to QR label, authenticated field scan, TAKE, and RETURN. A normal field scan should not require training, and initial company setup should not take days of configuration.
+
+**Status:** LOCKED product direction. A median time to first scan of 10 minutes is a target to measure with real usage, not a verified product claim. Anonymous QR page views do not count as authenticated field scans. Tool-code fallback must remain company-scoped and authenticated before revealing custody or allowing mutation.
+
 ## OpenNext on Cloudflare Workers
 
 **Decision:** Use standard Next.js 16 App Router with the OpenNext Cloudflare adapter.
@@ -50,6 +56,6 @@
 
 **Decision:** Keep customer files in a dedicated private Cloudflare R2 bucket that is separate from the OpenNext incremental-cache bucket. Store tenant-scoped metadata and quota state in Supabase; serve files only through authenticated application routes.
 
-**Status:** LOCKED FOR IMPLEMENTATION — code is staged behind `CUSTOMER_FILES_ENABLED=false`. Production activation requires the `takemovereturn-files` bucket, `CUSTOMER_FILES_R2_BUCKET` binding, migration `202609290004_customer_files.sql`, rollback-only DB test, full release suite, and production upload/read/delete/quota verification.
+**Status:** LOCKED FOR IMPLEMENTATION — the dedicated `takemovereturn-files` bucket and binding are deployed in Worker `0853dc4a-1038-40b8-89e5-60c1600b8cef`; tracked migrations and rollback-only DB tests passed. The upload gate is enabled and unauthenticated upload returns 401 before parsing the file. Authenticated upload/read/delete/quota checks have **NOT COMPLETED**, so do not claim the full storage workflow is production-verified.
 
 **Limits:** 10 MB per file. Tool and damage evidence allow JPEG/PNG/WebP; maintenance also allows PDF. Server validation checks both declared MIME type and file signature. Plan quotas remain 100 MB / 2 GB / 10 GB / 25 GB for Free / Starter / Growth / Pro.

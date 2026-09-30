@@ -6,6 +6,21 @@ on:
   pull_request:
 
 jobs:
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.118.0
+      - run: supabase db start
+      - name: Run rollback-only database security tests
+        run: |
+          set -euo pipefail
+          for test_file in supabase/tests/*.sql; do
+            echo "Running ${test_file}"
+            supabase db query --local --file "${test_file}"
+          done
   verify:
     runs-on: ubuntu-latest
     steps:

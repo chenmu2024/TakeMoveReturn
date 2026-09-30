@@ -8,7 +8,7 @@ export async function createTool(form: FormData) {
   const assetCode = String(form.get("assetCode") ?? "").trim();
   const name = String(form.get("name") ?? "").trim();
   const category = String(form.get("category") ?? "").trim();
-  if (!assetCode || assetCode.length > 80 || name.length < 2 || name.length > 120 || category.length > 80) {
+  if (assetCode.length > 80 || name.length < 2 || name.length > 120 || category.length > 80) {
     redirect("/app/tools/new?notice=invalid");
   }
 
@@ -21,14 +21,15 @@ export async function createTool(form: FormData) {
   if (membershipError) redirect("/app/tools/new?notice=unavailable");
   if (!membership) redirect("/app/onboarding");
 
-  const { error } = await supabase.rpc("create_tool", {
+  const { data: toolId, error } = await supabase.rpc("create_tool", {
     p_company_id: membership.company_id,
-    p_asset_code: assetCode,
+    p_asset_code: assetCode || `TM-${crypto.randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`,
     p_name: name,
     p_category: category || null,
   });
   if (error?.code === "23505") redirect("/app/tools/new?notice=duplicate");
   if (error?.message.includes("Tool limit reached")) redirect("/app/tools/new?notice=limit");
   if (error) redirect("/app/tools/new?notice=unavailable");
-  redirect("/app/tools");
+  if (!toolId) redirect("/app/tools/new?notice=unavailable");
+  redirect(`/app/tools/${toolId}/label`);
 }

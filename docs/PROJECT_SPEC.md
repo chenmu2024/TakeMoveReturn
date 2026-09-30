@@ -1,5 +1,11 @@
 # TakeMoveReturn
 
+## Field activation principle (2026-09-30)
+
+TakeMoveReturn does not win by having the most features. It wins by getting a construction company from spreadsheet to real field adoption with the least friction.
+
+If a field worker needs training to complete a normal scan, redesign it. If a company needs days of configuration before its first real tool scan, redesign the onboarding. Keep TAKE / MOVE / RETURN and company-scoped security intact; do not mistake a public QR page view for an authenticated field scan.
+
 > 2026-09-25 LOCKED 决策：TakeMoveReturn 是品牌，由中国个人经营者 Qiaosheng Zhong 运营；没有注册公司或个体工商户。网站为 `https://takemovereturn.com`，支持邮箱 `support@takemovereturn.com`，隐私邮箱 `privacy@takemovereturn.com`（投产前须验证收件）。支付选用 Waffo Pancake，Waffo.com Limited 是适用交易的 Merchant of Record。旧版支付服务商方案及“支付最后处理”决策均已失效；不得凭此说明支付已接通。以实际验证的 Waffo API、产品 ID、签名回调和运行状态为准。
 
 # AI 编程完整开发总指令

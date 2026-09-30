@@ -8,7 +8,7 @@ import "../service.css";
 const views: Record<string, WorkspaceView> = {
   dashboard: { key: "dashboard", title: "Workspace dashboard", summary: "A clear starting point for tool custody, locations, exceptions, and the next handoff.", eyebrow: "DASHBOARD", kind: "dashboard", primaryAction: { label: "Add first tool", href: "/app/tools" } },
   search: { key: "search", title: "Search workspace", summary: "Find tools, field workers, trucks, warehouses, and job sites in your company.", eyebrow: "SEARCH", kind: "search" },
-  tools: { key: "tools", title: "Tools", summary: "Register reusable tools with company-scoped asset codes and current status. Field custody and QR actions follow after security checks.", eyebrow: "TOOLS", kind: "table", columns: ["Tool", "Asset code", "Status", "Updated"], primaryAction: { label: "Add tool", href: "/app/tools/new" }, secondaryAction: { label: "Import list", href: "/app/import" }, emptyTitle: "No tools yet", emptyText: "Add the first reusable tool to begin your company register." },
+  tools: { key: "tools", title: "Tools", summary: "See who holds each tool, print QR labels, or import your existing list. Every field move is recorded.", eyebrow: "TOOLS", kind: "table", columns: ["Tool", "Asset code", "Status", "Updated"], primaryAction: { label: "Add tool", href: "/app/tools/new" }, secondaryAction: { label: "Print QR labels", href: "/app/tools/labels" }, emptyTitle: "No tools yet", emptyText: "Add or import a tool to create its first QR label." },
   workers: { key: "workers", title: "Field workers", summary: "Register workers and manage their field access.", eyebrow: "WORKERS", kind: "table", columns: ["Worker", "Employee code", "Status", "Security"], primaryAction: { label: "Add worker", href: "/app/workers/new" }, secondaryAction: { label: "Field devices", href: "/app/workers/devices" }, emptyTitle: "No workers yet", emptyText: "Add a field worker to prepare for secure tool handoffs." },
   locations: { key: "locations", title: "Locations", summary: "Track warehouses, trucks, job sites, and the places where tools are handed off.", eyebrow: "LOCATIONS", kind: "table", columns: ["Location", "Type", "Address", "Status", "Updated"], primaryAction: { label: "Add location", href: "/app/locations/new" }, emptyTitle: "No locations yet", emptyText: "Add a warehouse, job site, truck, or other place where tools are kept." },
   activity: { key: "activity", title: "Activity", summary: "Review durable TAKE, MOVE, RETURN, damage, maintenance, and correction events.", eyebrow: "ACTIVITY", kind: "activity", secondaryAction: { label: "Export history", href: "/app/reports" }, emptyTitle: "No transactions yet", emptyText: "Events will appear here after the first authenticated tool movement." },
@@ -190,15 +190,18 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       if (attentionError) throw new Error("Attention items could not be loaded.");
       attentionTools = attentionRows;
       const recentSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const [total, checkedOut, needsAttention, recentActivity, companyPlan, adminCount] = await Promise.all([
+      const [total, checkedOut, needsAttention, recentActivity, companyPlan, adminCount, activeWorkers, firstFieldTake, firstFieldReturn] = await Promise.all([
         supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).neq("status", "retired"),
         supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("status", "checked_out"),
         supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).in("status", ["damaged", "maintenance", "missing"]),
         supabase.from("tool_transactions").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).gte("created_at", recentSince),
         supabase.from("companies").select("plan").eq("id", membership.company_id).single(),
         supabase.from("organization_members").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("status", "active"),
+        supabase.from("workers").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("status", "active"),
+        supabase.from("tool_transactions").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("transaction_type", "checkout").not("performed_by_worker_id", "is", null),
+        supabase.from("tool_transactions").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("transaction_type", "return").not("performed_by_worker_id", "is", null),
       ]);
-      if (total.error || checkedOut.error || needsAttention.error || recentActivity.error || companyPlan.error || adminCount.error) {
+      if (total.error || checkedOut.error || needsAttention.error || recentActivity.error || companyPlan.error || adminCount.error || activeWorkers.error || firstFieldTake.error || firstFieldReturn.error) {
         throw new Error("Dashboard counts could not be loaded.");
       }
       let storageBytes = 0;
@@ -215,6 +218,9 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
         plan: companyPlan.data.plan as DashboardStats["plan"],
         admins: adminCount.count ?? 0,
         storageBytes,
+        activeWorkers: activeWorkers.count ?? 0,
+        firstFieldTake: (firstFieldTake.count ?? 0) > 0,
+        firstFieldReturn: (firstFieldReturn.count ?? 0) > 0,
       };
     }
   }

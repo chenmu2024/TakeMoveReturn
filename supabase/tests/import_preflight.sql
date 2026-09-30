@@ -30,7 +30,7 @@ do $$ declare v_codes text[]; begin
   exception when others then if SQLERRM <> 'Forbidden' then raise; end if;
   end;
   begin
-    perform public.import_existing_asset_codes('88888888-aaaa-4aaa-8aaa-888888888888',array_fill('A',array[5001]));
+    perform public.import_existing_asset_codes('88888888-aaaa-4aaa-8aaa-888888888888',array_fill('A'::text,array[5001]));
     raise exception 'Over-limit import lookup succeeded';
   exception when others then if SQLERRM <> 'Invalid import size' then raise; end if;
   end;

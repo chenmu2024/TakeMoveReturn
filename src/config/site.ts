@@ -16,7 +16,7 @@ const legal = {
   governingLaw: "People's Republic of China",
   disputeResolutionVenue: null,
   lastLegalReviewDate: null,
-  lastUpdated: "2026-09-29",
+  lastUpdated: "2026-09-30",
   effectiveDate: "2026-09-28" as string | null,
   refundPolicyStatus: "owner-approved",
 } as const;

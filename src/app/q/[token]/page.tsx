@@ -68,6 +68,7 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
     <p className="workspace-eyebrow">TAKEMOVERETURN · TOOL LABEL</p><h1>{tool.tool_name}</h1>
     <dl><div><dt>Company</dt><dd>{tool.company_name}</dd></div><div><dt>Asset code</dt><dd>{tool.asset_code}</dd></div></dl>
     <p>A QR label identifies a tool. It does not grant access to custody or history.</p>
+    <p><Link href="/field/find">Can&apos;t scan the QR? Enter the tool code</Link></p>
     {notice && <p id="movement-status" role={savedMessage ? "status" : "alert"}>{savedMessage ?? (notice === "session" ? "Worker session expired. Sign in again." : "Tool state changed or the movement could not be saved.")}</p>}
     {fieldSession && fieldTool ? <>
       <p>Signed in as {fieldSession.worker.name}. <Link href="/field">Lock or switch</Link></p>
@@ -79,10 +80,10 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
         return <form className="auth-form" action={recordFieldMovement} key={type}>
           <input type="hidden" name="token" value={token} /><input type="hidden" name="type" value={type} />
           <label htmlFor={`location-${type}`}>{type === "return" ? "Return location" : "Destination"}</label>
-          <select id={`location-${type}`} name="locationId" required defaultValue=""><option value="" disabled>Choose location</option>
+          <select id={`location-${type}`} name="locationId" required defaultValue={destinations.length === 1 ? destinations[0].id : ""}><option value="" disabled>Choose location</option>
             {destinations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}
           </select>
-          <label htmlFor={`notes-${type}`}>Note (optional)</label><input id={`notes-${type}`} name="notes" maxLength={500} />
+          <details><summary>Add a note (optional)</summary><label htmlFor={`notes-${type}`}>Note</label><input id={`notes-${type}`} name="notes" maxLength={500} /></details>
           <button className="workspace-button" type="submit">{type === "checkout" ? "TAKE" : type === "transfer" ? "MOVE" : "RETURN"}</button>
         </form>;
       }) : <p>Ask a manager to add an active location before moving this tool.</p>}

@@ -13,7 +13,7 @@
     "WAFFO_MERCHANT_ID": "MER_1nlEgg0UD2PNj3UGzHWgUm",
     "WAFFO_STORE_ID": "STO_41dTjcJJB7c2wSmzUpWqQr",
     "WAFFO_BILLING_ENABLED": "true",
-    "CUSTOMER_FILES_ENABLED": "false"
+    "CUSTOMER_FILES_ENABLED": "true"
   },
   "routes": [
     { "pattern": "takemovereturn.com/*", "zone_name": "takemovereturn.com" },
@@ -25,5 +25,8 @@
     "producers": [{ "binding": "IMPORT_QUEUE", "queue": "takemovereturn-import" }],
     "consumers": [{ "queue": "takemovereturn-import", "max_batch_size": 1, "max_batch_timeout": 5, "max_retries": 5 }]
   },
-  "r2_buckets": [{ "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "takemovereturn-opennext-cache" }]
+  "r2_buckets": [
+    { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "takemovereturn-opennext-cache" },
+    { "binding": "CUSTOMER_FILES_R2_BUCKET", "bucket_name": "takemovereturn-files" }
+  ]
 }

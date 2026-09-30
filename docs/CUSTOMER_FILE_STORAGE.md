@@ -79,4 +79,4 @@ A database tombstone can succeed while the subsequent R2 delete fails. The API l
 
 ## Current status
 
-Code and schema are staged, but the production feature is intentionally disabled until the dedicated bucket/binding, database migration, and production verification are complete.
+The dedicated private bucket, binding and enabled flag are deployed in Worker `0853dc4a-1038-40b8-89e5-60c1600b8cef`. Tracked database migrations and rollback-only file lifecycle tests passed on the linked project. OpenNext remote-cache prefill failed with HTTP 500, so the verified bundle was deployed directly through Wrangler. Guest upload returns 401 before file parsing; authenticated upload/read/delete/quota checks are **NOT COMPLETED**. Do not announce the full customer-file workflow as production-verified yet.
