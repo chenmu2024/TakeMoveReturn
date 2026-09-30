@@ -56,6 +56,6 @@
 
 **Decision:** Keep customer files in a dedicated private Cloudflare R2 bucket that is separate from the OpenNext incremental-cache bucket. Store tenant-scoped metadata and quota state in Supabase; serve files only through authenticated application routes.
 
-**Status:** LOCKED FOR IMPLEMENTATION — the dedicated `takemovereturn-files` bucket and binding are deployed in Worker `0853dc4a-1038-40b8-89e5-60c1600b8cef`; tracked migrations and rollback-only DB tests passed. The upload gate is enabled and unauthenticated upload returns 401 before parsing the file. Authenticated upload/read/delete/quota checks have **NOT COMPLETED**, so do not claim the full storage workflow is production-verified.
+**Status:** LOCKED FOR IMPLEMENTATION — the dedicated `takemovereturn-files` bucket exists; tracked migrations and rollback-only DB tests passed. Worker `0853dc4a-1038-40b8-89e5-60c1600b8cef` was rolled back after an authenticated workspace regression. Guarded Worker `61f3c6f2-011b-41fa-8925-cd6f6134c1ae` is now live; the owner verified dashboard and Tools access. Its file binding and enabled upload gate are deployed, but authenticated upload/read/delete/quota checks have **NOT COMPLETED**, so do not claim the full storage workflow is production-verified.
 
 **Limits:** 10 MB per file. Tool and damage evidence allow JPEG/PNG/WebP; maintenance also allows PDF. Server validation checks both declared MIME type and file signature. Plan quotas remain 100 MB / 2 GB / 10 GB / 25 GB for Free / Starter / Growth / Pro.

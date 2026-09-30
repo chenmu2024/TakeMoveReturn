@@ -118,11 +118,11 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
           .eq("company_id", membership.company_id).eq("status", "active"),
       ]);
       if (companyError || subscriptionError || pendingPlanChangeError || toolCountError || adminCountError) throw new Error("Billing state could not be loaded.");
-      let storageBytes = 0;
+      let storageBytes: number | null = customerFilesEnabled() ? null : 0;
       if (customerFilesEnabled()) {
         const { data: usage, error: usageError } = await supabase.rpc("customer_file_usage", { p_company_id: membership.company_id });
-        if (usageError) throw new Error("Storage usage could not be loaded.");
-        storageBytes = Number(usage ?? 0);
+        if (usageError) console.error("Storage usage unavailable", { code: usageError.code });
+        else storageBytes = Number(usage ?? 0);
       }
       billing = {
         plan: company.plan as BillingState["plan"], subscriptionPlan: (subscription?.plan as BillingState["subscriptionPlan"]) ?? null, role: membership.role,
@@ -201,14 +201,16 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
         supabase.from("tool_transactions").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("transaction_type", "checkout").not("performed_by_worker_id", "is", null),
         supabase.from("tool_transactions").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("transaction_type", "return").not("performed_by_worker_id", "is", null),
       ]);
-      if (total.error || checkedOut.error || needsAttention.error || recentActivity.error || companyPlan.error || adminCount.error || activeWorkers.error || firstFieldTake.error || firstFieldReturn.error) {
+      if (total.error || checkedOut.error || needsAttention.error || recentActivity.error || companyPlan.error || adminCount.error) {
         throw new Error("Dashboard counts could not be loaded.");
       }
-      let storageBytes = 0;
+      const setupAvailable = !activeWorkers.error && !firstFieldTake.error && !firstFieldReturn.error;
+      if (!setupAvailable) console.error("Setup progress unavailable", { codes: [activeWorkers.error?.code, firstFieldTake.error?.code, firstFieldReturn.error?.code] });
+      let storageBytes: number | null = customerFilesEnabled() ? null : 0;
       if (customerFilesEnabled()) {
         const { data: usage, error: usageError } = await supabase.rpc("customer_file_usage", { p_company_id: membership.company_id });
-        if (usageError) throw new Error("Storage usage could not be loaded.");
-        storageBytes = Number(usage ?? 0);
+        if (usageError) console.error("Storage usage unavailable", { code: usageError.code });
+        else storageBytes = Number(usage ?? 0);
       }
       dashboardStats = {
         totalTools: total.count ?? 0,
@@ -218,6 +220,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
         plan: companyPlan.data.plan as DashboardStats["plan"],
         admins: adminCount.count ?? 0,
         storageBytes,
+        setupAvailable,
         activeWorkers: activeWorkers.count ?? 0,
         firstFieldTake: (firstFieldTake.count ?? 0) > 0,
         firstFieldReturn: (firstFieldReturn.count ?? 0) > 0,

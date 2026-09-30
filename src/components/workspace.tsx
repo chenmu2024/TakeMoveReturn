@@ -21,12 +21,12 @@ export type WorkspaceView = {
 export type ToolSummary = { id: string; name: string; asset_code: string; status: string; updated_at: string };
 export type LocationSummary = { id: string; name: string; type: string; address: string | null; active: boolean; updated_at: string };
 export type WorkerSummary = { id: string; name: string; employee_code: string | null; status: string; updated_at: string };
-export type DashboardStats = { totalTools: number; checkedOut: number; needsAttention: number; recentActivity: number; plan: "free" | "starter" | "growth" | "pro"; admins: number; storageBytes: number; activeWorkers: number; firstFieldTake: boolean; firstFieldReturn: boolean };
+export type DashboardStats = { totalTools: number; checkedOut: number; needsAttention: number; recentActivity: number; plan: "free" | "starter" | "growth" | "pro"; admins: number; storageBytes: number | null; setupAvailable: boolean; activeWorkers: number; firstFieldTake: boolean; firstFieldReturn: boolean };
 export type CompanySettings = { name: string; plan: "free" | "starter" | "growth" | "pro"; timezone: string; role: string };
 export type WorkspaceMember = { user_id: string; email: string; role: "owner" | "admin" | "manager"; status: string; created_at: string };
 export type WorkspaceInvitation = { id: string; email: string; role: "admin" | "manager"; status: string; expires_at: string; created_at: string };
 export type BillingPlanChange = { plan: "starter" | "growth" | "pro"; billingInterval: "month" | "year"; timing: "immediate" | "next_period"; status: string };
-export type BillingState = { plan: "free" | "starter" | "growth" | "pro"; subscriptionPlan: "starter" | "growth" | "pro" | null; role: string; status: string | null; billingInterval: string | null; periodEnd: string | null; enabled: boolean; activeTools: number; admins: number; storageBytes: number; pendingPlanChange: BillingPlanChange | null };
+export type BillingState = { plan: "free" | "starter" | "growth" | "pro"; subscriptionPlan: "starter" | "growth" | "pro" | null; role: string; status: string | null; billingInterval: string | null; periodEnd: string | null; enabled: boolean; activeTools: number; admins: number; storageBytes: number | null; pendingPlanChange: BillingPlanChange | null };
 export type ActivityRecord = { id: string; toolId: string; toolName: string; assetCode: string; type: string; notes: string | null; createdAt: string };
 export type PrivacyRequest = { id: string; request_type: string; status: string; created_at: string; completed_at: string | null };
 export type SearchResult = { result_type: "tool" | "worker" | "location"; result_id: string; title: string; detail: string };
@@ -73,7 +73,7 @@ function DashboardContent({ stats, activity, attentionTools }: { stats: Dashboar
   const accountOverLimit = Boolean(stats && dashboardPlan && (
     stats.totalTools > dashboardPlan.toolLimit ||
     stats.admins > dashboardPlan.adminLimit ||
-    stats.storageBytes > dashboardPlan.storageLimitBytes
+    (stats.storageBytes !== null && stats.storageBytes > dashboardPlan.storageLimitBytes)
   ));
   const cards = [
     { label: "Active tools", value: stats?.totalTools, note: "Excludes retired tools" },
@@ -82,7 +82,7 @@ function DashboardContent({ stats, activity, attentionTools }: { stats: Dashboar
     { label: "Recent activity", value: stats?.recentActivity, note: "Events in the last 7 days" },
   ];
   return <>
-    {stats && !(stats.firstFieldTake && stats.firstFieldReturn) && <section className="workspace-onboarding" aria-label="Setup progress"><div><p className="workspace-eyebrow">GET YOUR CREW TRACKING TOOLS</p><h2>From first tool to first field handoff.</h2><p>{1 + Number(stats.totalTools > 0) + Number(stats.activeWorkers > 0) + Number(stats.firstFieldTake) + Number(stats.firstFieldReturn)} of 5 verified steps complete</p><progress value={1 + Number(stats.totalTools > 0) + Number(stats.activeWorkers > 0) + Number(stats.firstFieldTake) + Number(stats.firstFieldReturn)} max={5} aria-label="Setup progress" /><ol><li>Company created</li><li>{stats.totalTools > 0 ? `${stats.totalTools} tools added` : "Add or import your first tools"}</li><li>{stats.activeWorkers > 0 ? `${stats.activeWorkers} active workers added` : "Add a field worker"}</li><li>{stats.firstFieldTake ? "First field TAKE recorded" : "Print a QR label, enroll a device, and record a field TAKE"}</li><li>{stats.firstFieldReturn ? "First field RETURN recorded" : "Record the first field RETURN"}</li></ol><p>Printing a label is separate; progress counts only verified records and worker actions.</p></div><ActionLink action={{ label: "Continue setup", href: stats.totalTools === 0 ? "/app/tools/new" : stats.activeWorkers === 0 ? "/app/workers/new" : stats.firstFieldTake ? "/field" : "/app/tools" }} /></section>}
+    {stats?.setupAvailable && !(stats.firstFieldTake && stats.firstFieldReturn) && <section className="workspace-onboarding" aria-label="Setup progress"><div><p className="workspace-eyebrow">GET YOUR CREW TRACKING TOOLS</p><h2>From first tool to first field handoff.</h2><p>{1 + Number(stats.totalTools > 0) + Number(stats.activeWorkers > 0) + Number(stats.firstFieldTake) + Number(stats.firstFieldReturn)} of 5 verified steps complete</p><progress value={1 + Number(stats.totalTools > 0) + Number(stats.activeWorkers > 0) + Number(stats.firstFieldTake) + Number(stats.firstFieldReturn)} max={5} aria-label="Setup progress" /><ol><li>Company created</li><li>{stats.totalTools > 0 ? `${stats.totalTools} tools added` : "Add or import your first tools"}</li><li>{stats.activeWorkers > 0 ? `${stats.activeWorkers} active workers added` : "Add a field worker"}</li><li>{stats.firstFieldTake ? "First field TAKE recorded" : "Print a QR label, enroll a device, and record a field TAKE"}</li><li>{stats.firstFieldReturn ? "First field RETURN recorded" : "Record the first field RETURN"}</li></ol><p>Printing a label is separate; progress counts only verified records and worker actions.</p></div><ActionLink action={{ label: "Continue setup", href: stats.totalTools === 0 ? "/app/tools/new" : stats.activeWorkers === 0 ? "/app/workers/new" : stats.firstFieldTake ? "/field" : "/app/tools" }} /></section>}
     {accountOverLimit && <section className="workspace-over-limit" role="alert"><div><strong>Your workspace is above the limits of the {dashboardPlan?.name} plan.</strong><span>Existing tools, history and core tracking remain available. Reduce usage where possible or review a larger plan before adding more capacity.</span></div><div className="workspace-over-limit-usage"><span className={stats && dashboardPlan && stats.totalTools > dashboardPlan.toolLimit ? "over" : ""}>Tools: {stats?.totalTools ?? 0} / {dashboardPlan?.toolLimit ?? "—"}</span><span className={stats && dashboardPlan && stats.admins > dashboardPlan.adminLimit ? "over" : ""}>Admins: {stats?.admins ?? 0} / {dashboardPlan?.adminLimit ?? "—"}</span></div><div className="workspace-action-row"><Link className="workspace-button workspace-button-quiet" href="/app/tools">Manage usage</Link><Link className="workspace-button" href="/app/settings/billing">Review plan</Link></div></section>}
     <section className="workspace-stat-grid" aria-label="Workspace overview">
       {cards.map((card) => <article className="workspace-stat" key={card.label}><span>{card.label}</span><strong>{card.value ?? "—"}</strong><small>{stats ? card.note : "Awaiting workspace data"}</small></article>)}
@@ -193,14 +193,14 @@ function BillingContent({ billing, notice }: { billing: BillingState | null; not
   const current = billing ? plans[billing.plan] : null;
   const overTools = Boolean(billing && current && billing.activeTools > current.toolLimit);
   const overAdmins = Boolean(billing && current && billing.admins > current.adminLimit);
-  const overStorage = Boolean(billing && current && billing.storageBytes > current.storageLimitBytes);
+  const overStorage = Boolean(billing && current && billing.storageBytes !== null && billing.storageBytes > current.storageLimitBytes);
   const overLimit = overTools || overAdmins || overStorage;
   const billingMismatch = Boolean(billing?.subscriptionPlan && billing.status !== "canceled" && billing.subscriptionPlan !== billing.plan);
-  const storageUsage = billing ? billing.storageBytes < 1024 ** 2 ? `${Math.round(billing.storageBytes / 1024)} KB` : `${(billing.storageBytes / (1024 ** 2)).toFixed(1)} MB` : "—";
+  const storageUsage = billing?.storageBytes == null ? "Temporarily unavailable" : billing.storageBytes < 1024 ** 2 ? `${Math.round(billing.storageBytes / 1024)} KB` : `${(billing.storageBytes / (1024 ** 2)).toFixed(1)} MB`;
   const pendingChange = billing?.pendingPlanChange ?? null;
   const paidOwner = Boolean(billing && billing.role === "owner" && billing.plan !== "free");
   const fileStorageActive = process.env.CUSTOMER_FILES_ENABLED === "true";
-  const storageRatio = billing && current && current.storageLimitBytes > 0 ? billing.storageBytes / current.storageLimitBytes : 0;
+  const storageRatio = billing?.storageBytes != null && current && current.storageLimitBytes > 0 ? billing.storageBytes / current.storageLimitBytes : 0;
   const storageWarning = fileStorageActive && storageRatio >= 0.8 && storageRatio <= 1;
 
   const noticeText = notice === "payment-pending"
