@@ -100,7 +100,7 @@ insert into public.maintenance_events(id,company_id,tool_id,service_name,cost_ce
 set local role authenticated;
 set local request.jwt.claim.sub = 'c1111111-1111-4111-8111-111111111111';
 
-do $
+do $$
 begin
   perform public.reserve_customer_file('damage_photo','c1111111-7000-4000-8000-111111111111','d1.jpg','image/jpeg',1024);
   perform public.reserve_customer_file('damage_photo','c1111111-7000-4000-8000-111111111111','d2.jpg','image/jpeg',1024);
