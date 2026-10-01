@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
+import { captureClientError } from "../components/telemetry";
 
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error("TakeMoveReturn global error", error);
+    void captureClientError(error, { boundary: "global", digest: error.digest ?? "" });
   }, [error]);
 
   return <html lang="en"><body style={{ margin: 0, fontFamily: "Arial, Helvetica, sans-serif", background: "#fbfaf5", color: "#0b3027" }}>
