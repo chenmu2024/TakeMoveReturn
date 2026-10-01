@@ -2,7 +2,7 @@ import { createClient, isSupabaseConfigured } from "../../../../lib/supabase/ser
 import { csvDocument } from "../../../../lib/reports/csv";
 
 const reports = {
-  tools: { table: "tools", columns: ["asset_code", "name", "category", "brand", "model", "serial_number", "status", "condition", "updated_at"], orderBy: "updated_at" },
+  tools: { table: "tools", columns: ["asset_code", "name", "category", "brand", "model", "serial_number", "purchase_date", "purchase_price", "status", "condition", "updated_at"], orderBy: "updated_at" },
   workers: { table: "workers", columns: ["name", "employee_code", "status", "updated_at"], orderBy: "updated_at" },
   locations: { table: "locations", columns: ["name", "type", "address", "active", "updated_at"], orderBy: "updated_at" },
   activity: { table: "tool_transactions", columns: ["tool_id", "transaction_type", "from_worker_id", "to_worker_id", "from_location_id", "to_location_id", "notes", "created_at"], orderBy: "created_at" },
