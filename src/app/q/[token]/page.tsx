@@ -20,13 +20,14 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
   const tool = data as { company_name: string; tool_name: string; asset_code: string };
   const fieldSession = await fieldWorker();
   const enrolledDevice = fieldSession ? null : await fieldDevice();
-  let fieldTool: { status: string; current_worker_id: string | null; current_location_id: string | null } | null = null;
+  let fieldTool: { id: string; status: string; condition: string; current_worker_id: string | null; current_location_id: string | null } | null = null;
+  let fieldToolPhotoId: string | null = null;
   let fieldLocations: { id: string; name: string }[] = [];
   let currentHolder: string | null = null;
   let currentLocation: string | null = null;
   if (fieldSession) {
     const db = fieldDb();
-    const { data: ownTool } = await db.from("tools").select("status,current_worker_id,current_location_id")
+    const { data: ownTool } = await db.from("tools").select("id,status,condition,current_worker_id,current_location_id")
       .eq("qr_token", token).eq("company_id", fieldSession.device.company_id).maybeSingle();
     fieldTool = ownTool;
     if (ownTool) {
@@ -41,6 +42,12 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
         .eq("company_id", fieldSession.device.company_id).order("name");
       fieldLocations = (locations ?? []).filter((location) => location.active);
       currentLocation = locations?.find((location) => location.id === ownTool.current_location_id)?.name ?? null;
+      if (customerFilesEnabled()) {
+        const { data: photo } = await db.from("customer_files").select("id")
+          .eq("tool_id", ownTool.id).eq("kind", "tool_photo").eq("status", "ready")
+          .order("created_at", { ascending: false }).limit(1).maybeSingle();
+        fieldToolPhotoId = photo?.id ?? null;
+      }
       if (ownTool.current_worker_id) {
         const { data: holder } = await db.from("workers").select("name")
           .eq("id", ownTool.current_worker_id).eq("company_id", fieldSession.device.company_id).maybeSingle();
@@ -80,8 +87,9 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
     {notice && <p id="movement-status" role={savedMessage ? "status" : "alert"}>{savedMessage ?? (notice === "session" ? "Worker session expired. Sign in again." : "Tool state changed or the movement could not be saved.")}</p>}
     {fieldSession && fieldTool ? <>
       <p>Signed in as {fieldSession.worker.name}. <Link href="/field">Lock or switch</Link></p>
+      {fieldToolPhotoId && <img className="scan-tool-photo" src={`/api/field/files/${fieldToolPhotoId}`} alt={`Reference photo for ${tool.tool_name}`} />}
       <p>Current status: {fieldTool.status.replaceAll("_", " ")}</p>
-      <dl><div><dt>Current holder</dt><dd>{currentHolder ?? "Unassigned"}</dd></div>
+      <dl><div><dt>Condition</dt><dd>{fieldTool.condition}</dd></div><div><dt>Current holder</dt><dd>{currentHolder ?? "Unassigned"}</dd></div>
         <div><dt>Current location</dt><dd>{currentLocation ?? "Not set"}</dd></div></dl>
       {fieldLocations.length ? actions.map((type) => {
         const destinations = type === "transfer" ? moveLocations : fieldLocations;
