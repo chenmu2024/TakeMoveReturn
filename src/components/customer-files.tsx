@@ -29,11 +29,14 @@ export function CustomerFilesSection({
     ? "image/jpeg,image/png,image/webp,application/pdf"
     : "image/jpeg,image/png,image/webp";
   const label = kind === "maintenance_attachment" ? "Add attachment" : "Add photo";
+  const maxFiles = kind === "tool_photo" ? 1 : 3;
+  const maxSize = kind === "maintenance_attachment" ? "10 MB" : "5 MB";
+  const atLimit = files.length >= maxFiles;
 
   return <section className={compact ? "customer-files compact" : "customer-files"}>
     <div className="customer-files-heading">
       <strong>{kind === "maintenance_attachment" ? "Attachments" : "Photos"}</strong>
-      <span>10 MB max per file</span>
+      <span>{maxSize} max per file · {maxFiles} max</span>
     </div>
     {files.length ? <ul className="customer-file-list">{files.map((file) => <li key={file.id}>
       <div>
@@ -44,7 +47,7 @@ export function CustomerFilesSection({
         <button type="submit">Delete</button>
       </form>
     </li>)}</ul> : <p className="customer-files-empty">No files attached.</p>}
-    <form className="customer-file-upload" method="post" action="/api/files/upload" encType="multipart/form-data">
+    {atLimit ? <p className="customer-files-empty">Attachment limit reached. Delete an existing file before adding another.</p> : <form className="customer-file-upload" method="post" action="/api/files/upload" encType="multipart/form-data">
       <input type="hidden" name="kind" value={kind} />
       <input type="hidden" name="subjectId" value={subjectId} />
       <label>
@@ -52,6 +55,6 @@ export function CustomerFilesSection({
         <input name="file" type="file" accept={accept} required />
       </label>
       <button type="submit">{label}</button>
-    </form>
+    </form>}
   </section>;
 }
