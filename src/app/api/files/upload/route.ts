@@ -1,4 +1,5 @@
 import { createClient, isSupabaseConfigured } from "../../../../lib/supabase/server";
+import { isTrustedWriteOrigin } from "../../../../lib/security/request-origin";
 import { customerFilesEnabled, detectCustomerFileType, getCustomerFilesBucket, validateCustomerFile, type CustomerFileKind } from "../../../../lib/files/customer-files";
 
 const kinds = new Set<CustomerFileKind>(["tool_photo", "damage_photo", "maintenance_attachment"]);
@@ -13,6 +14,7 @@ function redirectTarget(kind: CustomerFileKind, subjectId: string, notice: strin
 }
 
 export async function POST(request: Request) {
+  if (!isTrustedWriteOrigin(request)) return new Response("Invalid origin", { status: 403 });
   if (!customerFilesEnabled()) return new Response("Customer file uploads are not enabled", { status: 503 });
   if (!isSupabaseConfigured()) return new Response("Storage unavailable", { status: 503 });
 
