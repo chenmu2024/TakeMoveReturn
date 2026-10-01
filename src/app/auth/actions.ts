@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { siteConfig } from "../../config/site";
 import { createClient, isSupabaseConfigured } from "../../lib/supabase/server";
+import { verifyTurnstile } from "../../lib/security/turnstile";
 
 function value(form: FormData, key: string) {
   return String(form.get(key) ?? "").trim();
@@ -18,6 +19,7 @@ function nextDestination(form: FormData) {
 
 export async function signIn(form: FormData) {
   requireConnection();
+  if (!await verifyTurnstile(form)) redirect("/auth/login?notice=challenge");
   const email = value(form, "email");
   const password = String(form.get("password") ?? "");
   if (!email || !password) redirect("/auth/login?notice=required");
@@ -29,6 +31,7 @@ export async function signIn(form: FormData) {
 
 export async function signUp(form: FormData) {
   requireConnection();
+  if (!await verifyTurnstile(form)) redirect("/auth/signup?notice=challenge");
   if (siteConfig.legal.legalReviewStatus !== "effective" || !siteConfig.legal.effectiveDate) {
     redirect("/auth/signup?notice=unavailable");
   }
@@ -62,6 +65,7 @@ export async function signUp(form: FormData) {
 
 export async function requestPasswordReset(form: FormData) {
   requireConnection();
+  if (!await verifyTurnstile(form)) redirect("/auth/forgot-password?notice=challenge");
   const email = value(form, "email");
   if (!email) redirect("/auth/forgot-password?notice=required");
   const supabase = await createClient();
