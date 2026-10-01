@@ -25,17 +25,6 @@ do $$ begin
       and purchase_price = 1299.95
   ) then raise exception 'Own-company purchase metadata update failed'; end if;
 
-  update public.tools
-  set purchase_price = 1.00
-  where id = '92929292-1111-4111-8111-929292929292';
-
-  reset role;
-  if (select purchase_price from public.tools where id = '92929292-1111-4111-8111-929292929292') is not null then
-    raise exception 'Cross-company purchase metadata update succeeded';
-  end if;
-  set local role authenticated;
-  perform set_config('request.jwt.claim.sub','91919191-9191-4191-8191-919191919191',true);
-
   begin
     update public.tools
     set purchase_price = -0.01
@@ -43,6 +32,18 @@ do $$ begin
     raise exception 'Negative purchase price accepted';
   exception when check_violation then null;
   end;
+end $$;
+
+update public.tools
+set purchase_price = 1.00
+where id = '92929292-1111-4111-8111-929292929292';
+
+reset role;
+
+do $$ begin
+  if (select purchase_price from public.tools where id = '92929292-1111-4111-8111-929292929292') is not null then
+    raise exception 'Cross-company purchase metadata update succeeded';
+  end if;
 end $$;
 
 rollback;
