@@ -1,6 +1,7 @@
 import app from "./.open-next/worker.js";
 import { handleImportQueue } from "./import-queue-consumer.mjs";
 import { handleCustomerFileCleanup } from "./customer-file-cleanup.mjs";
+import { handleRetentionCleanup } from "./retention-cleanup.mjs";
 export { DOQueueHandler, DOShardedTagCache, BucketCachePurge } from "./.open-next/worker.js";
 
 export default {
@@ -9,6 +10,9 @@ export default {
   },
   queue: handleImportQueue,
   scheduled(_controller, env, ctx) {
-    ctx.waitUntil(handleCustomerFileCleanup(env));
+    ctx.waitUntil(Promise.all([
+      handleCustomerFileCleanup(env),
+      handleRetentionCleanup(env),
+    ]));
   },
 };
