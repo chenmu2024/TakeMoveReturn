@@ -14,7 +14,9 @@ export function ImportPreview() {
   const [fileName, setFileName] = useState("");
   const [fileSize, setFileSize] = useState(0);
   const [sheetIndex, setSheetIndex] = useState(0);
-  const [mapping, setMapping] = useState<ImportMapping>({ assetCode: -1, name: -1, category: -1 });
+  const [mapping, setMapping] = useState<ImportMapping>({
+    assetCode: -1, name: -1, category: -1, brand: -1, model: -1, serialNumber: -1,
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [workspaceCheck, setWorkspaceCheck] = useState<WorkspaceCheck | null>(null);
@@ -100,8 +102,13 @@ export function ImportPreview() {
 
   function downloadIssues() {
     if (!result?.report?.issues.length) return;
-    const rows = result.report.issues.map((issue) => [issue.row, issue.assetCode, issue.name, issue.category, issue.reason]);
-    const blob = new Blob([csvDocument(["Source row", "Asset code", "Tool name", "Category", "Issue"], rows)], { type: "text/csv;charset=utf-8" });
+    const rows = result.report.issues.map((issue) => [
+      issue.row, issue.assetCode, issue.name, issue.category, issue.brand, issue.model, issue.serialNumber, issue.reason,
+    ]);
+    const blob = new Blob([csvDocument(
+      ["Source row", "Asset code", "Tool name", "Category", "Brand", "Model", "Serial number", "Issue"],
+      rows,
+    )], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a"); link.href = url; link.download = "tool-import-review.csv"; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1_000);
@@ -172,7 +179,7 @@ export function ImportPreview() {
       <div className="import-review-controls">
         <p><strong>{fileName}</strong> · {sheets.length} sheet{sheets.length === 1 ? "" : "s"}</p>
         {sheets.length > 1 && <label>Sheet<select value={sheetIndex} onChange={(event) => chooseSheet(Number(event.target.value))}>{sheets.map((sheet, index) => <option key={index} value={index}>{sheet.sheet}</option>)}</select></label>}
-        <div className="import-mapping">{selectColumn("Asset code", "assetCode", true)}{selectColumn("Tool name", "name", true)}{selectColumn("Category", "category", false)}</div>
+        <div className="import-mapping">{selectColumn("Asset code", "assetCode", true)}{selectColumn("Tool name", "name", true)}{selectColumn("Category", "category", false)}{selectColumn("Brand", "brand", false)}{selectColumn("Model", "model", false)}{selectColumn("Serial number", "serialNumber", false)}</div>
       </div>
       {result?.error && <p className="import-error" role="alert">{result.error}</p>}
       {result?.report && <>
@@ -181,7 +188,7 @@ export function ImportPreview() {
           <div><strong>{result.report.valid}</strong><span>Valid in file</span></div>
           <div><strong>{result.report.issues.length}</strong><span>Needs review</span></div>
         </div>
-        <div className="import-review-table"><h3>First 10 rows</h3><div className="workspace-table-wrap"><table><thead><tr><th>Row</th><th>Asset code</th><th>Tool name</th><th>Category</th><th>Review</th></tr></thead><tbody>{result.report.preview.map((row) => <tr key={row.row}><td>{row.row}</td><td>{row.assetCode || "—"}</td><td>{row.name || "—"}</td><td>{row.category || "—"}</td><td>{row.valid ? "Valid" : "Needs review"}</td></tr>)}</tbody></table></div></div>
+        <div className="import-review-table"><h3>First 10 rows</h3><div className="workspace-table-wrap"><table><thead><tr><th>Row</th><th>Asset code</th><th>Tool name</th><th>Category</th><th>Brand</th><th>Model</th><th>Serial</th><th>Review</th></tr></thead><tbody>{result.report.preview.map((row) => <tr key={row.row}><td>{row.row}</td><td>{row.assetCode || "—"}</td><td>{row.name || "—"}</td><td>{row.category || "—"}</td><td>{row.brand || "—"}</td><td>{row.model || "—"}</td><td>{row.serialNumber || "—"}</td><td>{row.valid ? "Valid" : "Needs review"}</td></tr>)}</tbody></table></div></div>
         {result.report.issues.length > 0 && <button className="workspace-button workspace-button-quiet" type="button" onClick={downloadIssues}>Download rows needing review</button>}
         <div className="import-pending">
           <button className="workspace-button workspace-button-quiet" type="button" disabled={checking || starting || Boolean(jobId)} onClick={() => void checkWorkspace()}>{checking ? "Checking workspace…" : "Check company duplicates and capacity"}</button>
