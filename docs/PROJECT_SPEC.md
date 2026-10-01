@@ -6,7 +6,7 @@ TakeMoveReturn does not win by having the most features. It wins by getting a co
 
 If a field worker needs training to complete a normal scan, redesign it. If a company needs days of configuration before its first real tool scan, redesign the onboarding. Keep TAKE / MOVE / RETURN and company-scoped security intact; do not mistake a public QR page view for an authenticated field scan.
 
-> 2026-09-25 LOCKED 决策：TakeMoveReturn 是品牌，由中国个人经营者 Qiaosheng Zhong 运营；没有注册公司或个体工商户。网站为 `https://takemovereturn.com`，支持邮箱 `support@takemovereturn.com`，隐私邮箱 `privacy@takemovereturn.com`（投产前须验证收件）。支付选用 Waffo Pancake，Waffo.com Limited 是适用交易的 Merchant of Record。旧版支付服务商方案及“支付最后处理”决策均已失效；不得凭此说明支付已接通。以实际验证的 Waffo API、产品 ID、签名回调和运行状态为准。
+> 2026-09-25 LOCKED 决策：TakeMoveReturn 是品牌，由中国个人经营者 Qiaosheng Zhong 运营；没有注册公司或个体工商户。网站为 `https://takemovereturn.com`，支持邮箱 `support@takemovereturn.com`，隐私联系邮箱 `contact@takemovereturn.com`（已验证收件；不使用未配置的 `privacy@takemovereturn.com`）。支付选用 Waffo Pancake，Waffo.com Limited 是适用交易的 Merchant of Record。旧版支付服务商方案及“支付最后处理”决策均已失效；不得凭此说明支付已接通。以实际验证的 Waffo API、产品 ID、签名回调和运行状态为准。
 
 # AI 编程完整开发总指令
 
@@ -2599,14 +2599,14 @@ CTA：
 
 ---
 
-# 67. Waffo
+# 67. Waffo Pancake
 
 使用：
 
-* Waffo Checkout
-* Waffo Billing
-* Customer Portal
-* Verified Webhooks
+* Waffo Pancake checkout sessions
+* Waffo subscription lifecycle API
+* Signed / verified Waffo webhooks
+* TakeMoveReturn 内置 Billing UI（不依赖不存在的 Customer Portal）
 
 支持：
 
@@ -2649,28 +2649,42 @@ CTA：
 
 ---
 
-# 70. Subscription Table
+# 70. Billing Persistence
 
-至少：
+以当前 Waffo 实现为准，至少包含：
 
 ```text
-id
-company_id
-provider_customer_id
-provider_subscription_id
+billing_checkout_intents
+- id
+- company_id
+- user_id
+- plan
+- billing_interval
+- product_id
+- status
+- session_id
+- created_at
+- expires_at
 
-plan
-billing_interval
-status
+billing_subscriptions
+- company_id
+- order_id
+- checkout_intent_id
+- plan
+- billing_interval
+- status
+- current_period_end
+- last_event_at
+- updated_at
 
-current_period_start
-current_period_end
-
-cancel_at_period_end
-
-created_at
-updated_at
+billing_webhook_events
+- event_type
+- event_id
+- order_id
+- received_at
 ```
+
+Subscription entitlement 只能由签名 Waffo event 推进；success return page 不能直接改变 workspace plan。
 
 ---
 
