@@ -6,7 +6,7 @@ const reports = {
   workers: { table: "workers", columns: ["name", "employee_code", "status", "updated_at"], orderBy: "updated_at" },
   locations: { table: "locations", columns: ["name", "type", "address", "active", "updated_at"], orderBy: "updated_at" },
   activity: { table: "tool_transactions", columns: ["tool_id", "transaction_type", "from_worker_id", "to_worker_id", "from_location_id", "to_location_id", "notes", "created_at"], orderBy: "created_at" },
-  damage: { table: "damage_reports", columns: ["tool_id", "severity", "description", "status", "created_at", "resolved_at"], orderBy: "created_at" },
+  damage: { table: "damage_reports", columns: ["tool_id", "reported_by_worker_id", "reported_by_user_id", "severity", "description", "status", "created_at", "resolved_at"], orderBy: "created_at" },
   maintenance: { table: "maintenance_schedules", columns: ["tool_id", "service_name", "interval_days", "next_due_at", "active", "updated_at"], orderBy: "updated_at" },
   "service-history": { table: "maintenance_events", columns: ["tool_id", "service_name", "notes", "cost_cents", "serviced_at", "created_at"], orderBy: "created_at" },
 } as const;
