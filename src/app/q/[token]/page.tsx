@@ -3,8 +3,9 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
+import { customerFilesEnabled } from "../../../lib/files/customer-files";
 import { fieldDb, fieldDevice, fieldWorker } from "../../../lib/field/server";
-import { recordFieldMovement } from "../../field/actions";
+import { recordFieldMovement, reportFieldIssue } from "../../field/actions";
 import "./scan.css";
 
 export const metadata: Metadata = { title: "Scan a tool | TakeMoveReturn", robots: { index: false, follow: false } };
@@ -17,34 +18,50 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
   const { data, error } = await supabase.rpc("lookup_tool_qr", { p_token: token }).maybeSingle();
   if (error) throw new Error("The tool label could not be checked.");
   if (!data) notFound();
+
   const tool = data as { company_name: string; tool_name: string; asset_code: string };
   const fieldSession = await fieldWorker();
   const enrolledDevice = fieldSession ? null : await fieldDevice();
-  let fieldTool: { status: string; current_worker_id: string | null; current_location_id: string | null } | null = null;
+  let fieldTool: { id: string; status: string; condition: string; current_worker_id: string | null; current_location_id: string | null } | null = null;
   let fieldLocations: { id: string; name: string }[] = [];
   let currentHolder: string | null = null;
   let currentLocation: string | null = null;
+  let primaryPhotoId: string | null = null;
+
   if (fieldSession) {
     const db = fieldDb();
-    const { data: ownTool } = await db.from("tools").select("status,current_worker_id,current_location_id")
+    const { data: ownTool } = await db.from("tools").select("id,status,condition,current_worker_id,current_location_id")
       .eq("qr_token", token).eq("company_id", fieldSession.device.company_id).maybeSingle();
     fieldTool = ownTool;
+
     if (ownTool) {
       const requestHeaders = await headers();
       if (requestHeaders.get("next-router-prefetch") !== "1" && requestHeaders.get("purpose") !== "prefetch") {
         const { error: scanError } = await db.rpc("record_first_authenticated_scan", {
-          p_session_hash: fieldSession.hash, p_device_hash: fieldSession.device.hash, p_qr_token: token,
+          p_session_hash: fieldSession.hash,
+          p_device_hash: fieldSession.device.hash,
+          p_qr_token: token,
         });
         if (scanError) console.error("First authenticated scan could not be recorded", { code: scanError.code });
       }
+
       const { data: locations } = await db.from("locations").select("id,name,active")
         .eq("company_id", fieldSession.device.company_id).order("name");
       fieldLocations = (locations ?? []).filter((location) => location.active);
       currentLocation = locations?.find((location) => location.id === ownTool.current_location_id)?.name ?? null;
+
       if (ownTool.current_worker_id) {
         const { data: holder } = await db.from("workers").select("name")
           .eq("id", ownTool.current_worker_id).eq("company_id", fieldSession.device.company_id).maybeSingle();
         currentHolder = holder?.name ?? null;
+      }
+
+      if (customerFilesEnabled()) {
+        const { data: photo } = await db.from("customer_files").select("id")
+          .eq("company_id", fieldSession.device.company_id).eq("tool_id", ownTool.id)
+          .eq("kind", "tool_photo").eq("status", "ready")
+          .order("created_at", { ascending: false }).limit(1).maybeSingle();
+        primaryPhotoId = photo?.id ?? null;
       }
     }
   }
@@ -65,37 +82,86 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
   }
 
   const notice = (await searchParams).notice;
-  const savedMessage = notice === "checkout-saved" ? "TAKE saved." : notice === "transfer-saved" ? "MOVE saved."
-    : notice === "return-saved" ? "RETURN saved." : notice === "saved" ? "Movement saved." : null;
+  const savedMessage = notice === "checkout-saved" ? "TAKE saved."
+    : notice === "transfer-saved" ? "MOVE saved."
+    : notice === "return-saved" ? "RETURN saved."
+    : notice === "damage-saved" ? "Damage report saved."
+    : notice === "missing-saved" ? "Missing-tool report saved."
+    : notice === "saved" ? "Movement saved."
+    : null;
+  const issueError = notice === "issue-state" ? "The issue could not be saved because the tool or report state changed." : null;
+
   const moveLocations = fieldLocations.filter((location) => fieldTool?.current_worker_id !== fieldSession?.worker.id
     || location.id !== fieldTool?.current_location_id);
   const actions = fieldTool?.status === "available" ? ["checkout"]
     : fieldTool?.status === "checked_out" ? [...(moveLocations.length ? ["transfer"] : []),
       ...(fieldTool.current_worker_id === fieldSession?.worker.id ? ["return"] : [])] : [];
+
   return <main className="scan-page"><section className="scan-card">
-    <p className="workspace-eyebrow">TAKEMOVERETURN · TOOL LABEL</p><h1>{tool.tool_name}</h1>
+    <p className="workspace-eyebrow">TAKEMOVERETURN · TOOL LABEL</p>
+    {primaryPhotoId && <img className="scan-tool-photo" src={`/api/field/files/${primaryPhotoId}`} alt="" />}
+    <h1>{tool.tool_name}</h1>
     <dl><div><dt>Company</dt><dd>{tool.company_name}</dd></div><div><dt>Asset code</dt><dd>{tool.asset_code}</dd></div></dl>
     <p>A QR label identifies a tool. It does not grant access to custody or history.</p>
     <p><Link href="/field/find">Can&apos;t scan the QR? Enter the tool code</Link></p>
-    {notice && <p id="movement-status" role={savedMessage ? "status" : "alert"}>{savedMessage ?? (notice === "session" ? "Worker session expired. Sign in again." : "Tool state changed or the movement could not be saved.")}</p>}
+
+    {notice && <p id={notice.startsWith("damage") || notice.startsWith("missing") || notice.startsWith("issue") ? "issue-status" : "movement-status"} role={savedMessage ? "status" : "alert"}>
+      {savedMessage ?? issueError ?? (notice === "session" ? "Worker session expired. Sign in again." : "Tool state changed or the action could not be saved.")}
+    </p>}
+
     {fieldSession && fieldTool ? <>
       <p>Signed in as {fieldSession.worker.name}. <Link href="/field">Lock or switch</Link></p>
-      <p>Current status: {fieldTool.status.replaceAll("_", " ")}</p>
-      <dl><div><dt>Current holder</dt><dd>{currentHolder ?? "Unassigned"}</dd></div>
-        <div><dt>Current location</dt><dd>{currentLocation ?? "Not set"}</dd></div></dl>
+      <dl>
+        <div><dt>Status</dt><dd>{fieldTool.status.replaceAll("_", " ")}</dd></div>
+        <div><dt>Condition</dt><dd>{fieldTool.condition.replaceAll("_", " ")}</dd></div>
+        <div><dt>Current holder</dt><dd>{currentHolder ?? "Unassigned"}</dd></div>
+        <div><dt>Current location</dt><dd>{currentLocation ?? "Not set"}</dd></div>
+      </dl>
+
       {fieldLocations.length ? actions.map((type) => {
         const destinations = type === "transfer" ? moveLocations : fieldLocations;
         return <form className="auth-form" action={recordFieldMovement} key={type}>
-          <input type="hidden" name="token" value={token} /><input type="hidden" name="type" value={type} />
+          <input type="hidden" name="token" value={token} />
+          <input type="hidden" name="type" value={type} />
           <label htmlFor={`location-${type}`}>{type === "return" ? "Return location" : "Destination"}</label>
-          <select id={`location-${type}`} name="locationId" required defaultValue={destinations.length === 1 ? destinations[0].id : ""}><option value="" disabled>Choose location</option>
+          <select id={`location-${type}`} name="locationId" required defaultValue={destinations.length === 1 ? destinations[0].id : ""}>
+            <option value="" disabled>Choose location</option>
             {destinations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}
           </select>
           <details><summary>Add a note (optional)</summary><label htmlFor={`notes-${type}`}>Note</label><input id={`notes-${type}`} name="notes" maxLength={500} /></details>
           <button className="workspace-button" type="submit">{type === "checkout" ? "TAKE" : type === "transfer" ? "MOVE" : "RETURN"}</button>
         </form>;
       }) : <p>Ask a manager to add an active location before moving this tool.</p>}
-      {fieldLocations.length > 0 && actions.length === 0 && <p>No field movement is available for this tool.</p>}
+      {fieldLocations.length > 0 && actions.length === 0 && <p>No field movement is available for this tool in its current state.</p>}
+
+      {!["retired", "missing"].includes(fieldTool.status) && <details className="scan-issue-panel">
+        <summary>Report damage</summary>
+        <form className="auth-form" action={reportFieldIssue}>
+          <input type="hidden" name="token" value={token} />
+          <input type="hidden" name="issueType" value="damage" />
+          <label htmlFor="issue-severity">Severity</label>
+          <select id="issue-severity" name="severity" defaultValue="minor">
+            <option value="minor">Minor</option>
+            <option value="needs_repair">Needs repair</option>
+            <option value="unusable">Unusable</option>
+          </select>
+          <label htmlFor="issue-description">What happened?</label>
+          <textarea id="issue-description" name="description" required minLength={3} maxLength={1000} rows={3} />
+          <button className="workspace-button workspace-button-quiet" type="submit">Save damage report</button>
+        </form>
+      </details>}
+
+      {!["retired", "missing"].includes(fieldTool.status) && <details className="scan-issue-panel">
+        <summary>Report missing</summary>
+        <form className="auth-form" action={reportFieldIssue}>
+          <input type="hidden" name="token" value={token} />
+          <input type="hidden" name="issueType" value="missing" />
+          <input type="hidden" name="severity" value="lost" />
+          <label htmlFor="missing-description">What do you know?</label>
+          <textarea id="missing-description" name="description" required minLength={3} maxLength={1000} rows={3} />
+          <button className="workspace-button workspace-button-quiet" type="submit">Mark as missing</button>
+        </form>
+      </details>}
     </> : enrolledDevice ? <Link className="workspace-button" href="/field">Worker sign-in</Link>
       : toolId ? <Link className="workspace-button" href={`/app/tools/${toolId}`}>Open tool record</Link>
         : <Link className="workspace-button" href="/field">Field access</Link>}
