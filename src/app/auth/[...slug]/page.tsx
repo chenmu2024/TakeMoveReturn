@@ -11,7 +11,8 @@ export default async function AuthPage({ params, searchParams }: { params: Promi
   if (!variants.has(key)) notFound();
   const query = await searchParams;
   return <AuthShell variant={key} notice={query.notice} next={query.next === "invitation" ? "invitation" : undefined} connected={isSupabaseConfigured()}
-    registrationOpen={siteConfig.legal.legalReviewStatus === "effective" && Boolean(siteConfig.legal.effectiveDate)} />;
+    registrationOpen={siteConfig.legal.legalReviewStatus === "effective" && Boolean(siteConfig.legal.effectiveDate)}
+    turnstileSiteKey={process.env.TURNSTILE_SITE_KEY?.trim() || undefined} />;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {

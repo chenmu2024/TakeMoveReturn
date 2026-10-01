@@ -15,7 +15,7 @@ set local role anon;
 do $$ begin
   begin
     perform public.create_import_job('aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa','tools.csv',50,
-      '[{"assetCode":"A-1","name":"Drill","category":"Power"}]'::jsonb);
+      '[{"assetCode":"A-1","name":"Drill","category":"Power","brand":"","model":"","serialNumber":""}]'::jsonb);
     raise exception 'Anonymous import succeeded';
   exception when insufficient_privilege then null;
   end;
@@ -26,18 +26,18 @@ set local request.jwt.claim.sub = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 do $$ declare v_job uuid; begin
   begin
     perform public.create_import_job('bbbbbbbb-1111-4111-8111-bbbbbbbbbbbb','tools.csv',50,
-      '[{"assetCode":"B-2","name":"Drill","category":"Power"}]'::jsonb);
+      '[{"assetCode":"B-2","name":"Drill","category":"Power","brand":"","model":"","serialNumber":""}]'::jsonb);
     raise exception 'Cross-company import succeeded';
   exception when others then if SQLERRM <> 'Forbidden' then raise; end if;
   end;
   begin
     perform public.create_import_job('aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa','tools.csv',50,
-      '[{"assetCode":"A-1","name":"Drill","category":"Power"},{"assetCode":"A-1","name":"Saw","category":"Power"}]'::jsonb);
+      '[{"assetCode":"A-1","name":"Drill","category":"Power","brand":"","model":"","serialNumber":""},{"assetCode":"A-1","name":"Saw","category":"Power","brand":"","model":"","serialNumber":""}]'::jsonb);
     raise exception 'Duplicate file code accepted';
   exception when others then if SQLERRM <> 'Duplicate asset codes in import' then raise; end if;
   end;
   v_job := public.create_import_job('aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa','tools.csv',100,
-    '[{"assetCode":"A-1","name":"Drill","category":"Power"},{"assetCode":"A-2","name":"Saw","category":"Power"}]'::jsonb);
+    '[{"assetCode":"A-1","name":"Drill","category":"Power","brand":"","model":"","serialNumber":""},{"assetCode":"A-2","name":"Saw","category":"Power","brand":"Milwaukee","model":"2732-20","serialNumber":"SN-A2"}]'::jsonb);
   perform set_config('test.import_job_id',v_job::text,true);
   if (select count(*) from public.import_rows where job_id = v_job) <> 2 then
     raise exception 'Import rows not staged';
@@ -55,6 +55,16 @@ do $$ declare v_job uuid := current_setting('test.import_job_id')::uuid; begin
   end if;
   if (select count(*) from public.tools where company_id = 'aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa') <> 2 then
     raise exception 'Import did not create exactly two tools';
+  end if;
+  if not exists (
+    select 1 from public.tools
+    where company_id = 'aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa'
+      and asset_code = 'A-2'
+      and brand = 'Milwaukee'
+      and model = '2732-20'
+      and serial_number = 'SN-A2'
+  ) then
+    raise exception 'Imported metadata was lost';
   end if;
   if (select count(*) from public.tools where company_id = 'bbbbbbbb-1111-4111-8111-bbbbbbbbbbbb') <> 1 then
     raise exception 'Import touched another company';

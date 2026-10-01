@@ -1,5 +1,13 @@
 # TakeMoveReturn delivery tracker
 
+## 2026-10-01 merged release — CURRENT
+
+- Merged the local workspace repairs with GitHub main through `7f0cbdf`, preserving timezone-aware dates, tool/import metadata, field reporting, attachment cardinality and guarded account deletion.
+- Conflict resolutions retain holder/location columns, contextual dashboard actions, paginated damage reports with worker attribution, and requester-visible privacy responses alongside the separate reauthenticated deletion flow.
+- Import preflight, creation and retry all require the request's own Origin, preserving version-preview import validation without permitting cross-origin writes. File writes retain their existing canonical-origin restriction.
+- Local typecheck, unit tests, source audits and production build pass. This merged release is not yet deployed; CI, linked pending migrations, OpenNext build and exact-commit production verification are required next. Historical preview checks do not validate the merged release.
+- Local CLI is linked to the verified TakeMoveReturn project `xcdhhxyqdlorxztafpee`; five October 1 migrations are pending and the privacy-review migration is already applied. No customer data has been deleted by this merge.
+
 ## 2026-10-01 audit repairs — implemented, preview only
 
 - Fixed decimal cost validation; added a regression test for the actual HTML pattern.
@@ -17,6 +25,51 @@
 Authenticated candidate `67d7bf40-53da-4beb-b887-7a1ccd51eac2` imported the authorized three-row CSV successfully (3 imported, 0 failed), and its job-specific label page rendered 3/3 QR images. Exactly those three no-history/no-file tools were cleaned up; import audit rows remain. The original tool remains. This supersedes the pending three-row candidate import statement below; production promotion is still pending.
 
 The current audit is recorded in `docs/QA_AUDIT_2026-10-01.md`. Confirmed repair targets: maintenance decimal-cost pattern, damage/maintenance history and tool-selector limits, privacy fulfilment operations, stale recent-import progress, missing holder/location columns on Tools, and contextual/singular copy. Typecheck, 34 tests and release/legal/SEO/database source audits passed. No application code was changed or production version promoted by this audit. Payment remained outside live verification scope.
+
+## 2026-10-01 deep audit follow-up — CURRENT
+
+Repository fixes completed in this pass:
+
+- Restored green CI after the workspace-timezone prop regression; latest dashboard changes pass database + verify jobs.
+- Added production-dependency audit gating (`npm audit --omit=dev --audit-level=high`); current production dependency audit reports zero vulnerabilities at that threshold.
+- Added same-origin validation to customer-file upload/delete and import preflight writes.
+- Added Tool metadata editing for name/category/brand/model/serial/description/notes and expanded Tool Detail with those fields, QR access, recent damage, maintenance, complete paginated history, and the private primary tool photo.
+- Field QR view now shows condition and the private tool photo through a field-session + company-scoped read route.
+- Dashboard now separates Total / Available / Checked Out / Missing / Damaged / Maintenance Due / Overdue, with maintenance dates interpreted using the workspace timezone.
+- Corrected Help/Privacy customer-file copy to 5 MB images, 10 MB maintenance attachments, and the 1 / 3 / 3 attachment model. Release audit now guards file-specific limits, same-origin file/import writes, and field-photo authorization.
+
+Verified external state:
+
+- `www.takemovereturn.com` redirects to the canonical apex, so strict apex Origin checks do not break normal `www` form use.
+- Production `/api/ready` still returns ready.
+- At the time of this audit, production `/help/damage` still served the prior 2026-09-29 / 10 MB copy even though `main` contains the corrected version. Therefore GitHub CI success must not be treated as proof that the Cloudflare production Worker has deployed the latest commit.
+- Production login renders, but no Turnstile widget is present; Turnstile code exists but production keys are not active/configured.
+
+Remaining blockers / gaps, in priority order:
+
+1. **Production deployment convergence:** confirm Cloudflare actually deploys the latest `main` and re-run public + authenticated smoke checks.
+2. **Customer-file DB cardinality:** current 1 / 3 / 3 limits are enforced in UI/API but not atomically inside `reserve_customer_file`; concurrent uploads can race until a database migration adds pending+ready cardinality enforcement.
+3. **Field Report Damage / Report Missing:** Field QR now shows condition/photo but workers still cannot submit these two secondary actions. They require a field-session-authorized transactional RPC.
+4. **Privacy fulfilment:** request intake and limited export exist; deletion/rectification/restriction fulfilment and retention cleanup remain operationally incomplete.
+5. **Import metadata:** CSV/XLSX background imports currently persist only asset code/name/category. Brand/model/serial need a migration across `import_rows`, validation, job creation and batch insertion before large imports preserve those fields.
+6. **Tool purchase fields:** `purchase_date` and `purchase_price` are in the source-of-truth model but absent from the current `tools` schema; do not add UI until the migration is applied.
+7. **Authenticated browser E2E:** signup/login/onboarding, tool edit, 200-label import→QR→print, field TAKE/MOVE/RETURN, customer files, membership and privacy still need credentialed browser automation/production verification.
+8. **Performance gates:** current load smoke is a small public-route regression test, not k6/production-scale load; Lighthouse targets are not yet enforced.
+9. **Repository protection:** `main` remains unprotected and has no ruleset; the current GitHub connection cannot administer branch protection.
+10. **Later scope:** automatic overdue/maintenance reminders, lightweight work orders, Sentry/PostHog/GA4 remain absent and should follow the core production-verification work.
+
+Billing remains Waffo and was not re-investigated or altered in this pass.
+## 2026-10-01 repair pass — CURRENT AUTHORITY
+
+This section supersedes contradictory historical status entries below.
+
+- DONE in repository: public Auth Turnstile verification is wired for login, signup and password reset when both Turnstile keys are configured.
+- DONE in repository: Tool Detail history is paginated in 50-event pages instead of stopping at 30 events.
+- DONE in repository: customer-file validation uses 5 MB for images and 10 MB for maintenance attachments; UI/API enforce 1 tool photo, 3 damage photos and 3 maintenance attachments.
+- DONE in CI baseline: the rollback-only Supabase SQL suite runs in the GitHub database job; do not describe that CI database job as unimplemented.
+- BLOCKED_BY_EXTERNAL_PERMISSIONS: this ChatGPT connection currently cannot administer the linked Supabase project, so new production DDL for timezone-correct Expected Return semantics, DB-level attachment cardinality enforcement, field Report Damage/Report Missing RPCs, and privacy deletion/retention operations cannot be truthfully marked applied from this repair pass.
+- STILL OPEN: authenticated production customer-file E2E, credentialed browser E2E, privacy request fulfilment/deletion, production Lighthouse/load evidence, field Report Damage/Report Missing, timezone-correct Expected Return persistence, normal OpenNext publish-path convergence, and repository branch protection.
+- Billing remains Waffo and is intentionally untouched in this repair pass.
 
 ## 2026-10-01 Finish Mode — LOCKED
 
@@ -58,7 +111,7 @@ The owner confirms real payment has been tested and asks not to investigate it i
 
 **Activation release status:** Worker `0853dc4a-1038-40b8-89e5-60c1600b8cef` briefly served the first-tool, setup-checklist, tool-code fallback and 200-label batch-print features described above, but authenticated workspace access regressed. Production was rolled back to stable Worker `a2959207-dbab-427c-a69c-ab9bfeac9a00`; the owner confirmed dashboard access returned. The guarded candidate `61f3c6f2-011b-41fa-8925-cd6f6134c1ae` now serves 100% of production traffic: optional setup and storage metrics fail closed without crashing core dashboard/billing data. The owner confirmed preview login, dashboard, label entry, QR labels and the browser print dialog, then confirmed production dashboard and Tools work after release. Public home/login/health returned 200; guest dashboard/Tools redirected to login. Typecheck, 33 unit tests, Next/OpenNext production builds, Wrangler dry-run, release/legal/SEO audits passed. Authenticated customer files, mobile visual, printer alignment and PDF output checks are **NOT COMPLETED**. Avery/Brother/DYMO-specific layouts are **NOT COMPLETED**.
 
-**Infrastructure from the preceding workstream:** linked Supabase migrations through `202609300003` and the rollback-only SQL suite passed; a separate private `takemovereturn-files` R2 bucket exists, with its binding and activation flag in the current Worker. CI includes a local Supabase test job; the GitHub database job has not passed. OpenNext cache prefill returned HTTP 500, so the verified bundle was uploaded directly through Wrangler. Authenticated customer-file upload/read/delete/quota remains **NOT VERIFIED**. Do not describe the full storage workflow as production-verified.
+**Infrastructure from the preceding workstream:** linked Supabase migrations through `202609300003` and the rollback-only SQL suite passed; a separate private `takemovereturn-files` R2 bucket exists, with its binding and activation flag in the current Worker. CI includes a local Supabase test job; the GitHub database job now passes. Older entries below that say otherwise are historical only. OpenNext cache prefill returned HTTP 500, so the verified bundle was uploaded directly through Wrangler. Authenticated customer-file upload/read/delete/quota remains **NOT VERIFIED**. Do not describe the full storage workflow as production-verified.
 
 **Next P0 sequence:** authenticate and visually verify the 200-label import-to-print path; add authenticated scan/activation timestamps and measured TTFS; verify empty-account and spreadsheet onboarding in a browser; then add an authorized overdue list and non-SMS reminder workflow. Corrective audit history remains required. P1 interactive demo, field-adoption metrics, accountability views, migration CTA and validated template SEO follow. Full offline, kits, reservations, AI, GPS/BLE/RFID and SMS remain VALIDATE BEFORE BUILD. No full-plan completion or production readiness is claimed.
 

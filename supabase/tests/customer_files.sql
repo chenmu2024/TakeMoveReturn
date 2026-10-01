@@ -70,6 +70,32 @@ begin
     raise exception 'Ready transition failed';
   end if;
 
+  begin
+    perform public.reserve_customer_file(
+      'tool_photo',
+      '55555555-1111-4111-8111-555555555555',
+      'second.jpg',
+      'image/jpeg',
+      1024
+    );
+    raise exception 'Second tool photo exceeded the one-photo limit';
+  exception when others then
+    if SQLERRM <> 'Attachment limit reached' then raise; end if;
+  end;
+
+  begin
+    perform public.reserve_customer_file(
+      'tool_photo',
+      '55555555-1111-4111-8111-555555555555',
+      'too-large.jpg',
+      'image/jpeg',
+      5242881
+    );
+    raise exception 'Oversized tool photo was accepted';
+  exception when others then
+    if SQLERRM <> 'Image file size must not exceed 5 MB' then raise; end if;
+  end;
+
   v_usage := public.customer_file_usage('55555555-aaaa-4aaa-8aaa-555555555555');
   if v_usage <> 1048576 then raise exception 'Usage did not include ready file'; end if;
 
@@ -80,6 +106,32 @@ begin
     'image/webp',
     2048
   );
+  perform public.reserve_customer_file(
+    'damage_photo',
+    '55555555-3333-4333-8333-555555555555',
+    'damage-2.jpg',
+    'image/jpeg',
+    2048
+  );
+  perform public.reserve_customer_file(
+    'damage_photo',
+    '55555555-3333-4333-8333-555555555555',
+    'damage-3.png',
+    'image/png',
+    2048
+  );
+  begin
+    perform public.reserve_customer_file(
+      'damage_photo',
+      '55555555-3333-4333-8333-555555555555',
+      'damage-4.jpg',
+      'image/jpeg',
+      2048
+    );
+    raise exception 'Fourth damage photo exceeded the three-photo limit';
+  exception when others then
+    if SQLERRM <> 'Attachment limit reached' then raise; end if;
+  end;
 
   perform public.reserve_customer_file(
     'maintenance_attachment',

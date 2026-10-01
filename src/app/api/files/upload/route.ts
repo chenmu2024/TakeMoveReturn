@@ -1,4 +1,5 @@
 import { createClient, isSupabaseConfigured } from "../../../../lib/supabase/server";
+import { isTrustedWriteOrigin } from "../../../../lib/security/request-origin";
 import { customerFilesEnabled, detectCustomerFileType, getCustomerFilesBucket, validateCustomerFile, type CustomerFileKind } from "../../../../lib/files/customer-files";
 
 const kinds = new Set<CustomerFileKind>(["tool_photo", "damage_photo", "maintenance_attachment"]);
@@ -13,6 +14,7 @@ function redirectTarget(kind: CustomerFileKind, subjectId: string, notice: strin
 }
 
 export async function POST(request: Request) {
+  if (!isTrustedWriteOrigin(request)) return new Response("Invalid origin", { status: 403 });
   if (!customerFilesEnabled()) return new Response("Customer file uploads are not enabled", { status: 503 });
   if (!isSupabaseConfigured()) return new Response("Storage unavailable", { status: 503 });
 
@@ -45,6 +47,18 @@ export async function POST(request: Request) {
   }
 
   const kind = kindValue as CustomerFileKind;
+  const maxFiles = kind === "tool_photo" ? 1 : 3;
+  const subjectColumn = kind === "tool_photo" ? "tool_id"
+    : kind === "damage_photo" ? "damage_report_id"
+    : "maintenance_event_id";
+  const { count: existingCount, error: countError } = await supabase.from("customer_files")
+    .select("id", { count: "exact", head: true })
+    .eq(subjectColumn, subjectId)
+    .eq("kind", kind)
+    .eq("status", "ready");
+  if (countError) return redirectTarget(kind, subjectId, "file-unavailable", request);
+  if ((existingCount ?? 0) >= maxFiles) return redirectTarget(kind, subjectId, "file-limit", request);
+
   const validated = validateCustomerFile({ kind, name: file.name, type: file.type, size: file.size });
   if (!validated.ok) return redirectTarget(kind, subjectId, `file-${validated.reason}`, request);
 
@@ -67,7 +81,9 @@ export async function POST(request: Request) {
   }).single();
 
   if (reserveError || !reservation) {
-    const reason = reserveError?.message?.includes("Storage limit reached") ? "file-quota" : "file-unavailable";
+    const reason = reserveError?.message?.includes("Storage limit reached") ? "file-quota"
+      : reserveError?.message?.includes("Attachment limit reached") ? "file-limit"
+      : "file-unavailable";
     return redirectTarget(kind, subjectId, reason, request);
   }
 

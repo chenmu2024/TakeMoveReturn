@@ -15,6 +15,7 @@ insert into public.locations(id,company_id,type,name) values
   ('77777777-2222-4222-8222-777777777777','77777777-bbbb-4bbb-8bbb-777777777777','warehouse','B warehouse');
 insert into public.tools(id,company_id,asset_code,qr_token,name) values
   ('66666666-3333-4333-8333-666666666666','66666666-aaaa-4aaa-8aaa-666666666666','A-1',repeat('a',64),'A tool'),
+  ('66666666-3334-4334-8334-666666666666','66666666-aaaa-4aaa-8aaa-666666666666','A-2',repeat('c',64),'A second tool'),
   ('77777777-3333-4333-8333-777777777777','77777777-bbbb-4bbb-8bbb-777777777777','B-1',repeat('b',64),'B tool');
 
 set local role anon;
@@ -28,6 +29,11 @@ do $$ begin
     perform public.record_field_tool_transaction(repeat('s',64),repeat('d',64),repeat('a',64),
       'checkout','66666666-2222-4222-8222-666666666666',null);
     raise exception 'Anonymous movement succeeded';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.report_field_tool_issue(repeat('s',64),repeat('d',64),repeat('a',64),'minor','Anonymous report');
+    raise exception 'Anonymous field issue report succeeded';
   exception when insufficient_privilege then null;
   end;
 end $$;
@@ -131,6 +137,43 @@ begin
   select attempt_id into v_attempt from public.begin_field_pin_attempt(repeat('d',64),
     '66666666-1111-4111-8111-666666666666',repeat('i',64));
   if v_attempt is not null then raise exception 'Worker PIN rate limit did not engage'; end if;
+
+  perform public.report_field_tool_issue(
+    repeat('u',64), repeat('d',64), repeat('a',64), 'needs_repair', 'Cracked field housing'
+  );
+  if (select status from public.tools where qr_token=repeat('a',64)) <> 'damaged'
+    or (select reported_by_worker_id from public.damage_reports where tool_id='66666666-3333-4333-8333-666666666666' and status='open')
+      <> '66666666-1112-4112-8112-666666666666'
+    or (select performed_by_worker_id from public.tool_transactions where tool_id='66666666-3333-4333-8333-666666666666'
+        and transaction_type='damage' order by created_at desc limit 1)
+      <> '66666666-1112-4112-8112-666666666666' then
+    raise exception 'Field damage report was not attributed';
+  end if;
+
+  begin
+    perform public.report_field_tool_issue(
+      repeat('u',64), repeat('d',64), repeat('a',64), 'minor', 'Duplicate issue'
+    );
+    raise exception 'Duplicate field issue succeeded';
+  exception when others then if SQLERRM <> 'Open report exists' then raise; end if;
+  end;
+
+  perform public.report_field_tool_issue(
+    repeat('u',64), repeat('d',64), repeat('c',64), 'lost', 'Missing after field handoff'
+  );
+  if (select status from public.tools where qr_token=repeat('c',64)) <> 'missing'
+    or (select transaction_type from public.tool_transactions where tool_id='66666666-3334-4334-8334-666666666666'
+        order by created_at desc limit 1) <> 'missing' then
+    raise exception 'Field missing report did not update tool state/history';
+  end if;
+
+  begin
+    perform public.report_field_tool_issue(
+      repeat('u',64), repeat('d',64), repeat('b',64), 'minor', 'Other tenant'
+    );
+    raise exception 'Cross-company field issue succeeded';
+  exception when others then if SQLERRM <> 'Tool not found' then raise; end if;
+  end;
 end $$;
 
 rollback;

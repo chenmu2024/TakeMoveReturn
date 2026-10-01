@@ -3,8 +3,9 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
+import { customerFilesEnabled } from "../../../lib/files/customer-files";
 import { fieldDb, fieldDevice, fieldWorker } from "../../../lib/field/server";
-import { recordFieldMovement } from "../../field/actions";
+import { recordFieldIssue, recordFieldMovement } from "../../field/actions";
 import "./scan.css";
 
 export const metadata: Metadata = { title: "Scan a tool | TakeMoveReturn", robots: { index: false, follow: false } };
@@ -20,13 +21,14 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
   const tool = data as { company_name: string; tool_name: string; asset_code: string };
   const fieldSession = await fieldWorker();
   const enrolledDevice = fieldSession ? null : await fieldDevice();
-  let fieldTool: { status: string; current_worker_id: string | null; current_location_id: string | null } | null = null;
+  let fieldTool: { id: string; status: string; condition: string; current_worker_id: string | null; current_location_id: string | null } | null = null;
+  let fieldToolPhotoId: string | null = null;
   let fieldLocations: { id: string; name: string }[] = [];
   let currentHolder: string | null = null;
   let currentLocation: string | null = null;
   if (fieldSession) {
     const db = fieldDb();
-    const { data: ownTool } = await db.from("tools").select("status,current_worker_id,current_location_id")
+    const { data: ownTool } = await db.from("tools").select("id,status,condition,current_worker_id,current_location_id")
       .eq("qr_token", token).eq("company_id", fieldSession.device.company_id).maybeSingle();
     fieldTool = ownTool;
     if (ownTool) {
@@ -41,6 +43,12 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
         .eq("company_id", fieldSession.device.company_id).order("name");
       fieldLocations = (locations ?? []).filter((location) => location.active);
       currentLocation = locations?.find((location) => location.id === ownTool.current_location_id)?.name ?? null;
+      if (customerFilesEnabled()) {
+        const { data: photo } = await db.from("customer_files").select("id")
+          .eq("tool_id", ownTool.id).eq("kind", "tool_photo").eq("status", "ready")
+          .order("created_at", { ascending: false }).limit(1).maybeSingle();
+        fieldToolPhotoId = photo?.id ?? null;
+      }
       if (ownTool.current_worker_id) {
         const { data: holder } = await db.from("workers").select("name")
           .eq("id", ownTool.current_worker_id).eq("company_id", fieldSession.device.company_id).maybeSingle();
@@ -66,7 +74,8 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
 
   const notice = (await searchParams).notice;
   const savedMessage = notice === "checkout-saved" ? "TAKE saved." : notice === "transfer-saved" ? "MOVE saved."
-    : notice === "return-saved" ? "RETURN saved." : notice === "saved" ? "Movement saved." : null;
+    : notice === "return-saved" ? "RETURN saved." : notice === "damage-saved" ? "Damage report saved."
+      : notice === "missing-saved" ? "Missing report saved." : notice === "saved" ? "Movement saved." : null;
   const moveLocations = fieldLocations.filter((location) => fieldTool?.current_worker_id !== fieldSession?.worker.id
     || location.id !== fieldTool?.current_location_id);
   const actions = fieldTool?.status === "available" ? ["checkout"]
@@ -77,11 +86,12 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
     <dl><div><dt>Company</dt><dd>{tool.company_name}</dd></div><div><dt>Asset code</dt><dd>{tool.asset_code}</dd></div></dl>
     <p>A QR label identifies a tool. It does not grant access to custody or history.</p>
     <p><Link href="/field/find">Can&apos;t scan the QR? Enter the tool code</Link></p>
-    {notice && <p id="movement-status" role={savedMessage ? "status" : "alert"}>{savedMessage ?? (notice === "session" ? "Worker session expired. Sign in again." : "Tool state changed or the movement could not be saved.")}</p>}
+    {notice && <p id={notice.includes("damage") || notice.includes("missing") || notice === "issue-state" ? "issue-status" : "movement-status"} role={savedMessage ? "status" : "alert"}>{savedMessage ?? (notice === "session" ? "Worker session expired. Sign in again." : notice === "issue-state" ? "The issue report could not be saved. The tool may already have an open report or its state may have changed." : "Tool state changed or the movement could not be saved.")}</p>}
     {fieldSession && fieldTool ? <>
       <p>Signed in as {fieldSession.worker.name}. <Link href="/field">Lock or switch</Link></p>
+      {fieldToolPhotoId && <img className="scan-tool-photo" src={`/api/field/files/${fieldToolPhotoId}`} alt={`Reference photo for ${tool.tool_name}`} />}
       <p>Current status: {fieldTool.status.replaceAll("_", " ")}</p>
-      <dl><div><dt>Current holder</dt><dd>{currentHolder ?? "Unassigned"}</dd></div>
+      <dl><div><dt>Condition</dt><dd>{fieldTool.condition}</dd></div><div><dt>Current holder</dt><dd>{currentHolder ?? "Unassigned"}</dd></div>
         <div><dt>Current location</dt><dd>{currentLocation ?? "Not set"}</dd></div></dl>
       {fieldLocations.length ? actions.map((type) => {
         const destinations = type === "transfer" ? moveLocations : fieldLocations;
@@ -96,6 +106,37 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
         </form>;
       }) : <p>Ask a manager to add an active location before moving this tool.</p>}
       {fieldLocations.length > 0 && actions.length === 0 && <p>No field movement is available for this tool.</p>}
+      {!["damaged", "missing", "retired"].includes(fieldTool.status) && <section className="scan-issue-actions" aria-labelledby="scan-issue-title">
+        <p className="workspace-eyebrow">FIELD ISSUE</p>
+        <h2 id="scan-issue-title">Something wrong with this tool?</h2>
+        <div className="scan-issue-grid">
+          <details>
+            <summary>Report damage</summary>
+            <form className="auth-form" action={recordFieldIssue}>
+              <input type="hidden" name="token" value={token} />
+              <label htmlFor="damage-severity">Severity</label>
+              <select id="damage-severity" name="severity" defaultValue="minor" required>
+                <option value="minor">Minor</option>
+                <option value="needs_repair">Needs repair</option>
+                <option value="unusable">Unusable</option>
+              </select>
+              <label htmlFor="damage-description">What happened?</label>
+              <textarea id="damage-description" name="description" minLength={3} maxLength={1000} rows={3} required />
+              <button className="workspace-button" type="submit">Save damage report</button>
+            </form>
+          </details>
+          <details>
+            <summary>Report missing</summary>
+            <form className="auth-form" action={recordFieldIssue}>
+              <input type="hidden" name="token" value={token} />
+              <input type="hidden" name="severity" value="lost" />
+              <label htmlFor="missing-description">What happened?</label>
+              <textarea id="missing-description" name="description" minLength={3} maxLength={1000} rows={3} required />
+              <button className="workspace-button" type="submit">Mark tool missing</button>
+            </form>
+          </details>
+        </div>
+      </section>}
     </> : enrolledDevice ? <Link className="workspace-button" href="/field">Worker sign-in</Link>
       : toolId ? <Link className="workspace-button" href={`/app/tools/${toolId}`}>Open tool record</Link>
         : <Link className="workspace-button" href="/field">Field access</Link>}

@@ -1,9 +1,11 @@
 import { plans, type PlanId } from "../../../../config/plans";
+import { isSameOrigin } from "../../../../lib/security/same-origin";
 import { siteConfig } from "../../../../config/site";
 import { MAX_IMPORT_ROWS, reviewImport } from "../../../../lib/import/preview";
 import { createClient, isSupabaseConfigured } from "../../../../lib/supabase/server";
 
 export async function POST(request: Request) {
+  if (!isSameOrigin(request)) return new Response("Invalid origin", { status: 403 });
   if (!isSupabaseConfigured()) return new Response("Unavailable", { status: 503 });
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -45,12 +47,17 @@ export async function POST(request: Request) {
   }
   const normalized: string[][] = [];
   for (const row of rows) {
-    if (!row || typeof row.assetCode !== "string" || typeof row.name !== "string" || typeof row.category !== "string") {
+    if (!row || typeof row.assetCode !== "string" || typeof row.name !== "string" ||
+        typeof row.category !== "string" || typeof row.brand !== "string" ||
+        typeof row.model !== "string" || typeof row.serialNumber !== "string") {
       return new Response("Invalid import row", { status: 400 });
     }
-    normalized.push([row.assetCode, row.name, row.category]);
+    normalized.push([row.assetCode, row.name, row.category, row.brand, row.model, row.serialNumber]);
   }
-  const review = reviewImport([["Asset code", "Tool name", "Category"], ...normalized], { assetCode: 0, name: 1, category: 2 });
+  const review = reviewImport(
+    [["Asset code", "Tool name", "Category", "Brand", "Model", "Serial number"], ...normalized],
+    { assetCode: 0, name: 1, category: 2, brand: 3, model: 4, serialNumber: 5 },
+  );
 
   const { data: company, error: companyError } = await supabase.from("companies")
     .select("plan").eq("id", membership.company_id).single();

@@ -29,14 +29,20 @@ export async function GET(request: Request, context: RouteContext) {
     const rows: string[][] = [];
     for (let start = 0; start < job.total_rows; start += 1000) {
       const { data, error } = await supabase.from("import_rows")
-        .select("row_number,asset_code,name,category,error_message")
+        .select("row_number,asset_code,name,category,brand,model,serial_number,error_message")
         .eq("job_id", id).eq("status", "failed").order("row_number").range(start, start + 999);
       if (error) return new Response("Error report unavailable", { status: 503 });
       if (!data?.length) break;
-      rows.push(...data.map((row) => [row.row_number, row.asset_code, row.name, row.category ?? "", row.error_message ?? ""].map(String)));
+      rows.push(...data.map((row) => [
+        row.row_number, row.asset_code, row.name, row.category ?? "", row.brand ?? "",
+        row.model ?? "", row.serial_number ?? "", row.error_message ?? "",
+      ].map(String)));
       if (data.length < 1000) break;
     }
-    return new Response(csvDocument(["Source row", "Asset code", "Tool name", "Category", "Issue"], rows), {
+    return new Response(csvDocument(
+      ["Source row", "Asset code", "Tool name", "Category", "Brand", "Model", "Serial number", "Issue"],
+      rows,
+    ), {
       headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="import-${id}-errors.csv"`, "Cache-Control": "no-store" },
     });
   }

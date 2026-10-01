@@ -34,6 +34,12 @@ const customerFilesHelper = read("src/lib/files/customer-files.ts");
 const customerFilesUpload = read("src/app/api/files/upload/route.ts");
 const customerFilesRead = read("src/app/api/files/[id]/route.ts");
 const customerFilesDelete = read("src/app/api/files/[id]/delete/route.ts");
+const fieldPhotoRead = read("src/app/api/field/files/[id]/route.ts");
+const fieldIssueMigration = read("supabase/migrations/202610010002_field_issue_reporting.sql");
+const fieldActions = read("src/app/field/actions.ts");
+const requestOrigin = read("src/lib/security/request-origin.ts");
+const versionRoute = read("src/app/api/version/route.ts");
+const importPreflight = read("src/app/api/import/preflight/route.ts");
 const authCallback = read("src/app/auth/callback/route.ts");
 const authActions = read("src/app/auth/actions.ts");
 const adminClient = read("src/lib/supabase/admin.ts");
@@ -84,7 +90,7 @@ pass("customer-file activation requires dedicated R2 binding", !wrangler.include
 pass("OpenNext cache R2 remains separate from future customer files", wrangler.includes("NEXT_INC_CACHE_R2_BUCKET") && wrangler.includes("takemovereturn-opennext-cache"));
 pass("customer-file migration enforces metadata RLS and plan quotas", customerFilesMigration.includes("create table public.customer_files") && customerFilesMigration.includes("enable row level security") && customerFilesMigration.includes("reserve_customer_file") && ["104857600","2147483648","10737418240","26843545600"].every((value) => customerFilesMigration.includes(value)));
 pass("customer-file metadata writes remain RPC-controlled", customerFilesMigration.includes("revoke all on public.customer_files from public, anon, authenticated") && customerFilesMigration.includes("grant select on public.customer_files to authenticated"));
-pass("customer-file upload validates size, MIME and file signature", customerFilesHelper.includes("10 * 1024 * 1024") && customerFilesHelper.includes("detectCustomerFileType") && customerFilesUpload.includes("detectCustomerFileType(bytes) !== validated.type"));
+pass("customer-file upload validates file-specific size, MIME and signature", customerFilesHelper.includes('input.kind === "maintenance_attachment" ? 10 * 1024 * 1024 : 5 * 1024 * 1024') && customerFilesHelper.includes("detectCustomerFileType") && customerFilesUpload.includes("detectCustomerFileType(bytes) !== validated.type"));
 pass("customer files are served only through authenticated gated routes", customerFilesRead.includes("getClaims()") && customerFilesRead.includes('eq("status", "ready")') && customerFilesRead.includes('"Cache-Control": "private, no-store, max-age=0"'));
 pass("customer-file delete is authenticated and metadata-led", customerFilesDelete.includes("getClaims()") && customerFilesDelete.includes('rpc("delete_customer_file"') && customerFilesDelete.includes("customer_file_r2_delete_failed"));
 pass("rollback-only customer-file security test exists", existsSync(new URL("../supabase/tests/customer_files.sql", import.meta.url)));
@@ -94,6 +100,9 @@ pass("customer-file cleanup is scheduled but safely no-ops without the dedicated
 pass("private file responses are hardened against active content", customerFilesRead.includes("Content-Security-Policy") && customerFilesRead.includes("Cross-Origin-Resource-Policy") && customerFilesRead.includes('record.content_type === "application/pdf" ? "attachment" : "inline"'));
 pass("storage UI warns before quota exhaustion", workspace.includes("storageRatio >= 0.8") && workspace.includes("uploads are blocked"));
 pass("customer-file cleanup tests exist", existsSync(new URL("../tests/customer-file-cleanup.test.mjs", import.meta.url)) && existsSync(new URL("../supabase/tests/customer_file_lifecycle.sql", import.meta.url)));
+pass("sensitive file writes require a trusted origin", requestOrigin.includes("isTrustedWriteOrigin") && [customerFilesUpload, customerFilesDelete].every((source) => source.includes("isTrustedWriteOrigin(request)")));
+pass("import writes require same-origin on production and version previews", read("src/lib/security/same-origin.ts").includes("new URL(request.url).origin") && [importPreflight, read("src/app/api/import/jobs/route.ts"), read("src/app/api/import/jobs/[id]/route.ts")].every((source) => source.includes("isSameOrigin(request)")));
+pass("field tool photos require a live field session and company scope", fieldPhotoRead.includes("fieldWorker()") && fieldPhotoRead.includes('eq("company_id", session.device.company_id)') && fieldPhotoRead.includes('eq("kind", "tool_photo")'));
 pass("invitation acceptance page exists", existsSync(new URL("../src/app/app/invitations/page.tsx", import.meta.url)));
 pass("route error recovery boundary exists", existsSync(new URL("../src/app/error.tsx", import.meta.url)));
 pass("global error fallback exists", existsSync(new URL("../src/app/global-error.tsx", import.meta.url)));
@@ -112,3 +121,8 @@ if (failures.length) {
   process.exit(1);
 }
 console.log("\nRelease audit passed.");
+
+pass("production version route exposes the deployed build SHA", versionRoute.includes("NEXT_PUBLIC_BUILD_SHA") && versionRoute.includes('"Cache-Control": "no-store, max-age=0"'));
+
+pass("field issue reporting is service-role-only", fieldIssueMigration.includes("report_field_tool_issue") && fieldIssueMigration.includes("from public, anon, authenticated") && fieldIssueMigration.includes("to service_role"));
+pass("field issue reporting preserves worker attribution", fieldIssueMigration.includes("reported_by_worker_id") && fieldIssueMigration.includes("performed_by_worker_id") && fieldActions.includes("recordFieldIssue"));

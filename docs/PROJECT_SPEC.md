@@ -6,7 +6,9 @@ TakeMoveReturn does not win by having the most features. It wins by getting a co
 
 If a field worker needs training to complete a normal scan, redesign it. If a company needs days of configuration before its first real tool scan, redesign the onboarding. Keep TAKE / MOVE / RETURN and company-scoped security intact; do not mistake a public QR page view for an authenticated field scan.
 
-> 2026-09-25 LOCKED 决策：TakeMoveReturn 是品牌，由中国个人经营者 Qiaosheng Zhong 运营；没有注册公司或个体工商户。网站为 `https://takemovereturn.com`，支持邮箱 `support@takemovereturn.com`，隐私邮箱 `privacy@takemovereturn.com`（投产前须验证收件）。支付选用 Waffo Pancake，Waffo.com Limited 是适用交易的 Merchant of Record。旧版支付服务商方案及“支付最后处理”决策均已失效；不得凭此说明支付已接通。以实际验证的 Waffo API、产品 ID、签名回调和运行状态为准。
+> 2026-09-25 LOCKED 决策：TakeMoveReturn 是品牌，由中国个人经营者 Qiaosheng Zhong 运营；没有注册公司或个体工商户。网站为 `https://takemovereturn.com`，支持邮箱 `support@takemovereturn.com`，隐私/数据权利请求统一使用已验证的 `contact@takemovereturn.com`。支付选用 Waffo Pancake，Waffo.com Limited 是适用交易的 Merchant of Record。旧版支付服务商方案及“支付最后处理”决策均已失效；不得凭此说明支付已接通。以实际验证的 Waffo API、产品 ID、签名回调和运行状态为准。
+
+> 2026-10-01 IMPLEMENTATION CLARIFICATION：当前生产支付唯一实现仍为 Waffo Pancake；Stripe 不属于当前生产方案。客户文件限制按本文件第 128–131 节执行：Tool 1 张 active primary image，Damage Report 最多 3 张，Maintenance Event 最多 3 个附件；图片服务端上限 5 MB，Maintenance 上限 10 MB。Turnstile 已接入公开 Auth 表单，只有在 Site Key 与 Secret Key 同时配置时才强制启用。任何需要数据库新 migration、Supabase 管理权限或真实生产凭据的项目必须保持“未验证/被外部权限阻塞”状态，不得靠文档宣称完成。
 
 # AI 编程完整开发总指令
 
