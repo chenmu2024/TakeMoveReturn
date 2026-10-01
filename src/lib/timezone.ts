@@ -62,3 +62,21 @@ export function localDueDateFromBoundary(boundary: string | null, timeZone: stri
     return null;
   }
 }
+
+
+export function dateInTimeZone(instant: Date | string | number, timeZone: string) {
+  const value = instant instanceof Date ? instant : new Date(instant);
+  if (!Number.isFinite(value.getTime())) return null;
+  try {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(value);
+    const values = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+    return `${values.year}-${values.month}-${values.day}`;
+  } catch {
+    return null;
+  }
+}
