@@ -19,6 +19,28 @@ Do not reopen payment investigation in this workstream unless the owner explicit
 
 Current product boundary remains: reusable construction tools/equipment, QR identity, holder, recorded location, TAKE/MOVE/RETURN, damage, lightweight maintenance, and history. Do not expand into GPS/BLE/RFID, fleet telematics, ERP, consumables inventory, or full CMMS merely to chase keywords.
 
+## 2026-10-01 audit hardening candidate — PR #15, NOT RELEASED
+
+This branch closes the code gaps found in the 2026-10-01 full audit. It must not be described as production-released until the database and verify CI jobs pass on the final commit, the tracked migrations are applied to the actual TakeMoveReturn Supabase project, and the Worker is deployed.
+
+Implemented in the candidate:
+- Expected-return semantics use a company-local `date` for overdue decisions rather than UTC end-of-day comparisons; the legacy timestamp is retained only for compatibility.
+- Customer-file rules now enforce one active primary tool image, up to three damage images, up to three maintenance attachments, 5 MB image limits and a 10 MB maintenance-attachment limit at both application and database boundaries.
+- Authenticated field workers can report Damage or Missing directly from the QR flow, and a valid field session can read the company-scoped primary tool photo without manager workspace access.
+- Tool Detail now exposes paginated complete movement history and a manager-only correction workflow that appends a `correction` transaction instead of rewriting prior history.
+- Lightweight maintenance Work Orders are implemented with `open / in_progress / completed / cancelled` states.
+- Cloudflare Turnstile verification is wired into signup, login and password reset when production keys are configured.
+- Privacy now includes password re-authenticated account closure, sole-owner protection, identity pseudonymization/disablement and a scheduled retention cleanup RPC.
+- `docs/PROJECT_SPEC.md` is aligned to the actual Waffo Pancake architecture and the verified privacy contact address.
+- New rollback SQL tests cover finish hardening and privacy/retention behavior. Existing storage lifecycle tests were updated to the locked one-primary-photo invariant.
+
+Still external/not yet verified:
+- Applying the new migrations to the actual production Supabase project cannot be performed through the currently connected Supabase account because it exposes only an unrelated inactive project.
+- Production Turnstile site/secret keys are external credentials and are not committed to the repository.
+- Authenticated production customer-file and 200-label browser verification still require a signed-in production session.
+- GitHub `main` is currently unprotected; the connected GitHub integration does not expose branch-protection mutation permissions.
+- Production-scale Lighthouse/k6 and credentialed Playwright coverage remain separate release gates; the existing CI runtime/load smoke is only a regression baseline.
+
 ## 2026-10-01 workspace usability update — in progress
 
 - The expected-return and first authenticated QR-open changes described as a pending candidate below were released in commit `78e65de`; linked migrations, GitHub database/verify jobs and Cloudflare deployment passed. Authenticated browser verification of those flows is still pending.
