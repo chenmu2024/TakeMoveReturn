@@ -43,6 +43,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
   let overdueTools: OverdueTool[] | null = null;
   let overdueCount = 0;
   let companySettings: CompanySettings | null = null;
+  let workspaceTimezone = "UTC";
   let workspaceMembers: WorkspaceMember[] | null = null;
   let workspaceInvitations: WorkspaceInvitation[] | null = null;
   let billing: BillingState | null = null;
@@ -61,6 +62,12 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       .select("company_id,role").eq("user_id", data.claims.sub).eq("status", "active").limit(1).maybeSingle();
     if (error) throw new Error("Workspace membership could not be checked.");
     if (!membership) redirect("/app/onboarding");
+    if (key === "dashboard" || key === "tools") {
+      const { data: timezoneRow, error: timezoneError } = await supabase.from("companies")
+        .select("timezone").eq("id", membership.company_id).maybeSingle();
+      if (timezoneError) throw new Error("Workspace timezone could not be loaded.");
+      workspaceTimezone = timezoneRow?.timezone || "UTC";
+    }
     searchConnected = key === "search";
     if (key === "search" && searchQuery.length >= 2 && searchQuery.length <= 100) {
       const { data: matches, error: searchError } = await supabase.rpc("search_workspace", {
@@ -269,7 +276,7 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       };
     }
   }
-  return <WorkspaceShell path={path} view={view} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} activity={activity} attentionTools={attentionTools} overdueTools={overdueTools} overdueCount={overdueCount} overdueOnly={overdueOnly} page={page} pageCount={pageCount} recordCount={recordCount} companySettings={companySettings} workspaceMembers={workspaceMembers} workspaceInvitations={workspaceInvitations} billing={billing} privacyRequests={privacyRequests} reportAccess={reportAccess} reportConnected={reportConnected} searchConnected={searchConnected} searchQuery={searchQuery} searchResults={searchResults} notice={queryParams.notice} />;
+  return <WorkspaceShell path={path} view={view} workspaceTimezone={workspaceTimezone} tools={tools} locations={locations} workers={workers} dashboardStats={dashboardStats} activity={activity} attentionTools={attentionTools} overdueTools={overdueTools} overdueCount={overdueCount} overdueOnly={overdueOnly} page={page} pageCount={pageCount} recordCount={recordCount} companySettings={companySettings} workspaceMembers={workspaceMembers} workspaceInvitations={workspaceInvitations} billing={billing} privacyRequests={privacyRequests} reportAccess={reportAccess} reportConnected={reportConnected} searchConnected={searchConnected} searchQuery={searchQuery} searchResults={searchResults} notice={queryParams.notice} />;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
