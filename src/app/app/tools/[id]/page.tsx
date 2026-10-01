@@ -21,7 +21,7 @@ function noticeMessage(notice?: string) {
   if (notice === "file-uploaded") return { role: "status" as const, text: "Tool photo uploaded." };
   if (notice === "file-deleted") return { role: "status" as const, text: "Tool photo deleted." };
   if (notice === "file-quota") return { role: "alert" as const, text: "Storage allowance reached. Delete files or review the workspace plan before uploading another photo." };
-  if (notice === "file-invalid-size") return { role: "alert" as const, text: "Files must be between 1 byte and 10 MB." };
+  if (notice === "file-invalid-size") return { role: "alert" as const, text: "Tool photos must be between 1 byte and 5 MB." };
   if (notice === "file-invalid-type") return { role: "alert" as const, text: "Tool photos must be JPEG, PNG, or WebP." };
   if (notice === "file-invalid-name") return { role: "alert" as const, text: "Choose a file with a simple file name." };
   if (notice?.startsWith("file-")) return { role: "alert" as const, text: "The file action could not be completed. Try again." };
@@ -63,7 +63,7 @@ export default async function ToolDetailPage({ params, searchParams }: { params:
     const { data: fileRows, error: fileError } = await supabase.from("customer_files")
       .select("id,original_name,content_type,size_bytes")
       .eq("tool_id", id).eq("kind", "tool_photo").eq("status", "ready")
-      .order("created_at", { ascending: false }).limit(12);
+      .order("created_at", { ascending: false }).limit(1);
     if (fileError) throw new Error("Tool photos could not be loaded.");
     toolFiles = (fileRows ?? []).map((file) => ({ ...file, size_bytes: Number(file.size_bytes) }));
   }
