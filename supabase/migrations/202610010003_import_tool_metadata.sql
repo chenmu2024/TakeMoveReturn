@@ -136,8 +136,6 @@ declare
   v_imported integer := 0;
   v_failed integer := 0;
 begin
-  if auth.role() <> 'service_role' then raise exception 'Forbidden'; end if;
-
   select * into v_batch
   from public.import_batches
   where job_id = p_job_id and batch_number = p_batch_number
