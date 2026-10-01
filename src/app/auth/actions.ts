@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { siteConfig } from "../../config/site";
 import { createClient, isSupabaseConfigured } from "../../lib/supabase/server";
@@ -16,8 +17,35 @@ function nextDestination(form: FormData) {
   return form.get("next") === "invitation" ? "invitation" : null;
 }
 
+async function verifyTurnstile(form: FormData, fallback: string) {
+  const secret = process.env.TURNSTILE_SECRET_KEY?.trim();
+  const siteKey = process.env.TURNSTILE_SITE_KEY?.trim();
+  if (!secret || !siteKey) return;
+
+  const response = value(form, "cf-turnstile-response");
+  if (!response) redirect(`${fallback}?notice=challenge`);
+
+  const ip = (await headers()).get("cf-connecting-ip") ?? undefined;
+  const body = new URLSearchParams({ secret, response });
+  if (ip) body.set("remoteip", ip);
+
+  try {
+    const result = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body,
+      cache: "no-store",
+    });
+    const data = await result.json() as { success?: boolean };
+    if (!result.ok || data.success !== true) redirect(`${fallback}?notice=challenge`);
+  } catch {
+    redirect(`${fallback}?notice=challenge`);
+  }
+}
+
 export async function signIn(form: FormData) {
   requireConnection();
+  await verifyTurnstile(form, "/auth/login");
   const email = value(form, "email");
   const password = String(form.get("password") ?? "");
   if (!email || !password) redirect("/auth/login?notice=required");
@@ -29,6 +57,7 @@ export async function signIn(form: FormData) {
 
 export async function signUp(form: FormData) {
   requireConnection();
+  await verifyTurnstile(form, "/auth/signup");
   if (siteConfig.legal.legalReviewStatus !== "effective" || !siteConfig.legal.effectiveDate) {
     redirect("/auth/signup?notice=unavailable");
   }
@@ -62,6 +91,7 @@ export async function signUp(form: FormData) {
 
 export async function requestPasswordReset(form: FormData) {
   requireConnection();
+  await verifyTurnstile(form, "/auth/forgot-password");
   const email = value(form, "email");
   if (!email) redirect("/auth/forgot-password?notice=required");
   const supabase = await createClient();
