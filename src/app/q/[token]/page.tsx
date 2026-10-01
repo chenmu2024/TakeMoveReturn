@@ -3,6 +3,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
+import { customerFilesEnabled } from "../../../lib/files/customer-files";
 import { fieldDb, fieldDevice, fieldWorker } from "../../../lib/field/server";
 import { recordFieldMovement } from "../../field/actions";
 import "./scan.css";
