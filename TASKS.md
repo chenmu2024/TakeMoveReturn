@@ -1,5 +1,17 @@
 # TakeMoveReturn delivery tracker
 
+## 2026-10-01 repair pass — CURRENT AUTHORITY
+
+This section supersedes contradictory historical status entries below.
+
+- DONE in repository: public Auth Turnstile verification is wired for login, signup and password reset when both Turnstile keys are configured.
+- DONE in repository: Tool Detail history is paginated in 50-event pages instead of stopping at 30 events.
+- DONE in repository: customer-file validation uses 5 MB for images and 10 MB for maintenance attachments; UI/API enforce 1 tool photo, 3 damage photos and 3 maintenance attachments.
+- DONE in CI baseline: the rollback-only Supabase SQL suite runs in the GitHub database job; do not describe that CI database job as unimplemented.
+- BLOCKED_BY_EXTERNAL_PERMISSIONS: this ChatGPT connection currently cannot administer the linked Supabase project, so new production DDL for timezone-correct Expected Return semantics, DB-level attachment cardinality enforcement, field Report Damage/Report Missing RPCs, and privacy deletion/retention operations cannot be truthfully marked applied from this repair pass.
+- STILL OPEN: authenticated production customer-file E2E, credentialed browser E2E, privacy request fulfilment/deletion, production Lighthouse/load evidence, field Report Damage/Report Missing, timezone-correct Expected Return persistence, normal OpenNext publish-path convergence, and repository branch protection.
+- Billing remains Waffo and is intentionally untouched in this repair pass.
+
 ## 2026-10-01 Finish Mode — LOCKED
 
 TakeMoveReturn is no longer in project-selection mode. The product already exists and the owner has explicitly required that it be finished. Do not pause, downgrade, replace, or restart the product based on competitor density alone.
@@ -37,7 +49,7 @@ The owner confirms real payment has been tested and asks not to investigate it i
 
 **Activation release status:** Worker `0853dc4a-1038-40b8-89e5-60c1600b8cef` briefly served the first-tool, setup-checklist, tool-code fallback and 200-label batch-print features described above, but authenticated workspace access regressed. Production was rolled back to stable Worker `a2959207-dbab-427c-a69c-ab9bfeac9a00`; the owner confirmed dashboard access returned. The guarded candidate `61f3c6f2-011b-41fa-8925-cd6f6134c1ae` now serves 100% of production traffic: optional setup and storage metrics fail closed without crashing core dashboard/billing data. The owner confirmed preview login, dashboard, label entry, QR labels and the browser print dialog, then confirmed production dashboard and Tools work after release. Public home/login/health returned 200; guest dashboard/Tools redirected to login. Typecheck, 33 unit tests, Next/OpenNext production builds, Wrangler dry-run, release/legal/SEO audits passed. Authenticated customer files, mobile visual, printer alignment and PDF output checks are **NOT COMPLETED**. Avery/Brother/DYMO-specific layouts are **NOT COMPLETED**.
 
-**Infrastructure from the preceding workstream:** linked Supabase migrations through `202609300003` and the rollback-only SQL suite passed; a separate private `takemovereturn-files` R2 bucket exists, with its binding and activation flag in the current Worker. CI includes a local Supabase test job; the GitHub database job has not passed. OpenNext cache prefill returned HTTP 500, so the verified bundle was uploaded directly through Wrangler. Authenticated customer-file upload/read/delete/quota remains **NOT VERIFIED**. Do not describe the full storage workflow as production-verified.
+**Infrastructure from the preceding workstream:** linked Supabase migrations through `202609300003` and the rollback-only SQL suite passed; a separate private `takemovereturn-files` R2 bucket exists, with its binding and activation flag in the current Worker. CI includes a local Supabase test job; the GitHub database job now passes. Older entries below that say otherwise are historical only. OpenNext cache prefill returned HTTP 500, so the verified bundle was uploaded directly through Wrangler. Authenticated customer-file upload/read/delete/quota remains **NOT VERIFIED**. Do not describe the full storage workflow as production-verified.
 
 **Next P0 sequence:** authenticate and visually verify the 200-label import-to-print path; add authenticated scan/activation timestamps and measured TTFS; verify empty-account and spreadsheet onboarding in a browser; then add an authorized overdue list and non-SMS reminder workflow. Corrective audit history remains required. P1 interactive demo, field-adoption metrics, accountability views, migration CTA and validated template SEO follow. Full offline, kits, reservations, AI, GPS/BLE/RFID and SMS remain VALIDATE BEFORE BUILD. No full-plan completion or production readiness is claimed.
 
