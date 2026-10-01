@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { WorkspaceShell, type ActivityRecord, type BillingState, type CompanySettings, type DashboardStats, type OverdueTool, type PrivacyRequest, type SearchResult, type WorkspaceInvitation, type WorkspaceMember, type WorkspaceView } from "../../../components/workspace";
 import { customerFilesEnabled } from "../../../lib/files/customer-files";
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
+import { dateInTimeZone } from "../../../lib/timezone";
 import "../service.css";
 
 const views: Record<string, WorkspaceView> = {
@@ -230,9 +231,14 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       if (attentionError) throw new Error("Attention items could not be loaded.");
       attentionTools = attentionRows;
       const recentSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const [total, checkedOut, needsAttention, recentActivity, companyPlan, adminCount, activeLocations, activeWorkers, firstFieldTake, firstFieldReturn] = await Promise.all([
+      const workspaceToday = dateInTimeZone(new Date(), workspaceTimezone) ?? new Date().toISOString().slice(0, 10);
+      const [total, available, checkedOut, missing, damaged, maintenanceDue, needsAttention, recentActivity, companyPlan, adminCount, activeLocations, activeWorkers, firstFieldTake, firstFieldReturn] = await Promise.all([
         supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).neq("status", "retired"),
+        supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("status", "available"),
         supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("status", "checked_out"),
+        supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("status", "missing"),
+        supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("status", "damaged"),
+        supabase.from("maintenance_schedules").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("active", true).lte("next_due_at", workspaceToday),
         supabase.from("tools").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).in("status", ["damaged", "maintenance", "missing"]),
         supabase.from("tool_transactions").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).gte("created_at", recentSince),
         supabase.from("companies").select("plan").eq("id", membership.company_id).single(),
@@ -242,7 +248,8 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
         supabase.from("tool_transactions").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("transaction_type", "checkout").not("performed_by_worker_id", "is", null),
         supabase.from("tool_transactions").select("id", { count: "exact", head: true }).eq("company_id", membership.company_id).eq("transaction_type", "return").not("performed_by_worker_id", "is", null),
       ]);
-      if (total.error || checkedOut.error || needsAttention.error || recentActivity.error || companyPlan.error || adminCount.error) {
+      if (total.error || available.error || checkedOut.error || missing.error || damaged.error || maintenanceDue.error ||
+          needsAttention.error || recentActivity.error || companyPlan.error || adminCount.error) {
         throw new Error("Dashboard counts could not be loaded.");
       }
       const setupAvailable = !activeLocations.error && !activeWorkers.error && !firstFieldTake.error && !firstFieldReturn.error;
@@ -260,7 +267,12 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       }
       dashboardStats = {
         totalTools: total.count ?? 0,
+        available: available.count ?? 0,
         checkedOut: checkedOut.count ?? 0,
+        missing: missing.count ?? 0,
+        damaged: damaged.count ?? 0,
+        maintenanceDue: maintenanceDue.count ?? 0,
+        overdue: overdueCount,
         needsAttention: needsAttention.count ?? 0,
         recentActivity: recentActivity.count ?? 0,
         plan: companyPlan.data.plan as DashboardStats["plan"],
