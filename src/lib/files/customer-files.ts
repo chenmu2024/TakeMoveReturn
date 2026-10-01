@@ -36,7 +36,8 @@ export function validateCustomerFile(input: {
   if (!name || name.length > 180 || name.includes("/") || name.includes("\\")) {
     return { ok: false as const, reason: "invalid-name" };
   }
-  if (!Number.isInteger(input.size) || input.size < 1 || input.size > 10 * 1024 * 1024) {
+  const maxBytes = input.kind === "maintenance_attachment" ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+  if (!Number.isInteger(input.size) || input.size < 1 || input.size > maxBytes) {
     return { ok: false as const, reason: "invalid-size" };
   }
 
