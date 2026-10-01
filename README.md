@@ -22,7 +22,7 @@ Customer-file storage is enabled in the current Worker configuration with a dedi
 - **QR + shared-device worker sessions** for browser-based field handoffs.
 - **Workspace member invitations and roles** for owner-controlled Admin/Manager access, with plan capacity enforced separately from unlimited field workers.
 
-Tracked database migrations are under `supabase/migrations/`; rollback-only security and transaction checks are under `supabase/tests/`.
+Tracked database migrations are under `supabase/migrations/`; rollback-only security and transaction checks are under `supabase/tests/`. The GitHub `database` job starts a local Supabase stack and executes the complete rollback-only SQL suite on every main-branch push and pull request.
 
 ## Local setup
 
@@ -55,7 +55,11 @@ The Cloudflare bundle is produced with `npm run cf:build`. `npm run runtime:smok
 - Field QR tokens identify a tool but do not authenticate a worker.
 - Shared-device and worker sessions are revocable and checked against worker status/auth version.
 - Import jobs are revalidated server-side and processed in idempotent batches.
-- Customer-file uploads are enabled in the current Worker configuration and exposed in production Help/Pricing, but authenticated upload/read/delete/quota verification remains an open production gate. Live GPS, RFID, Bluetooth beacon tracking, fleet telematics, ERP and full CMMS behavior remain outside product scope.
+- Public signup, sign-in and password-reset actions support Cloudflare Turnstile when the site/secret keys are configured; set `TURNSTILE_REQUIRED=true` only after both production keys are installed.
+- Customer-file uploads are enabled in the current Worker configuration. Code enforces one active primary tool photo, up to three damage photos, up to three maintenance attachments, 5 MB image limits and a 10 MB maintenance-attachment limit in addition to plan quota controls.
+- Field sessions can report damage or missing tools directly from the QR flow without receiving manager workspace access.
+- Account closure requires password re-authentication, prevents a sole workspace owner from being orphaned, pseudonymizes/disables the sign-in identity, and preserves non-personal business audit history.
+- Live GPS, RFID, Bluetooth beacon tracking, fleet telematics, ERP and full CMMS behavior remain outside product scope.
 
 ## Plans and billing
 
@@ -84,13 +88,14 @@ The obsolete static `dist/` site is intentionally removed and ignored. The produ
 
 The repository must **not** be described as fully production-complete while these remain open:
 
-- verify real production Waffo activation, plan-change, renewal, past-due, recovery, canceling, uncanceled and canceled webhooks through workspace entitlement;
 - production-verify the already-enabled customer-file workflow end-to-end: authenticated upload/read/delete/quota plus cleanup behavior;
-- complete privacy-request fulfilment and retention cleanup operations;
-- add credentialed browser E2E, execute the full Supabase rollback-only security suite in CI, and add production-scale load/Lighthouse coverage;
-- apply and production-verify the workspace membership migration, invitation email/acceptance flow, role changes and deactivation/reactivation;
-- complete remaining authenticated production browser verification;
+- apply the finish-hardening migrations and production-verify local-date overdue handling, field damage/missing reports, corrections, work orders, account closure and retention cleanup;
+- configure production Turnstile keys before enforcing `TURNSTILE_REQUIRED=true`;
+- add credentialed browser E2E and production-scale load/Lighthouse coverage; the complete rollback-only Supabase SQL suite already runs in CI;
+- complete the remaining authenticated production browser verification, including the 200-label import → QR → print path;
 - validate US search demand before indexing pending SEO routes.
+
+The owner has already confirmed a real payment test. Payment-provider investigation is intentionally outside the current finish workstream unless explicitly reopened.
 
 Operational maintenance now also includes a monthly scheduled SEO audit that opens or updates a GitHub issue on failure, Dependabot for npm/GitHub Actions updates, a minimal `/api/health` endpoint, route/global error fallbacks, hardened browser headers, and a private security-reporting policy in `SECURITY.md`.
 
