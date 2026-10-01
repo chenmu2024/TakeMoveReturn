@@ -18,6 +18,7 @@ function noticeMessage(notice?: string) {
   if (notice === "file-quota") return { role: "alert" as const, text: "Storage allowance reached. Delete files or review the workspace plan." };
   if (notice === "file-invalid-size") return { role: "alert" as const, text: "Files must be between 1 byte and 10 MB." };
   if (notice === "file-invalid-type") return { role: "alert" as const, text: "Maintenance attachments must be JPEG, PNG, WebP, or PDF." };
+  if (notice === "file-limit") return { role: "alert" as const, text: "A maintenance event can have up to three attachments. Delete one before uploading another." };
   if (notice?.startsWith("file-")) return { role: "alert" as const, text: "The attachment action could not be completed. Try again." };
   if (notice === "invalid") return { role: "alert" as const, text: "Check the service, date, interval and cost fields." };
   if (notice) return { role: "alert" as const, text: "The action could not be saved. Check for a duplicate schedule or changed tool state." };
