@@ -90,13 +90,17 @@ begin
   end;
 end $$;
 
--- Entity-count limits are tested with valid parent rows.
+-- Entity-count limits are tested with valid parent rows created by the test harness, not by the authenticated product role.
+reset role;
 insert into public.damage_reports(id,company_id,tool_id,severity,description) values
 ('c1111111-7000-4000-8000-111111111111','c1111111-aaaa-4aaa-8aaa-111111111111','c1111111-4000-4000-8000-111111111111','minor','Limit test');
 insert into public.maintenance_events(id,company_id,tool_id,service_name,cost_cents,serviced_at) values
 ('c1111111-8000-4000-8000-111111111111','c1111111-aaaa-4aaa-8aaa-111111111111','c1111111-4000-4000-8000-111111111111','Inspection',0,current_date);
 
-do $$
+set local role authenticated;
+set local request.jwt.claim.sub = 'c1111111-1111-4111-8111-111111111111';
+
+do $
 begin
   perform public.reserve_customer_file('damage_photo','c1111111-7000-4000-8000-111111111111','d1.jpg','image/jpeg',1024);
   perform public.reserve_customer_file('damage_photo','c1111111-7000-4000-8000-111111111111','d2.jpg','image/jpeg',1024);
