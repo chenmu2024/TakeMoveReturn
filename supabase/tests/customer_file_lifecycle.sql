@@ -26,7 +26,7 @@ insert into public.customer_files(
   null
 );
 
-do $
+do $$
 begin
   begin
     delete from public.tools where id = '77777777-1111-4111-8111-777777777777';
