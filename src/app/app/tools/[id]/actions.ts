@@ -5,6 +5,17 @@ import { z } from "zod";
 import { createClient, isSupabaseConfigured } from "../../../../lib/supabase/server";
 import { endOfLocalDateUtc } from "../../../../lib/timezone";
 
+const toolDetailsInput = z.object({
+  toolId: z.string().uuid(),
+  name: z.string().trim().min(2).max(120),
+  category: z.string().trim().max(80),
+  brand: z.string().trim().max(80),
+  model: z.string().trim().max(120),
+  serialNumber: z.string().trim().max(120),
+  description: z.string().trim().max(1000),
+  notes: z.string().trim().max(1000),
+});
+
 const movementInput = z.object({
   toolId: z.string().uuid(),
   type: z.enum(["checkout", "transfer", "return"]),
@@ -82,4 +93,49 @@ export async function setToolReturnDueDate(form: FormData) {
   const { error } = await supabase.rpc("set_tool_return_due_date", { p_tool_id: id.data, p_due_at: dueAt });
   if (error) redirect(`${path}?notice=${error.message.includes("not checked out") ? "due-state" : "due-unavailable"}`);
   redirect(`${path}?notice=due-saved`);
+}
+
+
+export async function updateToolDetails(form: FormData) {
+  if (!isSupabaseConfigured()) redirect("/auth/signup?notice=unavailable");
+  const input = toolDetailsInput.safeParse({
+    toolId: form.get("toolId"),
+    name: String(form.get("name") ?? ""),
+    category: String(form.get("category") ?? ""),
+    brand: String(form.get("brand") ?? ""),
+    model: String(form.get("model") ?? ""),
+    serialNumber: String(form.get("serialNumber") ?? ""),
+    description: String(form.get("description") ?? ""),
+    notes: String(form.get("notes") ?? ""),
+  });
+  if (!input.success) {
+    const rawId = String(form.get("toolId") ?? "");
+    redirect(/^[0-9a-f-]{36}$/i.test(rawId) ? `/app/tools/${rawId}/edit?notice=invalid` : "/app/tools");
+  }
+
+  const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  if (!claims?.claims) redirect("/auth/login?notice=session-expired");
+  const { data: membership, error: membershipError } = await supabase.from("organization_members")
+    .select("company_id").eq("user_id", claims.claims.sub).eq("status", "active")
+    .in("role", ["owner", "admin", "manager"]).order("created_at").limit(1).maybeSingle();
+  if (membershipError) redirect(`/app/tools/${input.data.toolId}/edit?notice=unavailable`);
+  if (!membership) redirect("/app/onboarding");
+
+  const { data: tool, error: toolError } = await supabase.from("tools")
+    .select("id").eq("id", input.data.toolId).eq("company_id", membership.company_id).maybeSingle();
+  if (toolError || !tool) redirect("/app/tools");
+
+  const { error } = await supabase.from("tools").update({
+    name: input.data.name,
+    category: input.data.category || null,
+    brand: input.data.brand || null,
+    model: input.data.model || null,
+    serial_number: input.data.serialNumber || null,
+    description: input.data.description || null,
+    notes: input.data.notes || null,
+  }).eq("id", input.data.toolId).eq("company_id", membership.company_id);
+
+  if (error) redirect(`/app/tools/${input.data.toolId}/edit?notice=unavailable`);
+  redirect(`/app/tools/${input.data.toolId}?notice=details-saved`);
 }
