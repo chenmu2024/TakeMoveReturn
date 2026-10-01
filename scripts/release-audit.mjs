@@ -35,6 +35,8 @@ const customerFilesUpload = read("src/app/api/files/upload/route.ts");
 const customerFilesRead = read("src/app/api/files/[id]/route.ts");
 const customerFilesDelete = read("src/app/api/files/[id]/delete/route.ts");
 const fieldPhotoRead = read("src/app/api/field/files/[id]/route.ts");
+const fieldIssueMigration = read("supabase/migrations/202610010002_field_issue_reporting.sql");
+const fieldActions = read("src/app/field/actions.ts");
 const requestOrigin = read("src/lib/security/request-origin.ts");
 const versionRoute = read("src/app/api/version/route.ts");
 const importPreflight = read("src/app/api/import/preflight/route.ts");
@@ -120,3 +122,6 @@ if (failures.length) {
 console.log("\nRelease audit passed.");
 
 pass("production version route exposes the deployed build SHA", versionRoute.includes("NEXT_PUBLIC_BUILD_SHA") && versionRoute.includes('"Cache-Control": "no-store, max-age=0"'));
+
+pass("field issue reporting is service-role-only", fieldIssueMigration.includes("report_field_tool_issue") && fieldIssueMigration.includes("from public, anon, authenticated") && fieldIssueMigration.includes("to service_role"));
+pass("field issue reporting preserves worker attribution", fieldIssueMigration.includes("reported_by_worker_id") && fieldIssueMigration.includes("performed_by_worker_id") && fieldActions.includes("recordFieldIssue"));
