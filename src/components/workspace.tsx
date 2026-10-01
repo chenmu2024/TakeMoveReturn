@@ -23,7 +23,7 @@ export type ToolSummary = { id: string; name: string; asset_code: string; status
 export type OverdueTool = { id: string; name: string; asset_code: string; expected_return_at: string };
 export type LocationSummary = { id: string; name: string; type: string; address: string | null; active: boolean; updated_at: string };
 export type WorkerSummary = { id: string; name: string; employee_code: string | null; status: string; updated_at: string };
-export type DashboardStats = { totalTools: number; checkedOut: number; needsAttention: number; recentActivity: number; plan: "free" | "starter" | "growth" | "pro"; admins: number; storageBytes: number | null; setupAvailable: boolean; activeLocations: number; activeWorkers: number; firstFieldTake: boolean; firstFieldReturn: boolean; activationStartedAt: string | null; firstScanAt: string | null };
+export type DashboardStats = { totalTools: number; available: number; checkedOut: number; missing: number; damaged: number; maintenanceDue: number; overdue: number; needsAttention: number; recentActivity: number; plan: "free" | "starter" | "growth" | "pro"; admins: number; storageBytes: number | null; setupAvailable: boolean; activeLocations: number; activeWorkers: number; firstFieldTake: boolean; firstFieldReturn: boolean; activationStartedAt: string | null; firstScanAt: string | null };
 export type CompanySettings = { name: string; plan: "free" | "starter" | "growth" | "pro"; timezone: string; role: string };
 export type WorkspaceMember = { user_id: string; email: string; role: "owner" | "admin" | "manager"; status: string; created_at: string };
 export type WorkspaceInvitation = { id: string; email: string; role: "admin" | "manager"; status: string; expires_at: string; created_at: string };
@@ -78,10 +78,13 @@ function DashboardContent({ stats, activity, attentionTools, overdueTools, overd
     (stats.storageBytes !== null && stats.storageBytes > dashboardPlan.storageLimitBytes)
   ));
   const cards = [
-    { label: "Active tools", value: stats?.totalTools, note: "Excludes retired tools" },
+    { label: "Total tools", value: stats?.totalTools, note: "Excludes retired tools" },
+    { label: "Available", value: stats?.available, note: "Ready for the next TAKE" },
     { label: "Checked out", value: stats?.checkedOut, note: "Currently with workers" },
-    { label: "Needs attention", value: stats?.needsAttention, note: "Damaged, missing, or in maintenance" },
-    { label: "Recent activity", value: stats?.recentActivity, note: "Events in the last 7 days" },
+    { label: "Missing", value: stats?.missing, note: "Reported missing or lost" },
+    { label: "Damaged", value: stats?.damaged, note: "Open damage state" },
+    { label: "Maintenance due", value: stats?.maintenanceDue, note: "Active schedules due now or earlier" },
+    { label: "Overdue", value: stats?.overdue, note: "Past expected return date" },
   ];
   return <>
     {stats?.setupAvailable && !(stats.firstFieldTake && stats.firstFieldReturn) && <section className="workspace-onboarding" aria-label="Setup progress"><div><p className="workspace-eyebrow">GET YOUR CREW TRACKING TOOLS</p><h2>From first tool to first field handoff.</h2><p>{1 + Number(stats.totalTools > 0) + Number(stats.activeLocations > 0) + Number(stats.activeWorkers > 0) + Number(stats.firstFieldTake) + Number(stats.firstFieldReturn)} of 6 verified steps complete</p><progress value={1 + Number(stats.totalTools > 0) + Number(stats.activeLocations > 0) + Number(stats.activeWorkers > 0) + Number(stats.firstFieldTake) + Number(stats.firstFieldReturn)} max={6} aria-label="Setup progress" /><ol><li>Company created</li><li>{stats.totalTools > 0 ? `${stats.totalTools} tools added` : "Add or import your first tools"}</li><li>{stats.activeLocations > 0 ? `${stats.activeLocations} active locations added` : "Add an active location before the first TAKE"}</li><li>{stats.activeWorkers > 0 ? `${stats.activeWorkers} active workers added` : "Add a field worker"}</li><li>{stats.firstFieldTake ? "First field TAKE recorded" : "Print a QR label, enroll a device, and record a field TAKE"}</li><li>{stats.firstFieldReturn ? "First field RETURN recorded" : "Record the first field RETURN"}</li></ol><p>Printing a label is separate; progress counts only verified records and worker actions.</p>{stats.totalTools > 0 && stats.activeLocations > 0 && stats.activeWorkers > 0 && !stats.firstFieldTake && <p><Link href="/app/tools/labels">Print QR labels</Link> · <Link href="/field/enroll">Enroll a shared device</Link></p>}</div><ActionLink action={{ label: "Continue setup", href: stats.totalTools === 0 ? "/app/tools/new" : stats.activeLocations === 0 ? "/app/locations/new" : stats.activeWorkers === 0 ? "/app/workers/new" : stats.firstFieldTake ? "/field" : "/app/tools/labels" }} /></section>}
