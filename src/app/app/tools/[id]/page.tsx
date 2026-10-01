@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { CustomerFilesSection, type CustomerFileView } from "../../../../components/customer-files";
 import { customerFilesEnabled } from "../../../../lib/files/customer-files";
 import { createClient, isSupabaseConfigured } from "../../../../lib/supabase/server";
+import { localDueDateFromBoundary } from "../../../../lib/timezone";
 import { recordToolMovement, setToolReturnDueDate } from "./actions";
 import "./tool-detail.css";
 
@@ -13,7 +14,7 @@ export const dynamic = "force-dynamic";
 function noticeMessage(notice?: string) {
   if (notice === "saved") return { role: "status" as const, text: "Movement saved to the tool history." };
   if (notice === "due-saved") return { role: "status" as const, text: "Expected return date updated." };
-  if (notice === "due-invalid") return { role: "alert" as const, text: "Choose a future return date (UTC)." };
+  if (notice === "due-invalid") return { role: "alert" as const, text: "Choose a valid future return date in the workspace timezone." };
   if (notice === "due-state") return { role: "alert" as const, text: "This tool is no longer checked out. Refresh the record." };
   if (notice === "due-unavailable") return { role: "alert" as const, text: "The return date could not be changed. Try again." };
   if (notice === "state") return { role: "alert" as const, text: "The tool changed state before this action was saved. Review its current status and try again." };
@@ -52,7 +53,7 @@ export default async function ToolDetailPage({ params, searchParams }: { params:
   const historyFrom = (historyPage - 1) * historyPageSize;
   const historyTo = historyFrom + historyPageSize - 1;
 
-  const [toolResult, workerResult, locationResult, historyResult] = await Promise.all([
+  const [toolResult, workerResult, locationResult, historyResult, companyResult] = await Promise.all([
     supabase.from("tools").select("id,name,asset_code,category,status,condition,current_worker_id,current_location_id,expected_return_at,updated_at")
       .eq("id", id).eq("company_id", membership.company_id).maybeSingle(),
     supabase.from("workers").select("id,name,status").eq("company_id", membership.company_id).order("name"),
@@ -60,8 +61,9 @@ export default async function ToolDetailPage({ params, searchParams }: { params:
     supabase.from("tool_transactions").select("id,transaction_type,from_worker_id,to_worker_id,to_location_id,notes,created_at")
       .eq("tool_id", id).eq("company_id", membership.company_id).order("created_at", { ascending: false })
       .range(historyFrom, historyTo),
+    supabase.from("companies").select("timezone").eq("id", membership.company_id).maybeSingle(),
   ]);
-  if (toolResult.error || workerResult.error || locationResult.error || historyResult.error) throw new Error("Tool record could not be loaded.");
+  if (toolResult.error || workerResult.error || locationResult.error || historyResult.error || companyResult.error) throw new Error("Tool record could not be loaded.");
 
   const tool = toolResult.data;
   if (!tool) notFound();
@@ -77,6 +79,8 @@ export default async function ToolDetailPage({ params, searchParams }: { params:
     toolFiles = (fileRows ?? []).map((file) => ({ ...file, size_bytes: Number(file.size_bytes) }));
   }
 
+  const companyTimezone = companyResult.data?.timezone || "UTC";
+  const dueDate = localDueDateFromBoundary(tool.expected_return_at, companyTimezone);
   const workers = workerResult.data ?? [];
   const locations = locationResult.data ?? [];
   const activeWorkers = workers.filter((worker) => worker.status === "active");
@@ -94,11 +98,11 @@ export default async function ToolDetailPage({ params, searchParams }: { params:
     {notice && <p className="tool-detail-notice" role={notice.role}>{notice.text}</p>}
 
     <section className="tool-detail-grid">
-      <article className="tool-detail-panel"><p className="tool-detail-eyebrow">CURRENT CUSTODY</p><dl><div><dt>Holder</dt><dd>{workerName(tool.current_worker_id)}</dd></div><div><dt>Location</dt><dd>{locationName(tool.current_location_id)}</dd></div><div><dt>Condition</dt><dd>{tool.condition}</dd></div>{tool.status === "checked_out" && <div><dt>Expected return</dt><dd>{tool.expected_return_at ? <><time dateTime={tool.expected_return_at}>{tool.expected_return_at.slice(0, 10)} UTC</time>{Date.parse(tool.expected_return_at) < Date.now() ? " · Overdue" : ""}</> : "Not set"}</dd></div>}<div><dt>Last updated</dt><dd>{tool.updated_at.slice(0, 16).replace("T", " ")} UTC</dd></div></dl></article>
+      <article className="tool-detail-panel"><p className="tool-detail-eyebrow">CURRENT CUSTODY</p><dl><div><dt>Holder</dt><dd>{workerName(tool.current_worker_id)}</dd></div><div><dt>Location</dt><dd>{locationName(tool.current_location_id)}</dd></div><div><dt>Condition</dt><dd>{tool.condition}</dd></div>{tool.status === "checked_out" && <div><dt>Expected return</dt><dd>{tool.expected_return_at ? <><time dateTime={tool.expected_return_at}>{dueDate ?? "Invalid date"}</time>{Date.parse(tool.expected_return_at) <= Date.now() ? " · Overdue" : ""}</> : "Not set"}</dd></div>}<div><dt>Last updated</dt><dd>{tool.updated_at.slice(0, 16).replace("T", " ")} UTC</dd></div></dl></article>
       <article className="tool-detail-panel"><p className="tool-detail-eyebrow">MANAGER HANDOFF</p><h2>Record the next move</h2><p>Only an authenticated workspace manager can change custody. A QR label identifies a tool; it does not grant access.</p>{activeLocations.length === 0 && <p>Add an <Link href="/app/locations/new">active location</Link> before recording a movement.</p>}{tool.status === "available" && activeWorkers.length === 0 && <p>Add an <Link href="/app/workers/new">active worker</Link> before TAKE.</p>}{!canTake && !canMove && !canReturn && <p>This tool is not eligible for TAKE, MOVE or RETURN in its current status.</p>}</article>
     </section>
 
-    {tool.status === "checked_out" && <section className="tool-detail-panel tool-detail-due"><p className="tool-detail-eyebrow">RETURN FOLLOW-UP</p><h2>Expected return</h2><p>Set an optional due date to highlight overdue tools in the workspace. This is an in-app reminder; no email or SMS is sent.</p><form action={setToolReturnDueDate}><input type="hidden" name="toolId" value={tool.id} /><label htmlFor="return-due-date">Return date (UTC)</label><input id="return-due-date" name="dueDate" type="date" defaultValue={tool.expected_return_at?.slice(0, 10) ?? ""} /><button type="submit">Save return date</button></form></section>}
+    {tool.status === "checked_out" && <section className="tool-detail-panel tool-detail-due"><p className="tool-detail-eyebrow">RETURN FOLLOW-UP</p><h2>Expected return</h2><p>Set an optional due date to highlight overdue tools in the workspace. This is an in-app reminder; no email or SMS is sent.</p><form action={setToolReturnDueDate}><input type="hidden" name="toolId" value={tool.id} /><label htmlFor="return-due-date">Return date ({companyTimezone})</label><input id="return-due-date" name="dueDate" type="date" defaultValue={dueDate ?? ""} /><button type="submit">Save return date</button></form></section>}
 
     {filesEnabled && <section className="tool-detail-panel"><p className="tool-detail-eyebrow">TOOL PHOTOS</p><h2>Reference photos</h2><p>Photos are private to authenticated workspace members and count against the workspace storage allowance.</p><CustomerFilesSection kind="tool_photo" subjectId={tool.id} files={toolFiles} /></section>}
 
