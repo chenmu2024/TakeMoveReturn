@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AuthShell, type AuthVariant } from "../../../components/auth-shell";
 import { siteConfig } from "../../../config/site";
 import { isSupabaseConfigured } from "../../../lib/supabase/server";
+import { turnstileEnabled, turnstileSiteKey } from "../../../lib/security/turnstile";
 
 const variants = new Set<AuthVariant>(["login", "signup", "forgot-password", "update-password"]);
 
@@ -11,7 +12,8 @@ export default async function AuthPage({ params, searchParams }: { params: Promi
   if (!variants.has(key)) notFound();
   const query = await searchParams;
   return <AuthShell variant={key} notice={query.notice} next={query.next === "invitation" ? "invitation" : undefined} connected={isSupabaseConfigured()}
-    registrationOpen={siteConfig.legal.legalReviewStatus === "effective" && Boolean(siteConfig.legal.effectiveDate)} />;
+    registrationOpen={siteConfig.legal.legalReviewStatus === "effective" && Boolean(siteConfig.legal.effectiveDate)}
+    turnstileKey={turnstileEnabled() ? turnstileSiteKey() : null} />;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
