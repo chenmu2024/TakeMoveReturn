@@ -74,17 +74,21 @@ export async function deleteAccount(form: FormData) {
   if (existingError) redirect("/app/settings/privacy?notice=privacy-delete-unavailable");
   if (existing?.status === "in_review") redirect("/app/settings/privacy?notice=privacy-open");
 
+  const admin = createAdminClient();
+  if (!admin) redirect("/app/settings/privacy?notice=privacy-delete-unavailable");
+
   let requestId = existing?.id ?? null;
   if (!requestId) {
-    const { data: created, error: createError } = await supabase.from("privacy_requests")
+    const { data: membership } = await supabase.from("organization_members")
+      .select("company_id")
+      .eq("user_id", auth.user.id)
+      .eq("status", "active")
+      .order("created_at")
+      .limit(1)
+      .maybeSingle();
+    const { data: created, error: createError } = await admin.from("privacy_requests")
       .insert({
-        company_id: (await supabase.from("organization_members")
-          .select("company_id")
-          .eq("user_id", auth.user.id)
-          .eq("status", "active")
-          .order("created_at")
-          .limit(1)
-          .maybeSingle()).data?.company_id ?? null,
+        company_id: membership?.company_id ?? null,
         requester_user_id: auth.user.id,
         request_type: "deletion",
         details: "Self-service account deletion after password re-authentication.",
@@ -94,9 +98,6 @@ export async function deleteAccount(form: FormData) {
     if (createError || !created?.id) redirect("/app/settings/privacy?notice=privacy-delete-unavailable");
     requestId = created.id;
   }
-
-  const admin = createAdminClient();
-  if (!admin) redirect("/app/settings/privacy?notice=privacy-delete-unavailable");
 
   const { error: beginError } = await admin.rpc("begin_account_deletion", {
     p_user_id: auth.user.id,
