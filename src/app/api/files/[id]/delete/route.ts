@@ -1,8 +1,10 @@
 import { createAdminClient } from "../../../../../lib/supabase/admin";
+import { isTrustedWriteOrigin } from "../../../../../lib/security/request-origin";
 import { createClient, isSupabaseConfigured } from "../../../../../lib/supabase/server";
 import { customerFilesEnabled, getCustomerFilesBucket } from "../../../../../lib/files/customer-files";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!isTrustedWriteOrigin(request)) return new Response("Invalid origin", { status: 403 });
   if (!customerFilesEnabled()) return new Response("Not found", { status: 404 });
   if (!isSupabaseConfigured()) return new Response("Storage unavailable", { status: 503 });
 
