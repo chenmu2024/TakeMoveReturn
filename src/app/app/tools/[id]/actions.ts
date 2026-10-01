@@ -12,6 +12,16 @@ const toolDetailsInput = z.object({
   brand: z.string().trim().max(80),
   model: z.string().trim().max(120),
   serialNumber: z.string().trim().max(120),
+  purchaseDate: z.string().trim().refine((value) => {
+    if (!value) return true;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const parsed = new Date(`${value}T00:00:00Z`);
+    return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+  }, "Invalid purchase date"),
+  purchasePrice: z.string().trim().refine(
+    (value) => value === "" || /^\d{1,10}(?:\.\d{1,2})?$/.test(value),
+    "Invalid purchase price",
+  ),
   description: z.string().trim().max(1000),
   notes: z.string().trim().max(1000),
 });
@@ -105,6 +115,8 @@ export async function updateToolDetails(form: FormData) {
     brand: String(form.get("brand") ?? ""),
     model: String(form.get("model") ?? ""),
     serialNumber: String(form.get("serialNumber") ?? ""),
+    purchaseDate: String(form.get("purchaseDate") ?? ""),
+    purchasePrice: String(form.get("purchasePrice") ?? ""),
     description: String(form.get("description") ?? ""),
     notes: String(form.get("notes") ?? ""),
   });
@@ -132,6 +144,8 @@ export async function updateToolDetails(form: FormData) {
     brand: input.data.brand || null,
     model: input.data.model || null,
     serial_number: input.data.serialNumber || null,
+    purchase_date: input.data.purchaseDate || null,
+    purchase_price: input.data.purchasePrice || null,
     description: input.data.description || null,
     notes: input.data.notes || null,
   }).eq("id", input.data.toolId).eq("company_id", membership.company_id);
