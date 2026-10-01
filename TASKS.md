@@ -1,5 +1,38 @@
 # TakeMoveReturn delivery tracker
 
+## 2026-10-01 deep audit follow-up — CURRENT
+
+Repository fixes completed in this pass:
+
+- Restored green CI after the workspace-timezone prop regression; latest dashboard changes pass database + verify jobs.
+- Added production-dependency audit gating (`npm audit --omit=dev --audit-level=high`); current production dependency audit reports zero vulnerabilities at that threshold.
+- Added same-origin validation to customer-file upload/delete and import preflight writes.
+- Added Tool metadata editing for name/category/brand/model/serial/description/notes and expanded Tool Detail with those fields, QR access, recent damage, maintenance, complete paginated history, and the private primary tool photo.
+- Field QR view now shows condition and the private tool photo through a field-session + company-scoped read route.
+- Dashboard now separates Total / Available / Checked Out / Missing / Damaged / Maintenance Due / Overdue, with maintenance dates interpreted using the workspace timezone.
+- Corrected Help/Privacy customer-file copy to 5 MB images, 10 MB maintenance attachments, and the 1 / 3 / 3 attachment model. Release audit now guards file-specific limits, same-origin file/import writes, and field-photo authorization.
+
+Verified external state:
+
+- `www.takemovereturn.com` redirects to the canonical apex, so strict apex Origin checks do not break normal `www` form use.
+- Production `/api/ready` still returns ready.
+- At the time of this audit, production `/help/damage` still served the prior 2026-09-29 / 10 MB copy even though `main` contains the corrected version. Therefore GitHub CI success must not be treated as proof that the Cloudflare production Worker has deployed the latest commit.
+- Production login renders, but no Turnstile widget is present; Turnstile code exists but production keys are not active/configured.
+
+Remaining blockers / gaps, in priority order:
+
+1. **Production deployment convergence:** confirm Cloudflare actually deploys the latest `main` and re-run public + authenticated smoke checks.
+2. **Customer-file DB cardinality:** current 1 / 3 / 3 limits are enforced in UI/API but not atomically inside `reserve_customer_file`; concurrent uploads can race until a database migration adds pending+ready cardinality enforcement.
+3. **Field Report Damage / Report Missing:** Field QR now shows condition/photo but workers still cannot submit these two secondary actions. They require a field-session-authorized transactional RPC.
+4. **Privacy fulfilment:** request intake and limited export exist; deletion/rectification/restriction fulfilment and retention cleanup remain operationally incomplete.
+5. **Import metadata:** CSV/XLSX background imports currently persist only asset code/name/category. Brand/model/serial need a migration across `import_rows`, validation, job creation and batch insertion before large imports preserve those fields.
+6. **Tool purchase fields:** `purchase_date` and `purchase_price` are in the source-of-truth model but absent from the current `tools` schema; do not add UI until the migration is applied.
+7. **Authenticated browser E2E:** signup/login/onboarding, tool edit, 200-label import→QR→print, field TAKE/MOVE/RETURN, customer files, membership and privacy still need credentialed browser automation/production verification.
+8. **Performance gates:** current load smoke is a small public-route regression test, not k6/production-scale load; Lighthouse targets are not yet enforced.
+9. **Repository protection:** `main` remains unprotected and has no ruleset; the current GitHub connection cannot administer branch protection.
+10. **Later scope:** automatic overdue/maintenance reminders, lightweight work orders, Sentry/PostHog/GA4 remain absent and should follow the core production-verification work.
+
+Billing remains Waffo and was not re-investigated or altered in this pass.
 ## 2026-10-01 repair pass — CURRENT AUTHORITY
 
 This section supersedes contradictory historical status entries below.
