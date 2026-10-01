@@ -67,7 +67,9 @@ export async function POST(request: Request) {
   }).single();
 
   if (reserveError || !reservation) {
-    const reason = reserveError?.message?.includes("Storage limit reached") ? "file-quota" : "file-unavailable";
+    const reason = reserveError?.message?.includes("Storage limit reached") ? "file-quota"
+      : reserveError?.message?.includes("Attachment limit reached") ? "file-limit"
+      : "file-unavailable";
     return redirectTarget(kind, subjectId, reason, request);
   }
 
