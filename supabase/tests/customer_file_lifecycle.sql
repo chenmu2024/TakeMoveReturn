@@ -24,16 +24,7 @@ insert into public.customer_files(
   '77777777-7777-4777-8777-777777777777',
   now() - interval '2 hours',
   null
-), (
-  '77777777-3333-4333-8333-777777777777',
-  '77777777-aaaa-4aaa-8aaa-777777777777',
-  'tool_photo',
-  '77777777-1111-4111-8111-777777777777',
-  '77777777-aaaa-4aaa-8aaa-777777777777/tool_photo/live',
-  'live.jpg','image/jpeg',1024,'ready',
-  '77777777-7777-4777-8777-777777777777',
-  now(),
-  now()
+)
 );
 
 do $$
@@ -75,10 +66,6 @@ begin
 end $$;
 
 reset role;
-
-update public.customer_files
-set status='deleted', deleted_at=now(), object_deleted_at=now()
-where id='77777777-3333-4333-8333-777777777777';
 
 delete from public.tools where id = '77777777-1111-4111-8111-777777777777';
 
