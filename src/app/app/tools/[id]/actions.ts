@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient, isSupabaseConfigured } from "../../../../lib/supabase/server";
+import { endOfLocalDateUtc } from "../../../../lib/timezone";
 
 const movementInput = z.object({
   toolId: z.string().uuid(),
@@ -59,10 +60,7 @@ export async function setToolReturnDueDate(form: FormData) {
   if (!id.success) redirect("/app/tools");
   const path = `/app/tools/${id.data}`;
   const rawDate = String(form.get("dueDate") ?? "");
-  const dueMillis = /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? Date.parse(`${rawDate}T23:59:59Z`) : NaN;
-  const dueAt = rawDate === "" ? null : Number.isFinite(dueMillis) && new Date(dueMillis).toISOString().slice(0, 10) === rawDate
-    ? new Date(dueMillis).toISOString() : undefined;
-  if (dueAt === undefined || (dueAt && dueMillis <= Date.now())) redirect(`${path}?notice=due-invalid`);
+  if (rawDate !== "" && !/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) redirect(`${path}?notice=due-invalid`);
 
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -72,9 +70,15 @@ export async function setToolReturnDueDate(form: FormData) {
     .in("role", ["owner", "admin", "manager"]).order("created_at").limit(1).maybeSingle();
   if (membershipError) redirect(`${path}?notice=due-unavailable`);
   if (!membership) redirect("/app/onboarding");
-  const { data: tool, error: toolError } = await supabase.from("tools")
-    .select("id").eq("id", id.data).eq("company_id", membership.company_id).maybeSingle();
+  const [{ data: tool, error: toolError }, { data: company, error: companyError }] = await Promise.all([
+    supabase.from("tools").select("id").eq("id", id.data).eq("company_id", membership.company_id).maybeSingle(),
+    supabase.from("companies").select("timezone").eq("id", membership.company_id).maybeSingle(),
+  ]);
   if (toolError || !tool) redirect("/app/tools");
+  if (companyError || !company?.timezone) redirect(`${path}?notice=due-unavailable`);
+  const dueAt = rawDate === "" ? null : endOfLocalDateUtc(rawDate, company.timezone);
+  if (dueAt === null && rawDate !== "") redirect(`${path}?notice=due-invalid`);
+  if (dueAt && Date.parse(dueAt) <= Date.now()) redirect(`${path}?notice=due-invalid`);
   const { error } = await supabase.rpc("set_tool_return_due_date", { p_tool_id: id.data, p_due_at: dueAt });
   if (error) redirect(`${path}?notice=${error.message.includes("not checked out") ? "due-state" : "due-unavailable"}`);
   redirect(`${path}?notice=due-saved`);
