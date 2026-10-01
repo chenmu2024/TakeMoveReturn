@@ -13,6 +13,7 @@ export const dynamic = "force-dynamic";
 
 function noticeMessage(notice?: string) {
   if (notice === "saved") return { role: "status" as const, text: "Movement saved to the tool history." };
+  if (notice === "details-saved") return { role: "status" as const, text: "Tool details updated." };
   if (notice === "due-saved") return { role: "status" as const, text: "Expected return date updated." };
   if (notice === "due-invalid") return { role: "alert" as const, text: "Choose a valid future return date in the workspace timezone." };
   if (notice === "due-state") return { role: "alert" as const, text: "This tool is no longer checked out. Refresh the record." };
@@ -53,8 +54,8 @@ export default async function ToolDetailPage({ params, searchParams }: { params:
   const historyFrom = (historyPage - 1) * historyPageSize;
   const historyTo = historyFrom + historyPageSize - 1;
 
-  const [toolResult, workerResult, locationResult, historyResult, companyResult] = await Promise.all([
-    supabase.from("tools").select("id,name,asset_code,category,status,condition,current_worker_id,current_location_id,expected_return_at,updated_at")
+  const [toolResult, workerResult, locationResult, historyResult, companyResult, damageResult, maintenanceScheduleResult, maintenanceEventResult] = await Promise.all([
+    supabase.from("tools").select("id,name,asset_code,category,brand,model,serial_number,description,notes,status,condition,current_worker_id,current_location_id,expected_return_at,updated_at")
       .eq("id", id).eq("company_id", membership.company_id).maybeSingle(),
     supabase.from("workers").select("id,name,status").eq("company_id", membership.company_id).order("name"),
     supabase.from("locations").select("id,name,type,active").eq("company_id", membership.company_id).order("name"),
@@ -62,8 +63,17 @@ export default async function ToolDetailPage({ params, searchParams }: { params:
       .eq("tool_id", id).eq("company_id", membership.company_id).order("created_at", { ascending: false })
       .range(historyFrom, historyTo),
     supabase.from("companies").select("timezone").eq("id", membership.company_id).maybeSingle(),
+    supabase.from("damage_reports").select("id,severity,status,description,created_at,resolved_at")
+      .eq("tool_id", id).eq("company_id", membership.company_id).order("created_at", { ascending: false }).limit(5),
+    supabase.from("maintenance_schedules").select("id,service_name,interval_days,next_due_at,active")
+      .eq("tool_id", id).eq("company_id", membership.company_id).eq("active", true).order("next_due_at").limit(5),
+    supabase.from("maintenance_events").select("id,service_name,serviced_at,cost_cents,notes")
+      .eq("tool_id", id).eq("company_id", membership.company_id).order("serviced_at", { ascending: false }).limit(5),
   ]);
-  if (toolResult.error || workerResult.error || locationResult.error || historyResult.error || companyResult.error) throw new Error("Tool record could not be loaded.");
+  if (toolResult.error || workerResult.error || locationResult.error || historyResult.error || companyResult.error ||
+      damageResult.error || maintenanceScheduleResult.error || maintenanceEventResult.error) {
+    throw new Error("Tool record could not be loaded.");
+  }
 
   const tool = toolResult.data;
   if (!tool) notFound();
@@ -97,6 +107,29 @@ export default async function ToolDetailPage({ params, searchParams }: { params:
     <section className="tool-detail-hero"><div><p className="tool-detail-eyebrow">TOOL RECORD · {tool.asset_code}</p><h1>{tool.name}</h1><p>{tool.category || "Reusable tool"}</p></div><strong>{tool.status.replaceAll("_", " ")}</strong></section>
     {notice && <p className="tool-detail-notice" role={notice.role}>{notice.text}</p>}
 
+    <section className="tool-detail-record-grid">
+      <article className="tool-detail-panel">
+        <div className="tool-detail-panel-heading"><div><p className="tool-detail-eyebrow">ASSET DETAILS</p><h2>Tool record</h2></div><Link href={`/app/tools/${tool.id}/edit`}>Edit details</Link></div>
+        <dl>
+          <div><dt>Asset ID</dt><dd>{tool.asset_code}</dd></div>
+          <div><dt>Category</dt><dd>{tool.category || "—"}</dd></div>
+          <div><dt>Brand</dt><dd>{tool.brand || "—"}</dd></div>
+          <div><dt>Model</dt><dd>{tool.model || "—"}</dd></div>
+          <div><dt>Serial</dt><dd>{tool.serial_number || "—"}</dd></div>
+        </dl>
+        {tool.description && <div className="tool-detail-copy"><strong>Description</strong><p>{tool.description}</p></div>}
+        {tool.notes && <div className="tool-detail-copy"><strong>Internal notes</strong><p>{tool.notes}</p></div>}
+        <p><Link href={`/app/tools/${tool.id}/label`}>Open QR label →</Link></p>
+      </article>
+      <article className="tool-detail-panel">
+        <p className="tool-detail-eyebrow">EXCEPTIONS & SERVICE</p><h2>Damage and maintenance</h2>
+        <div className="tool-detail-summary">
+          <div><strong>Damage</strong>{damageResult.data?.length ? <ul>{damageResult.data.map((report) => <li key={report.id}>{report.severity.replaceAll("_", " ")} · {report.status} · {report.created_at.slice(0, 10)}</li>)}</ul> : <p>No damage reports.</p>}<Link href="/app/damage">Open damage workspace →</Link></div>
+          <div><strong>Maintenance</strong>{maintenanceScheduleResult.data?.length ? <ul>{maintenanceScheduleResult.data.map((schedule) => <li key={schedule.id}>{schedule.service_name} · due {schedule.next_due_at}</li>)}</ul> : <p>No active service schedules.</p>}{maintenanceEventResult.data?.[0] && <p>Last service: {maintenanceEventResult.data[0].service_name} · {maintenanceEventResult.data[0].serviced_at}</p>}<Link href="/app/maintenance">Open maintenance workspace →</Link></div>
+        </div>
+      </article>
+    </section>
+
     <section className="tool-detail-grid">
       <article className="tool-detail-panel"><p className="tool-detail-eyebrow">CURRENT CUSTODY</p><dl><div><dt>Holder</dt><dd>{workerName(tool.current_worker_id)}</dd></div><div><dt>Location</dt><dd>{locationName(tool.current_location_id)}</dd></div><div><dt>Condition</dt><dd>{tool.condition}</dd></div>{tool.status === "checked_out" && <div><dt>Expected return</dt><dd>{tool.expected_return_at ? <><time dateTime={tool.expected_return_at}>{dueDate ?? "Invalid date"}</time>{Date.parse(tool.expected_return_at) <= Date.now() ? " · Overdue" : ""}</> : "Not set"}</dd></div>}<div><dt>Last updated</dt><dd>{tool.updated_at.slice(0, 16).replace("T", " ")} UTC</dd></div></dl></article>
       <article className="tool-detail-panel"><p className="tool-detail-eyebrow">MANAGER HANDOFF</p><h2>Record the next move</h2><p>Only an authenticated workspace manager can change custody. A QR label identifies a tool; it does not grant access.</p>{activeLocations.length === 0 && <p>Add an <Link href="/app/locations/new">active location</Link> before recording a movement.</p>}{tool.status === "available" && activeWorkers.length === 0 && <p>Add an <Link href="/app/workers/new">active worker</Link> before TAKE.</p>}{!canTake && !canMove && !canReturn && <p>This tool is not eligible for TAKE, MOVE or RETURN in its current status.</p>}</article>
@@ -104,7 +137,7 @@ export default async function ToolDetailPage({ params, searchParams }: { params:
 
     {tool.status === "checked_out" && <section className="tool-detail-panel tool-detail-due"><p className="tool-detail-eyebrow">RETURN FOLLOW-UP</p><h2>Expected return</h2><p>Set an optional due date to highlight overdue tools in the workspace. This is an in-app reminder; no email or SMS is sent.</p><form action={setToolReturnDueDate}><input type="hidden" name="toolId" value={tool.id} /><label htmlFor="return-due-date">Return date ({companyTimezone})</label><input id="return-due-date" name="dueDate" type="date" defaultValue={dueDate ?? ""} /><button type="submit">Save return date</button></form></section>}
 
-    {filesEnabled && <section className="tool-detail-panel"><p className="tool-detail-eyebrow">TOOL PHOTOS</p><h2>Reference photos</h2><p>Photos are private to authenticated workspace members and count against the workspace storage allowance.</p><CustomerFilesSection kind="tool_photo" subjectId={tool.id} files={toolFiles} /></section>}
+    {filesEnabled && <section className="tool-detail-panel"><p className="tool-detail-eyebrow">TOOL PHOTO</p><h2>Primary reference photo</h2><p>Photos are private to authenticated workspace members and count against the workspace storage allowance.</p>{toolFiles[0] && <img className="tool-detail-photo" src={`/api/files/${toolFiles[0].id}`} alt={`Reference photo for ${tool.name}`} loading="lazy" />}<CustomerFilesSection kind="tool_photo" subjectId={tool.id} files={toolFiles} /></section>}
 
     <section className="tool-detail-actions" aria-label="Tool movement actions">
       {canTake && <form action={recordToolMovement}><input type="hidden" name="toolId" value={tool.id} /><input type="hidden" name="type" value="checkout" /><h2>TAKE</h2><p>Assign this available tool to a worker.</p><label htmlFor="take-worker">Worker</label><select id="take-worker" name="workerId" required defaultValue=""><option value="" disabled>Select worker</option>{activeWorkers.map((worker) => <option key={worker.id} value={worker.id}>{worker.name}</option>)}</select><label htmlFor="take-location">Location</label><select id="take-location" name="locationId" required defaultValue=""><option value="" disabled>Select location</option>{activeLocations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}</select><button type="submit">Record TAKE</button></form>}
