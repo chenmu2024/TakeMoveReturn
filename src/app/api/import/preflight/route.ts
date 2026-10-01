@@ -1,9 +1,11 @@
 import { plans, type PlanId } from "../../../../config/plans";
+import { isTrustedWriteOrigin } from "../../../../lib/security/request-origin";
 import { siteConfig } from "../../../../config/site";
 import { MAX_IMPORT_ROWS, reviewImport } from "../../../../lib/import/preview";
 import { createClient, isSupabaseConfigured } from "../../../../lib/supabase/server";
 
 export async function POST(request: Request) {
+  if (!isTrustedWriteOrigin(request)) return new Response("Invalid origin", { status: 403 });
   if (!isSupabaseConfigured()) return new Response("Unavailable", { status: 503 });
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
