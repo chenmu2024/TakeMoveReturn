@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { siteConfig } from "../config/site";
+import { Telemetry } from "../components/telemetry";
 
 export const metadata: Metadata = {
   title: siteConfig.descriptor + " | " + siteConfig.name,
@@ -13,5 +14,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}</body></html>;
+  return <html lang="en"><body>{children}<Telemetry /></body></html>;
 }
