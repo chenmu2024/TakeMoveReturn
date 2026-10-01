@@ -2,6 +2,7 @@ import app from "./.open-next/worker.js";
 import { handleImportQueue } from "./import-queue-consumer.mjs";
 import { handleCustomerFileCleanup } from "./customer-file-cleanup.mjs";
 import { handleRetentionCleanup } from "./retention-cleanup.mjs";
+import { handleOverdueReminders } from "./overdue-reminders.mjs";
 export { DOQueueHandler, DOShardedTagCache, BucketCachePurge } from "./.open-next/worker.js";
 
 export default {
@@ -13,6 +14,7 @@ export default {
     ctx.waitUntil(Promise.all([
       handleCustomerFileCleanup(env),
       handleRetentionCleanup(env),
+      handleOverdueReminders(env),
     ]));
   },
 };
