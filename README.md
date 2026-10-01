@@ -4,6 +4,8 @@ TakeMoveReturn is QR-based construction tool tracking software for small crews. 
 
 ## Current production status
 
+Turnstile verification is wired into sign-in, signup and password-reset requests and becomes mandatory when both Turnstile keys are configured. Tool history is paginated beyond the previous 30-event cap. Customer-file validation now enforces 5 MB image / 10 MB maintenance limits and 1 / 3 / 3 per-subject UI/API limits; authenticated production storage verification remains open.
+
 The public site and registration are available at `https://takemovereturn.com/`. Auth, company onboarding, tools, locations, worker creation, shared-device enrollment, worker PIN sign-in and a production QR TAKE → MOVE → RETURN walkthrough have been exercised. CSV/XLSX imports use server revalidation plus Cloudflare Queue-backed batches.
 
 Waffo Pancake is the active Merchant of Record integration for paid subscriptions. Checkout is owner-only and uses server-side product IDs and signed Waffo API requests. The codebase supports owner-requested plan changes, billing-interval changes, cancellation and reactivation, but a delivered signed production webhook that reconciles those lifecycle events to workspace entitlement has not yet been independently verified end-to-end.
@@ -87,8 +89,8 @@ The repository must **not** be described as fully production-complete while thes
 - verify real production Waffo activation, plan-change, renewal, past-due, recovery, canceling, uncanceled and canceled webhooks through workspace entitlement;
 - production-verify the already-enabled customer-file workflow end-to-end: authenticated upload/read/delete/quota plus cleanup behavior;
 - complete privacy-request fulfilment and retention cleanup operations;
-- add credentialed browser E2E, execute the full Supabase rollback-only security suite in CI, and add production-scale load/Lighthouse coverage;
-- apply and production-verify the workspace membership migration, invitation email/acceptance flow, role changes and deactivation/reactivation;
+- add credentialed browser E2E and production-scale load/Lighthouse coverage; the rollback-only Supabase SQL suite already runs in CI;
+- production-verify the workspace invitation email/acceptance flow, role changes and deactivation/reactivation;
 - complete remaining authenticated production browser verification;
 - validate US search demand before indexing pending SEO routes.
 
