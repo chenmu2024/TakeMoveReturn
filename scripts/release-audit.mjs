@@ -36,6 +36,7 @@ const customerFilesRead = read("src/app/api/files/[id]/route.ts");
 const customerFilesDelete = read("src/app/api/files/[id]/delete/route.ts");
 const fieldPhotoRead = read("src/app/api/field/files/[id]/route.ts");
 const requestOrigin = read("src/lib/security/request-origin.ts");
+const versionRoute = read("src/app/api/version/route.ts");
 const importPreflight = read("src/app/api/import/preflight/route.ts");
 const authCallback = read("src/app/auth/callback/route.ts");
 const authActions = read("src/app/auth/actions.ts");
@@ -117,3 +118,5 @@ if (failures.length) {
   process.exit(1);
 }
 console.log("\nRelease audit passed.");
+
+pass("production version route exposes the deployed build SHA", versionRoute.includes("NEXT_PUBLIC_BUILD_SHA") && versionRoute.includes('"Cache-Control": "no-store, max-age=0"'));
