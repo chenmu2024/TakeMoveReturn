@@ -32,7 +32,7 @@ export default async function EditToolPage({ params, searchParams }: {
   if (!membership) redirect("/app/onboarding");
 
   const { data: tool, error } = await supabase.from("tools")
-    .select("id,name,asset_code,category,brand,model,serial_number,description,notes")
+    .select("id,name,asset_code,category,brand,model,serial_number,purchase_date,purchase_price,description,notes")
     .eq("id", id).eq("company_id", membership.company_id).maybeSingle();
   if (error) throw new Error("Tool details could not be loaded.");
   if (!tool) notFound();
@@ -55,6 +55,10 @@ export default async function EditToolPage({ params, searchParams }: {
         <input id="tool-edit-model" name="model" maxLength={120} defaultValue={tool.model ?? ""} />
         <label htmlFor="tool-edit-serial">Serial number</label>
         <input id="tool-edit-serial" name="serialNumber" maxLength={120} defaultValue={tool.serial_number ?? ""} />
+        <label htmlFor="tool-edit-purchase-date">Purchase date</label>
+        <input id="tool-edit-purchase-date" name="purchaseDate" type="date" defaultValue={tool.purchase_date ?? ""} />
+        <label htmlFor="tool-edit-purchase-price">Purchase price (USD)</label>
+        <input id="tool-edit-purchase-price" name="purchasePrice" type="number" inputMode="decimal" min="0" max="9999999999.99" step="0.01" defaultValue={tool.purchase_price == null ? "" : String(tool.purchase_price)} placeholder="0.00" />
         <label htmlFor="tool-edit-description">Description</label>
         <textarea id="tool-edit-description" name="description" maxLength={1000} rows={4} defaultValue={tool.description ?? ""} />
         <label htmlFor="tool-edit-notes">Internal notes</label>
