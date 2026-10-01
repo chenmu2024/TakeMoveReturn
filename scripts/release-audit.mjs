@@ -34,6 +34,9 @@ const customerFilesHelper = read("src/lib/files/customer-files.ts");
 const customerFilesUpload = read("src/app/api/files/upload/route.ts");
 const customerFilesRead = read("src/app/api/files/[id]/route.ts");
 const customerFilesDelete = read("src/app/api/files/[id]/delete/route.ts");
+const fieldPhotoRead = read("src/app/api/field/files/[id]/route.ts");
+const requestOrigin = read("src/lib/security/request-origin.ts");
+const importPreflight = read("src/app/api/import/preflight/route.ts");
 const authCallback = read("src/app/auth/callback/route.ts");
 const authActions = read("src/app/auth/actions.ts");
 const adminClient = read("src/lib/supabase/admin.ts");
@@ -94,6 +97,8 @@ pass("customer-file cleanup is scheduled but safely no-ops without the dedicated
 pass("private file responses are hardened against active content", customerFilesRead.includes("Content-Security-Policy") && customerFilesRead.includes("Cross-Origin-Resource-Policy") && customerFilesRead.includes('record.content_type === "application/pdf" ? "attachment" : "inline"'));
 pass("storage UI warns before quota exhaustion", workspace.includes("storageRatio >= 0.8") && workspace.includes("uploads are blocked"));
 pass("customer-file cleanup tests exist", existsSync(new URL("../tests/customer-file-cleanup.test.mjs", import.meta.url)) && existsSync(new URL("../supabase/tests/customer_file_lifecycle.sql", import.meta.url)));
+pass("sensitive file/import writes require a trusted origin", requestOrigin.includes("isTrustedWriteOrigin") && [customerFilesUpload, customerFilesDelete, importPreflight].every((source) => source.includes("isTrustedWriteOrigin(request)")));
+pass("field tool photos require a live field session and company scope", fieldPhotoRead.includes("fieldWorker()") && fieldPhotoRead.includes('eq("company_id", session.device.company_id)') && fieldPhotoRead.includes('eq("kind", "tool_photo")'));
 pass("invitation acceptance page exists", existsSync(new URL("../src/app/app/invitations/page.tsx", import.meta.url)));
 pass("route error recovery boundary exists", existsSync(new URL("../src/app/error.tsx", import.meta.url)));
 pass("global error fallback exists", existsSync(new URL("../src/app/global-error.tsx", import.meta.url)));
