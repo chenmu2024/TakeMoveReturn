@@ -13,7 +13,10 @@ test("customer file validation rejects unsafe names, types and sizes", () => {
   assert.equal(validateCustomerFile({ kind: "tool_photo", name: "tool.pdf", type: "application/pdf", size: 100 }).ok, false);
   assert.equal(validateCustomerFile({ kind: "maintenance_attachment", name: "service.exe", type: "application/octet-stream", size: 100 }).ok, false);
   assert.equal(validateCustomerFile({ kind: "damage_photo", name: "damage.png", type: "image/png", size: 0 }).ok, false);
-  assert.equal(validateCustomerFile({ kind: "damage_photo", name: "damage.png", type: "image/png", size: 10 * 1024 * 1024 + 1 }).ok, false);
+  assert.equal(validateCustomerFile({ kind: "damage_photo", name: "damage.png", type: "image/png", size: 5 * 1024 * 1024 }).ok, true);
+  assert.equal(validateCustomerFile({ kind: "damage_photo", name: "damage.png", type: "image/png", size: 5 * 1024 * 1024 + 1 }).ok, false);
+  assert.equal(validateCustomerFile({ kind: "maintenance_attachment", name: "service.pdf", type: "application/pdf", size: 10 * 1024 * 1024 }).ok, true);
+  assert.equal(validateCustomerFile({ kind: "maintenance_attachment", name: "service.pdf", type: "application/pdf", size: 10 * 1024 * 1024 + 1 }).ok, false);
 });
 
 test("customer file signature detection rejects MIME spoofing inputs", () => {
