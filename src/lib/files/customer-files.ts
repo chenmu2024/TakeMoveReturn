@@ -19,6 +19,16 @@ export type CustomerFilesBucket = {
 
 const imageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maintenanceTypes = new Set([...imageTypes, "application/pdf"]);
+const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+const MAINTENANCE_MAX_BYTES = 10 * 1024 * 1024;
+
+export function customerFileMaxBytes(kind: CustomerFileKind) {
+  return kind === "maintenance_attachment" ? MAINTENANCE_MAX_BYTES : IMAGE_MAX_BYTES;
+}
+
+export function customerFileMaxCount(kind: CustomerFileKind) {
+  return kind === "tool_photo" ? 1 : 3;
+}
 
 export function customerFilesEnabled() {
   return process.env.CUSTOMER_FILES_ENABLED === "true";
@@ -36,7 +46,7 @@ export function validateCustomerFile(input: {
   if (!name || name.length > 180 || name.includes("/") || name.includes("\\")) {
     return { ok: false as const, reason: "invalid-name" };
   }
-  if (!Number.isInteger(input.size) || input.size < 1 || input.size > 10 * 1024 * 1024) {
+  if (!Number.isInteger(input.size) || input.size < 1 || input.size > customerFileMaxBytes(input.kind)) {
     return { ok: false as const, reason: "invalid-size" };
   }
 
