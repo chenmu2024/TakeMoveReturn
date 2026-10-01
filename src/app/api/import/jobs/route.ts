@@ -1,6 +1,7 @@
 import { siteConfig } from "../../../../config/site";
 import { MAX_IMPORT_BYTES, MAX_IMPORT_ROWS, reviewImport } from "../../../../lib/import/preview";
 import { dispatchImport } from "../../../../lib/import/queue";
+import { isSameOrigin } from "../../../../lib/security/same-origin";
 import { createClient, isSupabaseConfigured } from "../../../../lib/supabase/server";
 
 export async function GET() {
@@ -22,7 +23,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) return new Response("Unavailable", { status: 503 });
-  if (request.headers.get("origin") !== siteConfig.siteUrl) return new Response("Invalid origin", { status: 403 });
+  if (!isSameOrigin(request)) return new Response("Invalid origin", { status: 403 });
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
   if (!claims?.claims) return new Response("Sign in required", { status: 401 });

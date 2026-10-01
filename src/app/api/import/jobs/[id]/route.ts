@@ -1,6 +1,6 @@
 import { csvDocument } from "../../../../../lib/reports/csv";
-import { siteConfig } from "../../../../../config/site";
 import { dispatchImport } from "../../../../../lib/import/queue";
+import { isSameOrigin } from "../../../../../lib/security/same-origin";
 import { createClient, isSupabaseConfigured } from "../../../../../lib/supabase/server";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -44,7 +44,7 @@ export async function GET(request: Request, context: RouteContext) {
 }
 
 export async function POST(request: Request, context: RouteContext) {
-  if (request.headers.get("origin") !== siteConfig.siteUrl) return new Response("Invalid origin", { status: 403 });
+  if (!isSameOrigin(request)) return new Response("Invalid origin", { status: 403 });
   const { id } = await context.params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return new Response("Import not found", { status: 404 });
   const result = await getJob(id);

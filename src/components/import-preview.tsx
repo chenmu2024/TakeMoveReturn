@@ -53,7 +53,11 @@ export function ImportPreview() {
         const response = await fetch(`/api/import/jobs/${jobId}`, { credentials: "same-origin", cache: "no-store" });
         if (!response.ok) throw new Error("Import progress is unavailable. Refresh this page and check again.");
         const current = await response.json() as ImportJob;
-        if (active) { setJob(current); setJobError(""); }
+        if (active) {
+          setJob(current);
+          setRecentJobs((items) => items.map((item) => item.id === current.id ? { ...item, ...current } : item));
+          setJobError("");
+        }
       } catch (cause) {
         if (active) setJobError(cause instanceof Error ? cause.message : "Import progress is unavailable.");
       }

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { CustomerFilesSection, type CustomerFileView } from "../../../components/customer-files";
+import { ServicePages, servicePage, type ServiceParams } from "../../../components/service-pages";
 import { customerFilesEnabled } from "../../../lib/files/customer-files";
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
 import { reportDamage, resolveDamage } from "./actions";
@@ -24,7 +25,7 @@ function noticeMessage(notice?: string) {
   return null;
 }
 
-export default async function DamagePage({ searchParams }: { searchParams: Promise<{ notice?: string }> }) {
+export default async function DamagePage({ searchParams }: { searchParams: Promise<ServiceParams> }) {
   if (!isSupabaseConfigured()) redirect("/auth/signup");
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -36,9 +37,16 @@ export default async function DamagePage({ searchParams }: { searchParams: Promi
   if (memberError) throw new Error("Workspace membership could not be checked.");
   if (!member) redirect("/app/onboarding");
 
+  const params = await searchParams;
+  const page = servicePage(params.page);
+  const toolPage = servicePage(params.toolPage);
+  const schedulePage = servicePage(params.schedulePage);
+  const toolQuery = typeof params.toolQuery === "string" ? params.toolQuery.trim().slice(0, 100) : "";
+  let selectableTools = supabase.from("tools").select("id,name,asset_code,status", { count: "exact" }).eq("company_id", member.company_id).neq("status", "retired");
+  if (toolQuery) selectableTools = selectableTools.ilike("name", `%${toolQuery.replace(/[\\%_]/g, (character) => "\\" + character)}%`);
   const [toolResult, reportResult] = await Promise.all([
-    supabase.from("tools").select("id,name,asset_code,status").eq("company_id", member.company_id).neq("status", "retired").order("name").limit(500),
-    supabase.from("damage_reports").select("id,tool_id,severity,description,status,created_at,resolved_at").eq("company_id", member.company_id).order("created_at", { ascending: false }).limit(100),
+    selectableTools.order("name").order("id").range((toolPage - 1) * 50, toolPage * 50 - 1),
+    supabase.from("damage_reports").select("id,tool_id,severity,description,status,created_at,resolved_at", { count: "exact" }).eq("company_id", member.company_id).order("created_at", { ascending: false }).order("id").range((page - 1) * 50, page * 50 - 1),
   ]);
   if (toolResult.error || reportResult.error) throw new Error("Damage records could not be loaded.");
 
@@ -62,15 +70,20 @@ export default async function DamagePage({ searchParams }: { searchParams: Promi
     }
   }
 
-  const toolNames = new Map(tools.map((tool) => [tool.id, `${tool.name} · ${tool.asset_code}`]));
-  const notice = noticeMessage((await searchParams).notice);
+  if (toolPage > Math.max(1, Math.ceil((toolResult.count ?? 0) / 50)) || page > Math.max(1, Math.ceil((reportResult.count ?? 0) / 50))) notFound();
+  const recordToolIds = [...new Set(reports.map((record) => record.tool_id))];
+  const recordTools = recordToolIds.length ? await supabase.from("tools").select("id,name,asset_code").eq("company_id", member.company_id).in("id", recordToolIds) : { data: [], error: null };
+  if (recordTools.error) throw new Error("Record tools could not be loaded.");
+  const toolNames = new Map((recordTools.data ?? []).map((tool) => [tool.id, `${tool.name} · ${tool.asset_code}`]));
+  const notice = noticeMessage(params.notice);
 
   return <main className="service-page">
     <header><Link href="/app">← Workspace</Link><p className="service-eyebrow">TOOL EXCEPTIONS</p><h1>Damage reports</h1><p>{filesEnabled ? "Record a damaged or missing tool, add private photo evidence, and keep its resolution with the tool history." : "Record a damaged or missing tool and its resolution. Photos are not enabled yet; do not include sensitive personal information in descriptions."}</p></header>
     {notice && <p className="service-notice" role={notice.role}>{notice.text}</p>}
+    <section className="service-card"><h2>Find a tool</h2><form method="get"><label htmlFor="tool-search">Search tool names</label><input id="tool-search" name="toolQuery" defaultValue={toolQuery} maxLength={100} /><button type="submit">Search tools</button></form><ServicePages params={params} parameter="toolPage" page={toolPage} count={toolResult.count ?? 0} label="Tool selection pages" /></section>
     <div className="service-grid">
       <section className="service-card"><h2>Report an issue</h2><form action={reportDamage}><label htmlFor="damage-tool">Tool</label><select id="damage-tool" name="toolId" required defaultValue=""><option value="" disabled>Select a tool</option>{tools.map((tool) => <option key={tool.id} value={tool.id}>{tool.name} · {tool.asset_code} ({tool.status})</option>)}</select><label htmlFor="damage-severity">Severity</label><select id="damage-severity" name="severity" required defaultValue="minor"><option value="minor">Minor</option><option value="needs_repair">Needs repair</option><option value="unusable">Unusable</option><option value="lost">Missing / lost</option></select><label htmlFor="damage-description">What happened?</label><textarea id="damage-description" name="description" required minLength={3} maxLength={1000} rows={4} /><button type="submit" disabled={!tools.length}>Save report</button></form></section>
-      <section className="service-card"><h2>Recent reports</h2>{reports.length ? <ul className="service-list">{reports.map((report) => <li key={report.id}><strong>{toolNames.get(report.tool_id) ?? "Tool record"}</strong><small>{report.severity.replaceAll("_", " ")} · {report.status} · {report.created_at.slice(0, 10)}</small><p>{report.description}</p>{filesEnabled && <CustomerFilesSection compact kind="damage_photo" subjectId={report.id} files={filesByReport.get(report.id) ?? []} />}{report.status === "open" && <form action={resolveDamage}><input type="hidden" name="reportId" value={report.id} /><label htmlFor={`resolution-${report.id}`}>Resolution</label><textarea id={`resolution-${report.id}`} name="resolution" required minLength={3} maxLength={1000} rows={2} /><button type="submit">Resolve report</button></form>}</li>)}</ul> : <p>No damage has been reported.</p>}</section>
+      <section className="service-card"><h2>Recent reports</h2>{reports.length ? <ul className="service-list">{reports.map((report) => <li key={report.id}><strong>{toolNames.get(report.tool_id) ?? "Tool record"}</strong><small>{report.severity.replaceAll("_", " ")} · {report.status} · {report.created_at.slice(0, 10)}</small><p>{report.description}</p>{filesEnabled && <CustomerFilesSection compact kind="damage_photo" subjectId={report.id} files={filesByReport.get(report.id) ?? []} />}{report.status === "open" && <form action={resolveDamage}><input type="hidden" name="reportId" value={report.id} /><label htmlFor={`resolution-${report.id}`}>Resolution</label><textarea id={`resolution-${report.id}`} name="resolution" required minLength={3} maxLength={1000} rows={2} /><button type="submit">Resolve report</button></form>}</li>)}</ul> : <p>No damage has been reported.</p>}<ServicePages params={params} parameter="page" page={page} count={reportResult.count ?? 0} label="Damage report pages" /></section>
     </div>
   </main>;
 }

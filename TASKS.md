@@ -1,5 +1,23 @@
 # TakeMoveReturn delivery tracker
 
+## 2026-10-01 audit repairs — implemented, preview only
+
+- Fixed decimal cost validation; added a regression test for the actual HTML pattern.
+- Added 50-record company-scoped pages for damage reports, maintenance schedules/history and selectable tools, plus name search and separate historical tool-name lookups. Repeated query parameters and wildcard literals are handled defensively.
+- Tools now displays company-scoped holder/location via batched lookups; dashboard action and singular counts follow actual data.
+- Import polling updates the matching recent-history row. The previously authenticated three-row same-origin import fix is included.
+- Added service-role-only privacy review transitions, requester-visible summaries, private append-only audit entries, a local operator tool and a fulfilment runbook. The additive migration is applied. This is an operator-assisted process, not automated account/R2/history erasure.
+- 35 tests, typecheck, production/OpenNext build, all existing source audits, runtime smoke and deployment dry-run pass. Local load smoke: 100/100 successful, p95 140ms (not production-scale evidence).
+- Linked rollback-only privacy review, requester-isolation and damage/maintenance tests pass. Test request count after rollback is zero; authenticated cannot execute review and service role cannot delete audit rows.
+- Authenticated Worker preview `4e3035ea`: dashboard, Tools, Damage, Maintenance and Privacy render correctly. Tools has no document-level overflow at 390/768/1024/1280/1440/1920px. Later input-boundary guards are in final preview `ff5feb05-263c-4318-a3a2-542a6a43faee`, alias `workspace-repairs`; final-guard authenticated validation and production promotion remain pending. No GitHub push or production traffic promotion in this repair turn. Payment unchanged.
+- Keep the broader verification gaps in `docs/QA_AUDIT_2026-10-01.md` open rather than claiming they passed.
+
+## 2026-10-01 latest acceptance evidence
+
+Authenticated candidate `67d7bf40-53da-4beb-b887-7a1ccd51eac2` imported the authorized three-row CSV successfully (3 imported, 0 failed), and its job-specific label page rendered 3/3 QR images. Exactly those three no-history/no-file tools were cleaned up; import audit rows remain. The original tool remains. This supersedes the pending three-row candidate import statement below; production promotion is still pending.
+
+The current audit is recorded in `docs/QA_AUDIT_2026-10-01.md`. Confirmed repair targets: maintenance decimal-cost pattern, damage/maintenance history and tool-selector limits, privacy fulfilment operations, stale recent-import progress, missing holder/location columns on Tools, and contextual/singular copy. Typecheck, 34 tests and release/legal/SEO/database source audits passed. No application code was changed or production version promoted by this audit. Payment remained outside live verification scope.
+
 ## 2026-10-01 Finish Mode — LOCKED
 
 TakeMoveReturn is no longer in project-selection mode. The product already exists and the owner has explicitly required that it be finished. Do not pause, downgrade, replace, or restart the product based on competitor density alone.
@@ -24,6 +42,9 @@ Current product boundary remains: reusable construction tools/equipment, QR iden
 - The expected-return and first authenticated QR-open changes described as a pending candidate below were released in commit `78e65de`; linked migrations, GitHub database/verify jobs and Cloudflare deployment passed. Authenticated browser verification of those flows is still pending.
 - Workspace tools, workers, locations and activity now have 50-record server-side pages instead of silently stopping after 100 rows. The dashboard's overdue preview shows the total and links to a paginated full list. A separate `/api/ready` checks Supabase Data API availability; `/api/health` remains a lightweight liveness endpoint. Typecheck, 33 unit tests, production and OpenNext builds, release/DB/SEO/legal audits and Wrangler dry-run passed. The owner confirmed preview login, all four paginated views and the overdue “View all” link. Preview `/api/ready` returned 200; disabled local configuration returned 503.
 - Still open: privacy-request fulfilment and retention cleanup; authenticated customer-file upload/read/delete/quota, bulk-label and responsive browser verification. Do not claim those are complete or automatically delete customer data.
+- 2026-10-01 acceptance: A marked temporary tool in the signed-in Worker preview successfully uploaded a 1.3 MB PNG to the private customer-file bucket, opened it while authenticated, and denied an unauthenticated request with 401. The UI deletion removed it from the list; a production database read confirmed the file was `deleted` with `object_deleted_at` set. The owner explicitly approved permanent cleanup of the temporary file and tool; an exact-ID/name/no-history guarded delete returned only that tool, and a follow-up count was zero. This verifies the ordinary small-file path, not quota/size-boundary or cross-workspace isolation.
+- 2026-10-01 acceptance: Two QR images rendered in the signed-in preview and the print action disabled correctly when all labels were deselected. A real 200-label print/PDF run is still open because this Free test workspace has a 25-tool capacity.
+- 2026-10-01 import regression: A three-row synthetic CSV mapped and passed server preflight (3 new, 0 duplicate, 0 invalid, 24 free slots), but job creation failed on the Worker version preview because both import mutation endpoints required the canonical production Origin. A minimal same-origin request check and regression test are in candidate Worker `67d7bf40-53da-4beb-b887-7a1ccd51eac2`; typecheck, 34 tests, release audit, OpenNext build and Wrangler dry-run passed. Candidate guest same-origin reaches 401 and cross-origin returns 403. Authenticated candidate import, queue completion and production rollout are pending.
 
 ## 2026-09-30 product activation plan — current update
 
