@@ -1,8 +1,24 @@
 export const MAX_IMPORT_BYTES = 10 * 1024 * 1024;
 export const MAX_IMPORT_ROWS = 5_000;
 
-export type ImportMapping = { assetCode: number; name: number; category: number };
-export type ImportIssue = { row: number; assetCode: string; name: string; category: string; reason: string };
+export type ImportMapping = {
+  assetCode: number;
+  name: number;
+  category: number;
+  brand: number;
+  model: number;
+  serialNumber: number;
+};
+export type ImportIssue = {
+  row: number;
+  assetCode: string;
+  name: string;
+  category: string;
+  brand: string;
+  model: string;
+  serialNumber: string;
+  reason: string;
+};
 
 export function parseCsv(text: string): string[][] {
   const rows: string[][] = [];
@@ -57,6 +73,9 @@ export function suggestedMapping(headers: readonly string[]): ImportMapping {
     assetCode: find(["assetcode", "assetid", "toolcode", "toolnumber", "identifier"]),
     name: find(["name", "toolname", "equipmentname", "itemname"]),
     category: find(["category", "toolcategory", "type"]),
+    brand: find(["brand", "make", "manufacturer"]),
+    model: find(["model", "modelnumber", "modelno"]),
+    serialNumber: find(["serial", "serialnumber", "serialno", "serialid"]),
   };
 }
 
@@ -64,31 +83,44 @@ export function reviewImport(rows: readonly unknown[][], mapping: ImportMapping)
   const headerIndex = firstHeaderRow(rows);
   if (headerIndex < 0) throw new Error("The selected sheet is empty.");
   const headers = rows[headerIndex].map(cellText);
-  if (mapping.assetCode < 0 || mapping.name < 0 || mapping.assetCode === mapping.name
-    || mapping.assetCode >= headers.length || mapping.name >= headers.length
-    || mapping.category >= headers.length || mapping.category === mapping.assetCode || mapping.category === mapping.name) {
-    throw new Error("Map different columns for asset code and tool name.");
+  const selectedColumns = Object.values(mapping).filter((index) => index >= 0);
+  if (mapping.assetCode < 0 || mapping.name < 0
+    || selectedColumns.some((index) => index >= headers.length)
+    || new Set(selectedColumns).size !== selectedColumns.length) {
+    throw new Error("Map each imported field to a different source column.");
   }
   const data = rows.slice(headerIndex + 1).map((row, index) => ({ row, sourceRow: headerIndex + index + 2 }))
     .filter(({ row }) => row.some((value) => cellText(value).trim()));
   if (data.length > MAX_IMPORT_ROWS) throw new Error("The file has more than 5,000 data rows.");
   const seen = new Set<string>();
   const issues: ImportIssue[] = [];
-  const preview: { row: number; assetCode: string; name: string; category: string; valid: boolean }[] = [];
-  const normalizedRows: { assetCode: string; name: string; category: string }[] = [];
+  const preview: {
+    row: number; assetCode: string; name: string; category: string;
+    brand: string; model: string; serialNumber: string; valid: boolean;
+  }[] = [];
+  const normalizedRows: {
+    assetCode: string; name: string; category: string;
+    brand: string; model: string; serialNumber: string;
+  }[] = [];
   data.forEach(({ row, sourceRow }) => {
     const assetCode = cellText(row[mapping.assetCode]).trim();
     const name = cellText(row[mapping.name]).trim();
     const category = mapping.category < 0 ? "" : cellText(row[mapping.category]).trim();
-    normalizedRows.push({ assetCode, name, category });
+    const brand = mapping.brand < 0 ? "" : cellText(row[mapping.brand]).trim();
+    const model = mapping.model < 0 ? "" : cellText(row[mapping.model]).trim();
+    const serialNumber = mapping.serialNumber < 0 ? "" : cellText(row[mapping.serialNumber]).trim();
+    normalizedRows.push({ assetCode, name, category, brand, model, serialNumber });
     const reasons: string[] = [];
     if (!assetCode || assetCode.length > 80) reasons.push("Asset code must be 1–80 characters");
     if (name.length < 2 || name.length > 120) reasons.push("Tool name must be 2–120 characters");
     if (category.length > 80) reasons.push("Category must be 80 characters or fewer");
+    if (brand.length > 80) reasons.push("Brand must be 80 characters or fewer");
+    if (model.length > 120) reasons.push("Model must be 120 characters or fewer");
+    if (serialNumber.length > 120) reasons.push("Serial number must be 120 characters or fewer");
     if (assetCode && seen.has(assetCode)) reasons.push("Duplicate asset code in this file");
     if (assetCode) seen.add(assetCode);
-    if (reasons.length) issues.push({ row: sourceRow, assetCode, name, category, reason: reasons.join("; ") });
-    if (preview.length < 10) preview.push({ row: sourceRow, assetCode, name, category, valid: !reasons.length });
+    if (reasons.length) issues.push({ row: sourceRow, assetCode, name, category, brand, model, serialNumber, reason: reasons.join("; ") });
+    if (preview.length < 10) preview.push({ row: sourceRow, assetCode, name, category, brand, model, serialNumber, valid: !reasons.length });
   });
   return { total: data.length, valid: data.length - issues.length, issues, preview, normalizedRows };
 }
