@@ -11,6 +11,13 @@ import "./tool-detail.css";
 export const metadata: Metadata = { title: "Tool Record | TakeMoveReturn", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
+function formatPurchasePrice(value: number | string | null) {
+  if (value === null) return "—";
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return "—";
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+}
+
 function noticeMessage(notice?: string) {
   if (notice === "saved") return { role: "status" as const, text: "Movement saved to the tool history." };
   if (notice === "details-saved") return { role: "status" as const, text: "Tool details updated." };
@@ -55,7 +62,7 @@ export default async function ToolDetailPage({ params, searchParams }: { params:
   const historyTo = historyFrom + historyPageSize - 1;
 
   const [toolResult, workerResult, locationResult, historyResult, companyResult, damageResult, maintenanceScheduleResult, maintenanceEventResult] = await Promise.all([
-    supabase.from("tools").select("id,name,asset_code,category,brand,model,serial_number,description,notes,status,condition,current_worker_id,current_location_id,expected_return_at,updated_at")
+    supabase.from("tools").select("id,name,asset_code,category,brand,model,serial_number,purchase_date,purchase_price,description,notes,status,condition,current_worker_id,current_location_id,expected_return_at,updated_at")
       .eq("id", id).eq("company_id", membership.company_id).maybeSingle(),
     supabase.from("workers").select("id,name,status").eq("company_id", membership.company_id).order("name"),
     supabase.from("locations").select("id,name,type,active").eq("company_id", membership.company_id).order("name"),
@@ -116,6 +123,8 @@ export default async function ToolDetailPage({ params, searchParams }: { params:
           <div><dt>Brand</dt><dd>{tool.brand || "—"}</dd></div>
           <div><dt>Model</dt><dd>{tool.model || "—"}</dd></div>
           <div><dt>Serial</dt><dd>{tool.serial_number || "—"}</dd></div>
+          <div><dt>Purchase date</dt><dd>{tool.purchase_date || "—"}</dd></div>
+          <div><dt>Purchase price</dt><dd>{formatPurchasePrice(tool.purchase_price)}</dd></div>
         </dl>
         {tool.description && <div className="tool-detail-copy"><strong>Description</strong><p>{tool.description}</p></div>}
         {tool.notes && <div className="tool-detail-copy"><strong>Internal notes</strong><p>{tool.notes}</p></div>}
