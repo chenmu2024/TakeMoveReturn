@@ -59,10 +59,8 @@ export async function setToolReturnDueDate(form: FormData) {
   if (!id.success) redirect("/app/tools");
   const path = `/app/tools/${id.data}`;
   const rawDate = String(form.get("dueDate") ?? "");
-  const dueMillis = /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? Date.parse(`${rawDate}T23:59:59Z`) : NaN;
-  const dueAt = rawDate === "" ? null : Number.isFinite(dueMillis) && new Date(dueMillis).toISOString().slice(0, 10) === rawDate
-    ? new Date(dueMillis).toISOString() : undefined;
-  if (dueAt === undefined || (dueAt && dueMillis <= Date.now())) redirect(`${path}?notice=due-invalid`);
+  const dueDate = rawDate === "" ? null : /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : undefined;
+  if (dueDate === undefined) redirect(`${path}?notice=due-invalid`);
 
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -75,7 +73,7 @@ export async function setToolReturnDueDate(form: FormData) {
   const { data: tool, error: toolError } = await supabase.from("tools")
     .select("id").eq("id", id.data).eq("company_id", membership.company_id).maybeSingle();
   if (toolError || !tool) redirect("/app/tools");
-  const { error } = await supabase.rpc("set_tool_return_due_date", { p_tool_id: id.data, p_due_at: dueAt });
+  const { error } = await supabase.rpc("set_tool_return_due_date", { p_tool_id: id.data, p_due_date: dueDate });
   if (error) redirect(`${path}?notice=${error.message.includes("not checked out") ? "due-state" : "due-unavailable"}`);
   redirect(`${path}?notice=due-saved`);
 }
