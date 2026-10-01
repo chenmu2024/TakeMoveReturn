@@ -37,11 +37,12 @@ export default async function DamagePage({ searchParams }: { searchParams: Promi
   if (memberError) throw new Error("Workspace membership could not be checked.");
   if (!member) redirect("/app/onboarding");
 
-  const [toolResult, reportResult] = await Promise.all([
+  const [toolResult, reportResult, workerResult] = await Promise.all([
     supabase.from("tools").select("id,name,asset_code,status").eq("company_id", member.company_id).neq("status", "retired").order("name").limit(500),
-    supabase.from("damage_reports").select("id,tool_id,severity,description,status,created_at,resolved_at").eq("company_id", member.company_id).order("created_at", { ascending: false }).limit(100),
+    supabase.from("damage_reports").select("id,tool_id,reported_by_worker_id,reported_by_user_id,severity,description,status,created_at,resolved_at").eq("company_id", member.company_id).order("created_at", { ascending: false }).limit(100),
+    supabase.from("workers").select("id,name").eq("company_id", member.company_id).order("name").limit(500),
   ]);
-  if (toolResult.error || reportResult.error) throw new Error("Damage records could not be loaded.");
+  if (toolResult.error || reportResult.error || workerResult.error) throw new Error("Damage records could not be loaded.");
 
   const tools = toolResult.data ?? [];
   const reports = reportResult.data ?? [];
@@ -64,6 +65,7 @@ export default async function DamagePage({ searchParams }: { searchParams: Promi
   }
 
   const toolNames = new Map(tools.map((tool) => [tool.id, `${tool.name} · ${tool.asset_code}`]));
+  const workerNames = new Map((workerResult.data ?? []).map((worker) => [worker.id, worker.name]));
   const notice = noticeMessage((await searchParams).notice);
 
   return <main className="service-page">
@@ -71,7 +73,7 @@ export default async function DamagePage({ searchParams }: { searchParams: Promi
     {notice && <p className="service-notice" role={notice.role}>{notice.text}</p>}
     <div className="service-grid">
       <section className="service-card"><h2>Report an issue</h2><form action={reportDamage}><label htmlFor="damage-tool">Tool</label><select id="damage-tool" name="toolId" required defaultValue=""><option value="" disabled>Select a tool</option>{tools.map((tool) => <option key={tool.id} value={tool.id}>{tool.name} · {tool.asset_code} ({tool.status})</option>)}</select><label htmlFor="damage-severity">Severity</label><select id="damage-severity" name="severity" required defaultValue="minor"><option value="minor">Minor</option><option value="needs_repair">Needs repair</option><option value="unusable">Unusable</option><option value="lost">Missing / lost</option></select><label htmlFor="damage-description">What happened?</label><textarea id="damage-description" name="description" required minLength={3} maxLength={1000} rows={4} /><button type="submit" disabled={!tools.length}>Save report</button></form></section>
-      <section className="service-card"><h2>Recent reports</h2>{reports.length ? <ul className="service-list">{reports.map((report) => <li key={report.id}><strong>{toolNames.get(report.tool_id) ?? "Tool record"}</strong><small>{report.severity.replaceAll("_", " ")} · {report.status} · {report.created_at.slice(0, 10)}</small><p>{report.description}</p>{filesEnabled && <CustomerFilesSection compact kind="damage_photo" subjectId={report.id} files={filesByReport.get(report.id) ?? []} />}{report.status === "open" && <form action={resolveDamage}><input type="hidden" name="reportId" value={report.id} /><label htmlFor={`resolution-${report.id}`}>Resolution</label><textarea id={`resolution-${report.id}`} name="resolution" required minLength={3} maxLength={1000} rows={2} /><button type="submit">Resolve report</button></form>}</li>)}</ul> : <p>No damage has been reported.</p>}</section>
+      <section className="service-card"><h2>Recent reports</h2>{reports.length ? <ul className="service-list">{reports.map((report) => <li key={report.id}><strong>{toolNames.get(report.tool_id) ?? "Tool record"}</strong><small>{report.severity.replaceAll("_", " ")} · {report.status} · {report.created_at.slice(0, 10)} · {report.reported_by_worker_id ? `Field worker: ${workerNames.get(report.reported_by_worker_id) ?? "Worker"}` : "Manager report"}</small><p>{report.description}</p>{filesEnabled && <CustomerFilesSection compact kind="damage_photo" subjectId={report.id} files={filesByReport.get(report.id) ?? []} />}{report.status === "open" && <form action={resolveDamage}><input type="hidden" name="reportId" value={report.id} /><label htmlFor={`resolution-${report.id}`}>Resolution</label><textarea id={`resolution-${report.id}`} name="resolution" required minLength={3} maxLength={1000} rows={2} /><button type="submit">Resolve report</button></form>}</li>)}</ul> : <p>No damage has been reported.</p>}</section>
     </div>
   </main>;
 }
