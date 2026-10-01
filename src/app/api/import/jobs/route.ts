@@ -65,13 +65,17 @@ export async function POST(request: Request) {
   }
   const normalized: string[][] = [];
   for (const row of payload.rows) {
-    if (!row || typeof row.assetCode !== "string" || typeof row.name !== "string" || typeof row.category !== "string") {
+    if (!row || typeof row.assetCode !== "string" || typeof row.name !== "string" ||
+        typeof row.category !== "string" || typeof row.brand !== "string" ||
+        typeof row.model !== "string" || typeof row.serialNumber !== "string") {
       return new Response("Invalid import row", { status: 400 });
     }
-    normalized.push([row.assetCode, row.name, row.category]);
+    normalized.push([row.assetCode, row.name, row.category, row.brand, row.model, row.serialNumber]);
   }
-  const review = reviewImport([["Asset code", "Tool name", "Category"], ...normalized],
-    { assetCode: 0, name: 1, category: 2 });
+  const review = reviewImport(
+    [["Asset code", "Tool name", "Category", "Brand", "Model", "Serial number"], ...normalized],
+    { assetCode: 0, name: 1, category: 2, brand: 3, model: 4, serialNumber: 5 },
+  );
   if (review.issues.length) return Response.json({ error: "Resolve invalid or duplicate rows before importing.", issues: review.issues.slice(0, 20) }, { status: 422 });
 
   const { data: jobId, error } = await supabase.rpc("create_import_job", {
