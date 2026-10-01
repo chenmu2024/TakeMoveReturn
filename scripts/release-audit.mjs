@@ -29,6 +29,14 @@ const memberMigration = read("supabase/migrations/202609290003_workspace_member_
 const customerFilesMigration = read("supabase/migrations/202609290004_customer_files.sql");
 const customerFileLifecycleMigration = read("supabase/migrations/202609300001_customer_file_lifecycle.sql");
 const customerFileCleanup = read("customer-file-cleanup.mjs");
+const retentionCleanup = read("retention-cleanup.mjs");
+const finishHardeningMigration = read("supabase/migrations/202610010001_finish_hardening.sql");
+const privacyRetentionMigration = read("supabase/migrations/202610010002_privacy_retention.sql");
+const fieldActions = read("src/app/field/actions.ts");
+const scanPage = read("src/app/q/[token]/page.tsx");
+const toolDetail = read("src/app/app/tools/[id]/page.tsx");
+const maintenancePage = read("src/app/app/maintenance/page.tsx");
+const turnstile = read("src/lib/security/turnstile.ts");
 const workerEntry = read("worker-entry.mjs");
 const customerFilesHelper = read("src/lib/files/customer-files.ts");
 const customerFilesUpload = read("src/app/api/files/upload/route.ts");
@@ -106,6 +114,14 @@ pass("scheduled SEO review workflow exists", existsSync(new URL("../.github/work
 pass("dependency update automation exists", existsSync(new URL("../.github/dependabot.yml", import.meta.url)));
 pass("security reporting policy exists", existsSync(new URL("../SECURITY.md", import.meta.url)));
 pass("browser hardening headers include COOP and CORP", nextConfig.includes("Cross-Origin-Opener-Policy") && nextConfig.includes("Cross-Origin-Resource-Policy") && nextConfig.includes("X-DNS-Prefetch-Control"));
+pass("company-local expected return dates are database-authoritative", finishHardeningMigration.includes("expected_return_date date") && finishHardeningMigration.includes("p_due_date date") && finishHardeningMigration.includes("at time zone v_timezone"));
+pass("customer file cardinality and image limits are database-enforced", finishHardeningMigration.includes("Tool already has an active primary image") && finishHardeningMigration.includes("Damage reports allow up to 3 photos") && finishHardeningMigration.includes("Maintenance events allow up to 3 attachments") && finishHardeningMigration.includes("5242880"));
+pass("field QR flow includes authenticated damage and missing reports", fieldActions.includes("reportFieldIssue") && scanPage.includes("Report damage") && scanPage.includes("Report missing") && finishHardeningMigration.includes("report_field_tool_issue"));
+pass("tool history is paginated and corrections append audit events", toolDetail.includes("Complete history") && toolDetail.includes("correctToolCustody") && finishHardeningMigration.includes("reverses_transaction_id"));
+pass("lightweight work orders are implemented through manager RPCs", finishHardeningMigration.includes("create table if not exists public.work_orders") && maintenancePage.includes("Work orders") && maintenancePage.includes("setWorkOrderStatus"));
+pass("Turnstile is verified server-side before public auth actions when configured", turnstile.includes("siteverify") && authActions.includes("verifyTurnstile(form)") && devVars.includes("TURNSTILE_REQUIRED=false"));
+pass("privacy fulfilment and retention cleanup are service-role controlled", privacyRetentionMigration.includes("fulfill_account_deletion") && privacyRetentionMigration.includes("run_retention_cleanup") && retentionCleanup.includes("run_retention_cleanup") && workerEntry.includes("handleRetentionCleanup"));
+pass("new hardening rollback tests exist", existsSync(new URL("../supabase/tests/finish_hardening.sql", import.meta.url)) && existsSync(new URL("../supabase/tests/privacy_retention.sql", import.meta.url)));
 
 if (failures.length) {
   console.error(`\nRelease audit failed: ${failures.join("; ")}`);

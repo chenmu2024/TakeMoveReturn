@@ -5,6 +5,14 @@ import { customerFilesEnabled } from "../../../lib/files/customer-files";
 import { createClient, isSupabaseConfigured } from "../../../lib/supabase/server";
 import "../service.css";
 
+function localDate(timeZone: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone, year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(new Date());
+  const value = new Map(parts.map((part) => [part.type, part.value]));
+  return `${value.get("year")}-${value.get("month")}-${value.get("day")}`;
+}
+
 const views: Record<string, WorkspaceView> = {
   dashboard: { key: "dashboard", title: "Workspace dashboard", summary: "A clear starting point for tool custody, locations, exceptions, and the next handoff.", eyebrow: "DASHBOARD", kind: "dashboard", primaryAction: { label: "Add first tool", href: "/app/tools" } },
   search: { key: "search", title: "Search workspace", summary: "Find tools, field workers, trucks, warehouses, and job sites in your company.", eyebrow: "SEARCH", kind: "search" },
@@ -61,6 +69,15 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
       .select("company_id,role").eq("user_id", data.claims.sub).eq("status", "active").limit(1).maybeSingle();
     if (error) throw new Error("Workspace membership could not be checked.");
     if (!membership) redirect("/app/onboarding");
+    let companyTimezone = "UTC";
+    if (key === "dashboard" || key === "tools") {
+      const { data: timeZoneRow, error: timeZoneError } = await supabase.from("companies")
+        .select("timezone").eq("id", membership.company_id).single();
+      if (timeZoneError) throw new Error("Workspace timezone could not be loaded.");
+      companyTimezone = timeZoneRow.timezone || "UTC";
+    }
+    const overdueBeforeDate = localDate(companyTimezone);
+
     searchConnected = key === "search";
     if (key === "search" && searchQuery.length >= 2 && searchQuery.length <= 100) {
       const { data: matches, error: searchError } = await supabase.rpc("search_workspace", {
@@ -152,10 +169,10 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
     }
     if (key === "tools") {
       let toolQuery = supabase.from("tools")
-        .select("id,name,asset_code,status,updated_at,expected_return_at", { count: "exact" }).eq("company_id", membership.company_id);
-      if (overdueOnly) toolQuery = toolQuery.eq("status", "checked_out").lt("expected_return_at", new Date().toISOString());
+        .select("id,name,asset_code,status,updated_at,expected_return_date", { count: "exact" }).eq("company_id", membership.company_id);
+      if (overdueOnly) toolQuery = toolQuery.eq("status", "checked_out").lt("expected_return_date", overdueBeforeDate);
       const { data: toolRows, count, error: toolError } = await toolQuery
-        .order(overdueOnly ? "expected_return_at" : "updated_at", { ascending: overdueOnly })
+        .order(overdueOnly ? "expected_return_date" : "updated_at", { ascending: overdueOnly })
         .order("id", { ascending: true }).range(offset, offset + pageSize - 1);
       if (toolError) throw new Error("Tools could not be loaded.");
       tools = toolRows;
@@ -207,13 +224,13 @@ export default async function WorkspacePage({ params, searchParams }: { params: 
     }
     if (key === "dashboard") {
       const { data: overdueRows, count, error: overdueError } = await supabase.from("tools")
-        .select("id,name,asset_code,expected_return_at", { count: "exact" }).eq("company_id", membership.company_id)
-        .eq("status", "checked_out").not("expected_return_at", "is", null)
-        .lt("expected_return_at", new Date().toISOString())
-        .order("expected_return_at", { ascending: true }).limit(10);
+        .select("id,name,asset_code,expected_return_date", { count: "exact" }).eq("company_id", membership.company_id)
+        .eq("status", "checked_out").not("expected_return_date", "is", null)
+        .lt("expected_return_date", overdueBeforeDate)
+        .order("expected_return_date", { ascending: true }).limit(10);
       if (overdueError) console.error("Overdue returns unavailable", { code: overdueError.code });
       else {
-        overdueTools = (overdueRows ?? []).filter((row): row is OverdueTool => row.expected_return_at !== null);
+        overdueTools = (overdueRows ?? []).filter((row): row is OverdueTool => row.expected_return_date !== null);
         overdueCount = count ?? 0;
       }
       const { data: attentionRows, error: attentionError } = await supabase.from("tools")

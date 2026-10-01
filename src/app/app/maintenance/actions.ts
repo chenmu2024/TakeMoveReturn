@@ -13,6 +13,16 @@ const serviceInput = z.object({
   scheduleId: z.string().uuid(), servicedAt: date,
   cost: z.string().regex(/^\d{1,7}(?:\.\d{1,2})?$/), notes: z.string().trim().max(1000),
 });
+const workOrderInput = z.object({
+  toolId: z.string().uuid(),
+  title: z.string().trim().min(2).max(160),
+  dueDate: z.union([date, z.literal("")]),
+  notes: z.string().trim().max(1000),
+});
+const workOrderStatusInput = z.object({
+  workOrderId: z.string().uuid(),
+  status: z.enum(["open", "in_progress", "completed", "cancelled"]),
+});
 
 async function managerClient() {
   if (!isSupabaseConfigured()) redirect("/auth/signup");
@@ -55,4 +65,37 @@ export async function recordService(form: FormData) {
     p_cost_cents: costCents, p_notes: input.data.notes || null,
   });
   redirect(`/app/maintenance?notice=${error ? "unavailable" : "recorded"}`);
+}
+
+
+export async function createWorkOrder(form: FormData) {
+  const input = workOrderInput.safeParse({
+    toolId: form.get("toolId"),
+    title: form.get("title"),
+    dueDate: form.get("dueDate") ?? "",
+    notes: form.get("notes") ?? "",
+  });
+  if (!input.success) redirect("/app/maintenance?notice=work-order-invalid");
+  const supabase = await managerClient();
+  const { error } = await supabase.rpc("create_work_order", {
+    p_tool_id: input.data.toolId,
+    p_title: input.data.title,
+    p_due_date: input.data.dueDate || null,
+    p_notes: input.data.notes,
+  });
+  redirect(`/app/maintenance?notice=${error ? "work-order-unavailable" : "work-order-created"}`);
+}
+
+export async function setWorkOrderStatus(form: FormData) {
+  const input = workOrderStatusInput.safeParse({
+    workOrderId: form.get("workOrderId"),
+    status: form.get("status"),
+  });
+  if (!input.success) redirect("/app/maintenance?notice=work-order-invalid");
+  const supabase = await managerClient();
+  const { error } = await supabase.rpc("set_work_order_status", {
+    p_work_order_id: input.data.workOrderId,
+    p_status: input.data.status,
+  });
+  redirect(`/app/maintenance?notice=${error ? "work-order-unavailable" : "work-order-updated"}`);
 }

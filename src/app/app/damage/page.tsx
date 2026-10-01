@@ -16,7 +16,7 @@ function noticeMessage(notice?: string) {
   if (notice === "file-uploaded") return { role: "status" as const, text: "Damage photo uploaded." };
   if (notice === "file-deleted") return { role: "status" as const, text: "Attachment deleted." };
   if (notice === "file-quota") return { role: "alert" as const, text: "Storage allowance reached. Delete files or review the workspace plan." };
-  if (notice === "file-invalid-size") return { role: "alert" as const, text: "Files must be between 1 byte and 10 MB." };
+  if (notice === "file-invalid-size") return { role: "alert" as const, text: "Damage photos must be between 1 byte and 5 MB." };
   if (notice === "file-invalid-type") return { role: "alert" as const, text: "Damage evidence must be JPEG, PNG, or WebP." };
   if (notice?.startsWith("file-")) return { role: "alert" as const, text: "The photo action could not be completed. Try again." };
   if (notice === "invalid") return { role: "alert" as const, text: "Check the required fields and description length." };

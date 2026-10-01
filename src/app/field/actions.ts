@@ -94,3 +94,32 @@ export async function recordFieldMovement(form: FormData) {
   });
   redirect(`/q/${input.data.token}?notice=${error ? "state" : `${input.data.type}-saved`}#movement-status`);
 }
+
+
+export async function reportFieldIssue(form: FormData) {
+  const input = z.object({
+    token: z.string().regex(/^[0-9a-f]{64}$/),
+    issueType: z.enum(["damage", "missing"]),
+    severity: z.enum(["minor", "needs_repair", "unusable", "lost"]).default("minor"),
+    description: z.string().trim().min(3).max(1000),
+  }).safeParse({
+    token: form.get("token"),
+    issueType: form.get("issueType"),
+    severity: form.get("severity") ?? "minor",
+    description: form.get("description"),
+  });
+  if (!input.success) redirect("/field?notice=invalid");
+
+  const session = await fieldWorker();
+  if (!session) redirect(`/q/${input.data.token}?notice=session#issue-status`);
+
+  const { error } = await fieldDb().rpc("report_field_tool_issue", {
+    p_session_hash: session.hash,
+    p_device_hash: session.device.hash,
+    p_qr_token: input.data.token,
+    p_issue_type: input.data.issueType,
+    p_severity: input.data.issueType === "missing" ? "lost" : input.data.severity,
+    p_description: input.data.description,
+  });
+  redirect(`/q/${input.data.token}?notice=${error ? "issue-state" : input.data.issueType === "missing" ? "missing-saved" : "damage-saved"}#issue-status`);
+}

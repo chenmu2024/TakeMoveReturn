@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import { captureClientError } from "../components/telemetry";
 
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error("TakeMoveReturn route error", error);
+    void captureClientError(error, { boundary: "route", digest: error.digest ?? "" });
   }, [error]);
 
   return <main className="marketing-page">

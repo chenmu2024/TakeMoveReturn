@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { CustomerFileKind } from "../lib/files/customer-files";
+import { customerFileMaxBytes, customerFileMaxCount, type CustomerFileKind } from "../lib/files/customer-files";
 
 export type CustomerFileView = {
   id: string;
@@ -29,11 +29,15 @@ export function CustomerFilesSection({
     ? "image/jpeg,image/png,image/webp,application/pdf"
     : "image/jpeg,image/png,image/webp";
   const label = kind === "maintenance_attachment" ? "Add attachment" : "Add photo";
+  const maxFiles = customerFileMaxCount(kind);
+  const maxBytes = customerFileMaxBytes(kind);
+  const atLimit = files.length >= maxFiles;
+  const limitLabel = maxBytes / (1024 * 1024);
 
   return <section className={compact ? "customer-files compact" : "customer-files"}>
     <div className="customer-files-heading">
-      <strong>{kind === "maintenance_attachment" ? "Attachments" : "Photos"}</strong>
-      <span>10 MB max per file</span>
+      <strong>{kind === "maintenance_attachment" ? "Attachments" : kind === "tool_photo" ? "Primary photo" : "Photos"}</strong>
+      <span>{maxFiles} max · {limitLabel} MB max per file</span>
     </div>
     {files.length ? <ul className="customer-file-list">{files.map((file) => <li key={file.id}>
       <div>
@@ -44,7 +48,7 @@ export function CustomerFilesSection({
         <button type="submit">Delete</button>
       </form>
     </li>)}</ul> : <p className="customer-files-empty">No files attached.</p>}
-    <form className="customer-file-upload" method="post" action="/api/files/upload" encType="multipart/form-data">
+    {atLimit ? <p className="customer-files-empty">{kind === "tool_photo" ? "Delete the current primary photo before uploading a replacement." : `Maximum of ${maxFiles} files reached for this record.`}</p> : <form className="customer-file-upload" method="post" action="/api/files/upload" encType="multipart/form-data">
       <input type="hidden" name="kind" value={kind} />
       <input type="hidden" name="subjectId" value={subjectId} />
       <label>
@@ -52,6 +56,6 @@ export function CustomerFilesSection({
         <input name="file" type="file" accept={accept} required />
       </label>
       <button type="submit">{label}</button>
-    </form>
+    </form>}
   </section>;
 }
