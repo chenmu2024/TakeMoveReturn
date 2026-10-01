@@ -2,3 +2,5 @@
 #movement-status{scroll-margin-top:24px;padding:12px 14px;border:1px solid #b5d4bd;border-radius:6px;background:#edf6ee;color:#174b2f}.scan-card #movement-status[role="alert"]{border-color:#e9c8ad;background:#fff5ec;color:#75421f}
 
 .scan-tool-photo{display:block;width:100%;max-height:320px;margin:16px 0;border:1px solid var(--line);border-radius:8px;object-fit:contain;background:#f8faf7}
+
+.scan-issue-actions{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}.scan-issue-actions h2{margin:6px 0 12px;font-size:1.2rem}.scan-issue-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.scan-issue-grid details{padding:12px;border:1px solid var(--line);border-radius:8px;background:#f8faf7}.scan-issue-grid summary{cursor:pointer;font-weight:800}.scan-issue-grid textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:6px;font:inherit;resize:vertical}.scan-issue-grid select{width:100%;padding:10px;border:1px solid var(--line);border-radius:6px;background:#fff;font:inherit}@media(max-width:560px){.scan-issue-grid{grid-template-columns:1fr}}
