@@ -29,7 +29,7 @@ function noticeMessage(notice?: string) {
   return null;
 }
 
-export default async function ToolDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ notice?: string }> }) {
+export default async function ToolDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ notice?: string; historyPage?: string }> }) {
   if (!isSupabaseConfigured()) redirect("/auth/signup");
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
@@ -44,13 +44,21 @@ export default async function ToolDetailPage({ params, searchParams }: { params:
   if (membershipError) throw new Error("Workspace membership could not be checked.");
   if (!membership) redirect("/app/onboarding");
 
+  const query = await searchParams;
+  const parsedHistoryPage = Number.parseInt(query.historyPage ?? "1", 10);
+  const historyPage = Number.isFinite(parsedHistoryPage) && parsedHistoryPage > 0 ? parsedHistoryPage : 1;
+  const historyPageSize = 50;
+  const historyFrom = (historyPage - 1) * historyPageSize;
+  const historyTo = historyFrom + historyPageSize - 1;
+
   const [toolResult, workerResult, locationResult, historyResult] = await Promise.all([
     supabase.from("tools").select("id,name,asset_code,category,status,condition,current_worker_id,current_location_id,expected_return_at,updated_at")
       .eq("id", id).eq("company_id", membership.company_id).maybeSingle(),
     supabase.from("workers").select("id,name,status").eq("company_id", membership.company_id).order("name"),
     supabase.from("locations").select("id,name,type,active").eq("company_id", membership.company_id).order("name"),
     supabase.from("tool_transactions").select("id,transaction_type,from_worker_id,to_worker_id,to_location_id,notes,created_at")
-      .eq("tool_id", id).eq("company_id", membership.company_id).order("created_at", { ascending: false }).limit(30),
+      .eq("tool_id", id).eq("company_id", membership.company_id).order("created_at", { ascending: false })
+      .range(historyFrom, historyTo),
   ]);
   if (toolResult.error || workerResult.error || locationResult.error || historyResult.error) throw new Error("Tool record could not be loaded.");
 
@@ -74,7 +82,7 @@ export default async function ToolDetailPage({ params, searchParams }: { params:
   const activeLocations = locations.filter((location) => location.active);
   const workerName = (workerId: string | null) => workers.find((worker) => worker.id === workerId)?.name ?? "—";
   const locationName = (locationId: string | null) => locations.find((location) => location.id === locationId)?.name ?? "—";
-  const notice = noticeMessage((await searchParams).notice);
+  const notice = noticeMessage(query.notice);
   const canTake = tool.status === "available" && activeWorkers.length > 0 && activeLocations.length > 0;
   const canMove = ["available", "checked_out"].includes(tool.status) && activeLocations.length > 0;
   const canReturn = tool.status === "checked_out" && activeLocations.length > 0;
@@ -99,6 +107,6 @@ export default async function ToolDetailPage({ params, searchParams }: { params:
       {canReturn && <form action={recordToolMovement}><input type="hidden" name="toolId" value={tool.id} /><input type="hidden" name="type" value="return" /><input type="hidden" name="workerId" value="" /><h2>RETURN</h2><p>Clear the holder and record where the tool was returned.</p><label htmlFor="return-location">Return location</label><select id="return-location" name="locationId" required defaultValue=""><option value="" disabled>Select location</option>{activeLocations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}</select><button type="submit">Record RETURN</button></form>}
     </section>
 
-    <section className="tool-detail-panel tool-detail-history"><p className="tool-detail-eyebrow">AUDITABLE HISTORY</p><h2>Recent movements</h2>{historyResult.data?.length ? <ol>{historyResult.data.map((event) => <li key={event.id}><div><strong>{event.transaction_type.toUpperCase()}</strong><time dateTime={event.created_at}>{event.created_at.slice(0, 16).replace("T", " ")} UTC</time></div><p>{workerName(event.from_worker_id)} → {workerName(event.to_worker_id)} · {locationName(event.to_location_id)}</p>{event.notes && <p>{event.notes}</p>}</li>)}</ol> : <p>No movement has been recorded for this tool yet.</p>}</section>
+    <section className="tool-detail-panel tool-detail-history"><p className="tool-detail-eyebrow">AUDITABLE HISTORY</p><h2>Complete movement history</h2>{historyResult.data?.length ? <><ol>{historyResult.data.map((event) => <li key={event.id}><div><strong>{event.transaction_type.toUpperCase()}</strong><time dateTime={event.created_at}>{event.created_at.slice(0, 16).replace("T", " ")} UTC</time></div><p>{workerName(event.from_worker_id)} → {workerName(event.to_worker_id)} · {locationName(event.to_location_id)}</p>{event.notes && <p>{event.notes}</p>}</li>)}</ol><nav aria-label="Movement history pages">{historyPage > 1 && <Link href={`/app/tools/${tool.id}?historyPage=${historyPage - 1}`}>← Newer</Link>}{historyResult.data.length === historyPageSize && <Link href={`/app/tools/${tool.id}?historyPage=${historyPage + 1}`}>Older →</Link>}</nav></> : <p>{historyPage > 1 ? "No older movement records." : "No movement has been recorded for this tool yet."}</p>}</section>
   </main>;
 }
