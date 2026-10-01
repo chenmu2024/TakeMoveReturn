@@ -24,6 +24,7 @@ const notices: Record<string, string> = {
   "session-expired": "Your sign-in link has expired. Please sign in again.",
   "callback-error": "The sign-in link could not be verified. Please request a new one.",
   challenge: "Security check could not be verified. Please try again.",
+  "account-deleted": "Your account has been deleted. Retained company audit records no longer identify your deleted account.",
 };
 
 function AuthForm({ variant, next, turnstileSiteKey }: { variant: AuthVariant; next?: "invitation"; turnstileSiteKey?: string }) {
