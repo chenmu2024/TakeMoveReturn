@@ -45,6 +45,18 @@ export async function POST(request: Request) {
   }
 
   const kind = kindValue as CustomerFileKind;
+  const maxFiles = kind === "tool_photo" ? 1 : 3;
+  const subjectColumn = kind === "tool_photo" ? "tool_id"
+    : kind === "damage_photo" ? "damage_report_id"
+    : "maintenance_event_id";
+  const { count: existingCount, error: countError } = await supabase.from("customer_files")
+    .select("id", { count: "exact", head: true })
+    .eq(subjectColumn, subjectId)
+    .eq("kind", kind)
+    .eq("status", "ready");
+  if (countError) return redirectTarget(kind, subjectId, "file-unavailable", request);
+  if ((existingCount ?? 0) >= maxFiles) return redirectTarget(kind, subjectId, "file-limit", request);
+
   const validated = validateCustomerFile({ kind, name: file.name, type: file.type, size: file.size });
   if (!validated.ok) return redirectTarget(kind, subjectId, `file-${validated.reason}`, request);
 
