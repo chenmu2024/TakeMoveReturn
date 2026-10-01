@@ -174,6 +174,6 @@ begin
     raise exception 'Cross-company field issue succeeded';
   exception when others then if SQLERRM <> 'Tool not found' then raise; end if;
   end;
-end $;
+end $$;
 
 rollback;
