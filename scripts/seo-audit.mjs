@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
 const seoSource = readFileSync(new URL("../src/data/seo-keywords.ts", import.meta.url), "utf8");
-const schemaSource = readFileSync(new URL("../src/components/seo-schema.tsx", import.meta.url), "utf8");
+const schemaSource = readFileSync(new URL("../src/components/seo-schema.tsx", import.meta.url), "utf8") + readFileSync(new URL("../src/lib/public-seo.ts", import.meta.url), "utf8");
 const siteConfig = readFileSync(new URL("../src/config/site.ts", import.meta.url), "utf8");
 const sitemapSource = readFileSync(new URL("../src/app/sitemap.ts", import.meta.url), "utf8");
 const contentSource = readFileSync(new URL("../src/app/[...slug]/page.tsx", import.meta.url), "utf8");

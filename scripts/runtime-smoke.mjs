@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { auditPublicSeo } from "./seo-runtime-audit.mjs";
 
 const port = 3210;
 const origin = `http://127.0.0.1:${port}`;
@@ -41,6 +42,7 @@ async function request(path, options = {}) {
 
 try {
   await waitForServer();
+  await auditPublicSeo(origin);
 
   const publicRoutes = [
     "/",

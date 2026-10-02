@@ -1,3 +1,5 @@
+import { practicalContent, practicalContentUpdatedAt } from "./seo-practical-content.ts";
+
 export type SeoPage = {
   path: string; canonical: string; title: string; h1: string; description: string; headings: string[];
   keyword: string; primaryKeyword: string; secondaryKeywords: string[]; cluster: string;
@@ -1822,5 +1824,13 @@ export const keywordRegistry: KeywordRegistryEntry[] = [
     "needsUSVerification": true
   }
 ];
+
+for (const page of seoPages) {
+  const content = practicalContent[page.path];
+  if (content) {
+    page.dateModified = practicalContentUpdatedAt;
+    page.faqs = [...(page.faqs ?? []), { question: content.question, answer: content.answer }];
+  }
+}
 
 export const seoPageByPath = new Map(seoPages.map((page) => [page.path, page]));

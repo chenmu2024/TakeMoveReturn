@@ -47,11 +47,11 @@ jobs:
               report,
               '```',
             ].join('\n');
-            if (existing.data.length) {
+            if (existing.length) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: existing.data[0].number,
+                issue_number: existing[0].number,
                 body,
               });
             } else {

@@ -8,6 +8,7 @@
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "build": "next build",
     "seo:audit": "node scripts/seo-audit.mjs",
+    "seo:runtime": "node --experimental-strip-types scripts/seo-runtime-audit.mjs",
     "legal:audit": "node scripts/legal-audit.mjs",
     "cf:build": "opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare preview",

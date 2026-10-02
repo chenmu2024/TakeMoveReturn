@@ -16,7 +16,7 @@ export function MarketingFooter() {
 }
 
 export function ProductWorkspace({ compact = false }: { compact?: boolean }) {
-  return <section className={compact ? "product-shot product-shot-compact" : "product-shot"} aria-label="TakeMoveReturn product preview"><Image src="/images/product-workspace.png" alt="Product preview showing a construction tool list and TAKE, MOVE, and RETURN actions" width={1024} height={1462} priority={!compact} sizes={compact ? "(max-width: 760px) 100vw, 480px" : "(max-width: 760px) 100vw, 1024px"} /></section>;
+  return <section className={compact ? "product-shot product-shot-compact" : "product-shot"} aria-label="TakeMoveReturn illustrative product preview"><Image src="/images/product-workspace.png" alt="Illustrative interface concept with fictional tool records and TAKE, MOVE, and RETURN actions; not a current workspace screenshot" width={1024} height={1462} priority={!compact} sizes={compact ? "(max-width: 760px) 100vw, 480px" : "(max-width: 760px) 100vw, 1024px"} /><p className="product-preview-caption">Illustrative design preview with fictional records. The current workspace interface may differ.</p></section>;
 }
 
 export function WorkflowSteps() {
@@ -25,7 +25,7 @@ export function WorkflowSteps() {
 }
 
 export function ProofStrip() {
-  const items = [{ icon: IconQrcode, title: "5-second scans", text: "A simple field workflow." }, { icon: IconUsersGroup, title: "Unlimited field workers", text: "Pay for tools, not people." }, { icon: IconMapPin, title: "Built for the field", text: "Workers, trucks, warehouses, job sites." }, { icon: IconCircleCheck, title: "Clear history", text: "Know what happened to every tool." }];
+  const items = [{ icon: IconQrcode, title: "QR browser workflow", text: "A simple field workflow." }, { icon: IconUsersGroup, title: "Unlimited field workers", text: "Pay for tools, not people." }, { icon: IconMapPin, title: "Built for the field", text: "Workers, trucks, warehouses, job sites." }, { icon: IconCircleCheck, title: "Clear history", text: "Know what happened to every tool." }];
   return <div className="proof-strip">{items.map(({ icon: Icon, title, text }) => <div key={title}><Icon size={27} stroke={1.8} aria-hidden="true" /><h3>{title}</h3><p>{text}</p></div>)}</div>;
 }
 

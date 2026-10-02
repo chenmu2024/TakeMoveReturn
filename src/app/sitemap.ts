@@ -5,7 +5,7 @@ import { helpArticles, helpContentUpdatedAt } from "../data/help-articles";
 
 const staticPages = [
   { path: "/features", lastModified: "2026-09-24" },
-  { path: "/pricing", lastModified: "2026-09-29" },
+  { path: "/pricing", lastModified: "2026-10-03" },
   { path: "/help", lastModified: helpContentUpdatedAt },
   { path: "/help/contact", lastModified: helpContentUpdatedAt },
 ];

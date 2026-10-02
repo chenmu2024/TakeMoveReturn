@@ -1,5 +1,15 @@
 # TakeMoveReturn delivery tracker
 
+## 2026-10-03 SEO / GEO improvements — local, not deployed
+
+- Added distinct practical explanations, checklists and FAQs to all 29 non-home keyword routes, with actual editorial modification dates. Existing 135-keyword mapping and 10 indexable / 20 pending verification split are preserved.
+- Public product/Pricing schema uses the existing plan config for seven offers; home FAQ markup matches its visible questions. Articles identify the confirmed individual operator as publisher and disclose AI-assisted content without invented authorship, credentials, ratings or testimonials.
+- Added a generated 1200×630 sharing PNG, explicit share metadata for dynamic pages/Features/Pricing, optional Google/Bing ownership-verification metadata, and an illustrative downloadable CSV. Existing mockup is labeled as illustrative; removed an unmeasured five-second scan claim.
+- Production HTTP audit covers 31 pages: canonical/H1/description/share image, visible FAQ/schema agreement, plan consistency, index/sitemap gates and resources. Fixed the scheduled SEO issue-notification array bug and tested both existing/missing issue branches without posting issues.
+- Typecheck, 44 unit tests and source SEO/legal/release/database audits pass. Final Next production build/runtime smoke also pass after the proof-strip copy edit. OpenNext build passed before that last copy-only edit; rebuild the deployment bundle before publishing. Browser production checks for the inventory page and annual pricing show no overflow at 390/768/1024/1280/1440/1920px and no captured console errors.
+- Owner confirms Search Console/Bing data and Semrush US exports are unavailable. Pending-page US evidence, genuine crawler/WAF verification, field Core Web Vitals, AI referral reporting and authorized current-workspace screenshots remain unverified. See `docs/SEO_GEO_OPERATIONS.md`; no fabricated evidence or analytics activation.
+- No payment/backend/database changes. No GitHub push or production deployment in this turn. Pre-existing untracked `qa-evidence/` remains untouched.
+
 ## 2026-10-01 merged release — CURRENT
 
 - Merged the local workspace repairs with GitHub main through `7f0cbdf`, preserving timezone-aware dates, tool/import metadata, field reporting, attachment cardinality and guarded account deletion.

@@ -10,6 +10,7 @@ import { legalDocuments } from "../../data/legal-documents";
 import { subprocessors } from "../../data/subprocessors";
 import { helpArticleBySlug, helpContentUpdatedAt } from "../../data/help-articles";
 import { seoPageByPath } from "../../data/seo-keywords";
+import { practicalContent } from "../../data/seo-practical-content";
 
 const pages: Record<string, { title: string; description: string }> = {
   help: { title: "Help Center", description: "Guidance for getting started, QR labels, tool tracking, workers, locations, imports, and account settings." },
@@ -79,6 +80,7 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
   const key = (await params).slug.join("/");
   const path = "/" + key;
   const seoPage = seoPageByPath.get(path);
+  const practical = practicalContent[path];
   const helpArticle = key.startsWith("help/") ? helpArticleBySlug.get(key.slice(5)) : undefined;
   const page = seoPage ?? pages[key] ?? (helpArticle ? { title: `${helpArticle.title} | TakeMoveReturn Help`, description: helpArticle.summary } : undefined);
   if (!page) notFound();
@@ -107,6 +109,7 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
           <p className="eyebrow">{eyebrow}</p>
           <h1>{title}</h1>
           <p>{page.description}</p>
+          {seoPage && <p className="editorial-meta">TakeMoveReturn product guidance · AI-assisted content · Updated <time dateTime={seoPage.dateModified}>{seoPage.dateModified}</time>. Examples are illustrative, not customer testimonials.</p>}
           {seoPage && <Link className="button" href="/signup">Start free <IconArrowRight size={18} aria-hidden="true" /></Link>}
         </header>
 
@@ -137,6 +140,8 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
             {seoPage.workflow && <section className="workflow-proof" aria-labelledby="workflow-proof-title"><p className="eyebrow">WORKFLOW</p><h2 id="workflow-proof-title">A short path from tool list to current record.</h2><ol className="workflow-list">{seoPage.workflow.map((step, index) => <li key={step}><span>{String(index + 1).padStart(2, "0")}</span><p>{step}</p></li>)}</ol></section>}
 
             <div className="content-sections">{seoPage.headings.map((heading, index) => <section key={heading}><h2>{heading}</h2><p>{sectionCopy[index] ?? detailCopy[index] ?? detailCopy[0]}</p></section>)}</div>
+
+            {practical && <section className="practical-content"><h2>{practical.heading}</h2><p>{practical.explanation}</p><h3>Put it into practice</h3><ol>{practical.checklist.map((item) => <li key={item}>{item}</li>)}</ol>{["/tool-inventory-software", "/blog/how-to-manage-construction-site-inventory", "/guides/how-to-keep-track-of-tools-and-equipment"].includes(path) && <p><a href="/resources/tool-register-example.csv" download>Download an illustrative tool register (CSV)</a>. This is a planning example, not a prevalidated import or a customer dataset. Review and map columns in <Link href="/help/import-export">the import workflow</Link>.</p>}<p>For product corrections, contact <a href={`mailto:${siteConfig.supportEmail}`}>{siteConfig.supportEmail}</a>. <Link href="/about">About the service and operator</Link>.</p></section>}
 
             {seoPage.faqs && <section className="faq-block" aria-labelledby="faq-title"><p className="eyebrow">FAQ</p><h2 id="faq-title">Questions crews ask before they switch.</h2><div className="faq-list">{seoPage.faqs.map((faq) => <details key={faq.question}><summary>{faq.question}</summary><p>{faq.answer}</p></details>)}</div></section>}
 
@@ -185,8 +190,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: page.title,
     description: page.description,
     alternates: { canonical },
-    openGraph: { title: page.title, description: page.description, url: new URL(canonical, siteConfig.siteUrl).toString(), siteName: siteConfig.name, type: seoPage?.pageType === "blog" || seoPage?.pageType === "guide" || seoPage?.pageType === "best" ? "article" : "website" },
-    twitter: { card: "summary_large_image", title: page.title, description: page.description },
+    openGraph: { title: page.title, description: page.description, url: new URL(canonical, siteConfig.siteUrl).toString(), siteName: siteConfig.name, images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "TakeMoveReturn QR construction tool tracking" }], type: seoPage?.pageType === "blog" || seoPage?.pageType === "guide" || seoPage?.pageType === "best" ? "article" : "website" },
+    twitter: { card: "summary_large_image", title: page.title, description: page.description, images: ["/opengraph-image"] },
     robots: (seoPage && (seoPage.status !== "indexable" || seoPage.needsUSVerification)) || ["privacy", "terms", "dpa", "subprocessors", "business-information"].includes(key) ? { index: false, follow: false } : { index: true, follow: true },
   };
 }
