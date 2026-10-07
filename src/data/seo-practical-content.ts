@@ -4,6 +4,8 @@ export type PracticalContent = {
   checklist: string[];
   question: string;
   answer: string;
+  updatedAt?: string;
+  table?: { caption: string; headings: string[]; rows: string[][] };
 };
 
 // Editorial additions, not customer cases, measured outcomes or US keyword verification.
@@ -24,6 +26,8 @@ export const practicalContent: Record<string, PracticalContent> = {
     answer: "No. Locations reflect authenticated, user-recorded events, not live GPS positions.",
   },
   "/tool-management-software": {
+    updatedAt: "2026-10-07",
+    table: { caption: "A practical division of responsibility", headings: ["Role", "Owns", "Checks before leaving"], rows: [["Manager", "Tool identities, locations, worker access and exception review", "Every active tool has a distinct code and a usable location"], ["Field worker", "TAKE, MOVE and RETURN under their own identity", "The recorded holder and location match the handoff"], ["Returning crew", "Physical count and observed condition", "Missing or damaged items are reported for manager review"]] },
     heading: "Give the supervisor and worker different jobs",
     explanation: "A supervisor maintains tool records, locations and worker access. A field worker records the next handoff using their own identity. Shared-device enrollment does not replace worker authentication, and a printed QR label is an identifier rather than permission to edit company data.",
     checklist: ["Enroll shared devices through the authorized workspace flow.", "Give each worker their own PIN; do not put it in an employee code.", "Lock or switch the worker session before another person uses the device."],
@@ -31,6 +35,8 @@ export const practicalContent: Record<string, PracticalContent> = {
     answer: "No. A QR label identifies a tool; authorized device and worker access are still required for field actions.",
   },
   "/tool-inventory-software": {
+    updatedAt: "2026-10-07",
+    table: { caption: "Illustrative count sheet: fictional items, people and locations", headings: ["Asset code", "Tool", "Recorded holder / location", "Physical count result"], rows: [["EXAMPLE-001", "Cordless drill", "Worker A / Site North", "Found with Worker B: review the handoff"], ["EXAMPLE-002", "Drain camera", "No holder / Warehouse", "Present: no movement needed"], ["EXAMPLE-003", "Laser level", "Worker B / Service truck", "Not found: check history and report the discrepancy"]] },
     heading: "Clean the register before importing it",
     explanation: "Use one row per physical reusable tool. Two identical drills need different asset codes; a box of screws is consumable stock, not two hundred reusable tool records. Validate a small file first and inspect duplicate-code and capacity errors before importing the rest.",
     checklist: ["Keep asset codes as text so leading zeroes survive spreadsheet editing.", "Remove duplicate rows and use clear, distinguishable tool names.", "Review mapped columns and import results before printing labels."],
@@ -52,8 +58,10 @@ export const practicalContent: Record<string, PracticalContent> = {
     answer: "No. Never print worker PINs or passwords on a label. The label should identify the tool, not disclose credentials.",
   },
   "/equipment-checkout": {
+    updatedAt: "2026-10-07",
+    table: { caption: "Check the tool record after each authenticated handoff", headings: ["Action", "Use it when", "Expected record"], rows: [["TAKE", "An available tool is issued to a worker", "Checked out to that worker at the selected location"], ["MOVE", "A checked-out tool changes holder or location", "Updated holder/location and a new movement event"], ["RETURN", "The tool is handed back", "No current holder and the selected return location"]] },
     heading: "Use the right event at each handoff",
-    explanation: "TAKE starts custody, MOVE records a change of destination, and RETURN ends the checkout at the selected return location. Select a real location and inspect the resulting status before leaving the page. If a response is unclear, check the history before submitting the same action again.",
+    explanation: "TAKE starts custody, MOVE records a change of holder or location, and RETURN ends the checkout at the selected return location. Select a real location and inspect the resulting status before leaving the page. If a response is unclear, check the history before submitting the same action again.",
     checklist: ["Confirm the correct worker is signed in before TAKE.", "Use MOVE when the checked-out tool changes location.", "After RETURN, verify that the tool is available and the return location is correct."],
     question: "What if I do not see a success message?",
     answer: "Check the tool status and activity history before retrying. If the record is still unclear, contact support without sending your PIN.",
@@ -66,6 +74,8 @@ export const practicalContent: Record<string, PracticalContent> = {
     answer: "No. Software records are not a safety certification or a substitute for a competent inspection.",
   },
   "/blog/how-to-manage-construction-site-inventory": {
+    updatedAt: "2026-10-07",
+    table: { caption: "Illustrative reconciliation: investigate before changing the record", headings: ["Count result", "Follow-up", "Record to keep"], rows: [["Tool is present with a different worker", "Confirm the handoff with both workers", "An authorized MOVE, preserving earlier history"], ["Tool is absent from its recorded truck", "Check the latest event and contact the holder", "The discrepancy and any authorized missing report"], ["A new tool has no record", "Check for an existing code or serial number first", "One new tool record with a distinct asset code"], ["Consumable quantity is below the site's target", "Use the materials replenishment process", "A stock adjustment or reorder outside tool custody"]] },
     heading: "Run a site count without mixing tools and consumables",
     explanation: "Start with reusable tools that move between crews. Count materials separately, then reconcile each tool against its asset code, holder and recorded location. A tool physically present but checked out to another worker needs a handoff correction, not a second inventory row.",
     checklist: ["Group the count by warehouse, truck and job site.", "Record discrepancies for follow-up rather than silently overwriting the list.", "Use a reviewed CSV import for new tools and QR events for subsequent movement."],

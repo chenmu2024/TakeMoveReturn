@@ -506,6 +506,7 @@ if (!checkoutPage?.block.includes('primaryCandidate: "tool checkout system"')) {
 const staticRelatedPaths = new Set([
   "/features", "/pricing", "/help", "/help/contact", "/about", "/privacy", "/terms",
   "/dpa", "/subprocessors", "/business-information", "/signup", "/login",
+  ...[...readFileSync(new URL("../src/data/help-articles.ts", import.meta.url), "utf8").matchAll(/slug: "([^"]+)"/g)].map((match) => `/help/${match[1]}`),
 ]);
 for (const page of pages) {
   for (const relatedPath of arrayField(page.block, "relatedPaths")) {

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { IconArrowRight, IconCheck } from "@tabler/icons-react";
 import { InlineCta, MarketingFooter, MarketingHeader, ProductWorkspace } from "../../components/marketing";
 import { HelpCenter } from "../../components/help-center";
-import { SeoPageSchema } from "../../components/seo-schema";
+import { AboutSeoSchema, SeoPageSchema } from "../../components/seo-schema";
 import { siteConfig } from "../../config/site";
 import { legalDocuments } from "../../data/legal-documents";
 import { subprocessors } from "../../data/subprocessors";
@@ -94,6 +94,8 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
         ? "COMPARISON GUIDE"
         : "CONSTRUCTION TOOL TRACKING";
   const relatedPaths = seoPage?.relatedPaths?.length ? seoPage.relatedPaths : defaultRelatedPaths;
+  const informational = seoPage && ["blog", "guide", "best"].includes(seoPage.pageType);
+  const productPreview = <section className="content-product"><div><p className="eyebrow">PRODUCT PREVIEW</p><h2>See the record before you search for the tool.</h2><p>Keep the details field teams need together, from the tool list to the next handoff.</p></div><ProductWorkspace compact /></section>;
   const sectionCopy = seoPage
     ? (seoPage.sectionCopy?.length
       ? seoPage.sectionCopy
@@ -103,6 +105,7 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
   return (
     <main className="marketing-page">
       {seoPage && <SeoPageSchema page={seoPage} path={path} />}
+      {key === "about" && <AboutSeoSchema />}
       <MarketingHeader />
       <article className="content-page">
         <header className="content-hero">
@@ -116,32 +119,33 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
         {seoPage ? (
           <>
             <section className="direct-answer">
-              <h2>A practical tool-tracking workflow for construction crews.</h2>
+              <h2>{path === "/blog/how-to-manage-construction-site-inventory" ? "How do you manage construction site inventory?" : "A practical tool-tracking workflow for construction crews."}</h2>
               <p>{seoPage.directAnswer ?? "TakeMoveReturn gives small crews a simple QR-based way to record where reusable tools are, who has them, and what happened next."}</p>
-              <ul>
+              {!informational && <ul>
                 <li><IconCheck size={18} aria-hidden="true" />No GPS or expensive hardware required</li>
                 <li><IconCheck size={18} aria-hidden="true" />Works from a phone browser</li>
                 <li><IconCheck size={18} aria-hidden="true" />Built around TAKE, MOVE, and RETURN</li>
-              </ul>
+              </ul>}
             </section>
 
-            <section className="content-product">
-              <div><p className="eyebrow">PRODUCT PREVIEW</p><h2>See the record before you search for the tool.</h2><p>Keep the details field teams need together, from the tool list to the next handoff.</p></div>
-              <ProductWorkspace compact />
-            </section>
+            {!informational && productPreview}
 
-            <section className="content-proof" aria-labelledby="content-proof-title">
+            {!informational && <section className="content-proof" aria-labelledby="content-proof-title">
               <article><p className="eyebrow">FIELD REALITY</p><h2 id="content-proof-title">Built for the problem behind the search.</h2><p>{seoPage.pain ?? "Tool records become difficult to trust when handoffs happen faster than the spreadsheet can be updated."}</p></article>
               <article><p className="eyebrow">CONSTRUCTION SCENARIO</p><h2>Follow the next handoff.</h2><p>{seoPage.scenario ?? "A tool moves between a worker, a truck, and a job site, and the next person needs a clear record."}</p></article>
               {seoPage.audience && <article><p className="eyebrow">WHO IT SERVES</p><h2>Keep the workflow in scope.</h2><p>{seoPage.audience}</p></article>}
               {seoPage.comparison && <article><p className="eyebrow">BOUNDARY CHECK</p><h2>Use the right tool for the job.</h2><p>{seoPage.comparison}</p></article>}
-            </section>
+            </section>}
 
-            {seoPage.workflow && <section className="workflow-proof" aria-labelledby="workflow-proof-title"><p className="eyebrow">WORKFLOW</p><h2 id="workflow-proof-title">A short path from tool list to current record.</h2><ol className="workflow-list">{seoPage.workflow.map((step, index) => <li key={step}><span>{String(index + 1).padStart(2, "0")}</span><p>{step}</p></li>)}</ol></section>}
+            {seoPage.workflow && <section className="workflow-proof" aria-labelledby="workflow-proof-title"><p className="eyebrow">WORKFLOW</p><h2 id="workflow-proof-title">{path === "/blog/how-to-manage-construction-site-inventory" ? "A six-step construction site inventory process" : "A short path from tool list to current record."}</h2><ol className="workflow-list">{seoPage.workflow.map((step, index) => <li key={step}><span>{String(index + 1).padStart(2, "0")}</span><p>{step}</p></li>)}</ol></section>}
+
+            {practical?.table && <section className="practical-content"><div className="editorial-table-wrap" role="region" aria-label={practical.table.caption} tabIndex={0}><table className="editorial-table"><caption>{practical.table.caption}</caption><thead><tr>{practical.table.headings.map((heading) => <th key={heading} scope="col">{heading}</th>)}</tr></thead><tbody>{practical.table.rows.map((row) => <tr key={row[0]}>{row.map((cell, index) => index === 0 ? <th key={index} scope="row">{cell}</th> : <td key={index}>{cell}</td>)}</tr>)}</tbody></table></div></section>}
 
             <div className="content-sections">{seoPage.headings.map((heading, index) => <section key={heading}><h2>{heading}</h2><p>{sectionCopy[index] ?? detailCopy[index] ?? detailCopy[0]}</p></section>)}</div>
 
             {practical && <section className="practical-content"><h2>{practical.heading}</h2><p>{practical.explanation}</p><h3>Put it into practice</h3><ol>{practical.checklist.map((item) => <li key={item}>{item}</li>)}</ol>{["/tool-inventory-software", "/blog/how-to-manage-construction-site-inventory", "/guides/how-to-keep-track-of-tools-and-equipment"].includes(path) && <p><a href="/resources/tool-register-example.csv" download>Download an illustrative tool register (CSV)</a>. This is a planning example, not a prevalidated import or a customer dataset. Review and map columns in <Link href="/help/import-export">the import workflow</Link>.</p>}<p>For product corrections, contact <a href={`mailto:${siteConfig.supportEmail}`}>{siteConfig.supportEmail}</a>. <Link href="/about">About the service and operator</Link>.</p></section>}
+
+            {informational && productPreview}
 
             {seoPage.faqs && <section className="faq-block" aria-labelledby="faq-title"><p className="eyebrow">FAQ</p><h2 id="faq-title">Questions crews ask before they switch.</h2><div className="faq-list">{seoPage.faqs.map((faq) => <details key={faq.question}><summary>{faq.question}</summary><p>{faq.answer}</p></details>)}</div></section>}
 
@@ -160,7 +164,7 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
         ) : key === "help/contact" ? (
           <section className="help-contact"><p className="eyebrow">SUPPORT</p><h2>Contact Support</h2><p>For product questions or help with your workspace, email {siteConfig.supportEmail}. Please do not include passwords or worker PINs.</p><a className="button" href={`mailto:${siteConfig.supportEmail}`}>Email support <IconArrowRight size={18} aria-hidden="true" /></a><Link className="text-link" href="/help">Back to Help Center <IconArrowRight size={16} aria-hidden="true" /></Link></section>
         ) : helpArticle ? (
-          <article className="help-article"><nav aria-label="Breadcrumb"><Link href="/help">Help Center</Link><span aria-hidden="true">/</span><span>{helpArticle.category}</span></nav><p className="help-article-updated">Updated {helpContentUpdatedAt}</p><h2>What to do</h2><p className="help-article-summary">{helpArticle.summary}</p><ol>{helpArticle.steps.map((step) => <li key={step}>{step}</li>)}</ol><div className="help-article-note"><strong>Current status</strong><p>{helpArticle.note}</p></div><div className="help-article-links"><Link href="/help">All help articles <IconArrowRight size={16} aria-hidden="true" /></Link><Link href="/help/contact">Contact Support <IconArrowRight size={16} aria-hidden="true" /></Link></div></article>
+          <article className="help-article"><nav aria-label="Breadcrumb"><Link href="/help">Help Center</Link><span aria-hidden="true">/</span><span>{helpArticle.category}</span></nav><p className="help-article-updated">Updated {helpArticle.updatedAt ?? helpContentUpdatedAt}</p><h2>What to do</h2><p className="help-article-summary">{helpArticle.summary}</p><ol>{helpArticle.steps.map((step) => <li key={step}>{step}</li>)}</ol><div className="help-article-note"><strong>Current status</strong><p>{helpArticle.note}</p></div><div className="help-article-links">{helpArticle.relatedLinks?.map((link) => <Link key={link.href} href={link.href}>{link.label} <IconArrowRight size={16} aria-hidden="true" /></Link>)}<Link href="/help">All help articles <IconArrowRight size={16} aria-hidden="true" /></Link><Link href="/help/contact">Contact Support <IconArrowRight size={16} aria-hidden="true" /></Link></div></article>
         ) : key === "privacy" || key === "terms" || key === "dpa" ? (
           <LegalDocument kind={key} />
         ) : key === "subprocessors" ? (
@@ -168,7 +172,7 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
         ) : key === "business-information" ? (
           <BusinessInformationPage />
         ) : key === "about" ? (
-          <section className="legal-document"><div className="legal-sections"><section><h2>Made for small construction crews</h2><p>TakeMoveReturn helps teams record reusable tools as they move between people, warehouses, trucks and job sites. Company records are organized around TAKE, MOVE and RETURN, so the next crew can see the latest recorded holder, location and history.</p></section><section><h2>How it works</h2><p>Managers create tool, worker and location records; QR labels identify tools, and authorized users record handoffs. The record is only as current as the latest scan, user entry and system event. Registration, worker-attributed QR handoffs, and reviewed spreadsheet imports are available. Other capabilities may be added after verification.</p></section><section><h2>What it is not</h2><p>This is not live GPS tracking, theft prevention, insurance, safety certification, ERP or a substitute for a professional tool inspection.</p></section><section><h2>Who operates it</h2><p>{siteConfig.legal.legalOperatorStatement} The operating name is not presented as a registered company. For help email <a href={`mailto:${siteConfig.supportEmail}`}>{siteConfig.supportEmail}</a>; for privacy questions email <a href={`mailto:${siteConfig.privacyEmail}`}>{siteConfig.privacyEmail}</a>.</p></section></div></section>
+          <section className="legal-document"><div className="legal-sections"><section><h2>Made for small construction crews</h2><p>TakeMoveReturn helps teams record reusable tools as they move between people, warehouses, trucks and job sites. Company records are organized around TAKE, MOVE and RETURN, so the next crew can see the latest recorded holder, location and history.</p></section><section><h2>How it works</h2><p>Managers create tool, worker and location records; QR labels identify tools, and authorized users record handoffs. The record is only as current as the latest scan, user entry and system event. Registration, worker-attributed QR handoffs, and reviewed spreadsheet imports are available. Other capabilities may be added after verification.</p></section><section><h2>What it is not</h2><p>This is not live GPS tracking, theft prevention, insurance, safety certification, ERP or a substitute for a professional tool inspection.</p></section><section id="operator"><h2>Who operates it</h2><p>{siteConfig.legal.legalOperatorName} operates TakeMoveReturn and publishes its product guidance. {siteConfig.legal.legalOperatorStatement} The operating name is not presented as a registered company. For help email <a href={`mailto:${siteConfig.supportEmail}`}>{siteConfig.supportEmail}</a>; for privacy questions email <a href={`mailto:${siteConfig.privacyEmail}`}>{siteConfig.privacyEmail}</a>.</p></section></div></section>
         ) : (
           <section className="plain-content"><h2>Built around TAKE, MOVE, and RETURN</h2><p>TakeMoveReturn helps small construction crews keep tool records clear, practical, and easy to use in the field.</p></section>
         )}

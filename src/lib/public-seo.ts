@@ -17,6 +17,7 @@ export function softwareSchema() {
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
     url: siteConfig.siteUrl,
+    provider: { "@id": `${siteConfig.siteUrl}/about#operator` },
     description: "Browser-based QR custody tracking for reusable construction tools. Locations reflect recorded handoffs, not live GPS.",
     offers: Object.values(plans).flatMap((plan) => {
       const intervals = plan.id === "free" ? ["month"] as const : ["month", "year"] as const;
@@ -36,6 +37,10 @@ export function softwareSchema() {
       }));
     }),
   };
+}
+
+export function operatorSchema() {
+  return { "@context": "https://schema.org", "@type": "Person", "@id": `${siteConfig.siteUrl}/about#operator`, name: siteConfig.legal.legalOperatorName, url: `${siteConfig.siteUrl}/about#operator` };
 }
 
 export function faqSchema(faqs: { question: string; answer: string }[]) {

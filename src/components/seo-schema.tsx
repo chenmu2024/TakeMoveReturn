@@ -1,7 +1,7 @@
 import type { SeoPage } from "../data/seo-keywords";
 import { siteConfig } from "../config/site";
 import { seoPageByPath } from "../data/seo-keywords";
-import { faqSchema, pricingFaqs, softwareSchema } from "../lib/public-seo";
+import { faqSchema, operatorSchema, pricingFaqs, softwareSchema } from "../lib/public-seo";
 
 function safeJson(value: unknown) {
   return JSON.stringify(value).replace(/</g, "\\u003c");
@@ -15,7 +15,7 @@ export function HomeSeoSchema() {
   const url = siteConfig.siteUrl;
   return <>
     <SchemaScript id="brand-schema" value={{ "@context": "https://schema.org", "@type": "Brand", "@id": `${url}/#brand`, name: siteConfig.name, url }} />
-    <SchemaScript id="website-schema" value={{ "@context": "https://schema.org", "@type": "WebSite", "@id": `${url}/#website`, name: siteConfig.name, url, description: "QR-based construction tool tracking for small crews." }} />
+    <SchemaScript id="website-schema" value={{ "@context": "https://schema.org", "@type": "WebSite", "@id": `${url}/#website`, name: siteConfig.name, url, publisher: { "@id": `${url}/about#operator` }, description: "QR-based construction tool tracking for small crews." }} />
     <SchemaScript id="software-schema" value={softwareSchema()} />
     <SchemaScript id="home-faq-schema" value={faqSchema(seoPageByPath.get("/")?.faqs ?? [])} />
   </>;
@@ -48,4 +48,8 @@ export function SeoPageSchema({ page, path }: { page: SeoPage; path: string }) {
 
 export function PricingSeoSchema() {
   return <><SchemaScript id="pricing-software-schema" value={softwareSchema()} /><SchemaScript id="pricing-faq-schema" value={faqSchema(pricingFaqs)} /></>;
+}
+
+export function AboutSeoSchema() {
+  return <><SchemaScript id="operator-schema" value={operatorSchema()} /><SchemaScript id="about-schema" value={{ "@context": "https://schema.org", "@type": "AboutPage", "@id": `${siteConfig.siteUrl}/about#page`, url: `${siteConfig.siteUrl}/about`, name: `About ${siteConfig.name}`, mainEntity: { "@id": `${siteConfig.siteUrl}/about#operator` }, isPartOf: { "@id": `${siteConfig.siteUrl}/#website` } }} /></>;
 }

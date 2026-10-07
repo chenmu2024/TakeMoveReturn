@@ -8,6 +8,7 @@ const staticPages = [
   { path: "/pricing", lastModified: "2026-10-03" },
   { path: "/help", lastModified: helpContentUpdatedAt },
   { path: "/help/contact", lastModified: helpContentUpdatedAt },
+  { path: "/about", lastModified: "2026-10-07" },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -17,7 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
   const helpEntries = helpArticles.map((article) => ({
     url: new URL(`/help/${article.slug}`, siteConfig.siteUrl).toString(),
-    lastModified: new Date(helpContentUpdatedAt),
+    lastModified: new Date(article.updatedAt ?? helpContentUpdatedAt),
   }));
   const seoEntries = seoPages
     .filter((page) => page.status === "indexable" && !page.needsUSVerification)

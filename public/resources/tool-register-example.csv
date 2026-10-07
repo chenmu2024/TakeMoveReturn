@@ -1,4 +1,7 @@
-asset_code,name,category,location_note,condition_note
-EXAMPLE-001,Cordless drill,Power tools,Warehouse,Illustrative record only
-EXAMPLE-002,Drain camera,Inspection equipment,Service truck,Illustrative record only
-EXAMPLE-003,Laser level,Measuring tools,Job site,Illustrative record only
+asset_code,name,category,brand,model,serial_number
+EXAMPLE-001,Example cordless drill A,Power tools,,,EXAMPLE-S001
+EXAMPLE-002,Example drain camera,Inspection equipment,,,EXAMPLE-S002
+EXAMPLE-003,Example laser level,Measuring tools,,,EXAMPLE-S003
+EXAMPLE-004,Example cordless drill B,Power tools,,,EXAMPLE-S004
+EXAMPLE-005,Example rotary hammer,Power tools,,,EXAMPLE-S005
+EXAMPLE-006,Example pipe press tool,Plumbing tools,,,EXAMPLE-S006
