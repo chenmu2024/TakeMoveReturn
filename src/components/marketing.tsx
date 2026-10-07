@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { IconArrowRight, IconCircleCheck, IconFileSpreadsheet, IconMapPin, IconQrcode, IconTool, IconUsersGroup } from "@tabler/icons-react";
 import { siteConfig } from "../config/site";
@@ -16,7 +15,7 @@ export function MarketingFooter() {
 }
 
 export function ProductWorkspace({ compact = false }: { compact?: boolean }) {
-  return <section className={compact ? "product-shot product-shot-compact" : "product-shot"} aria-label="TakeMoveReturn illustrative product preview"><Image src="/images/product-workspace.png" alt="Illustrative interface concept with fictional tool records and TAKE, MOVE, and RETURN actions; not a current workspace screenshot" width={1024} height={1462} priority={!compact} sizes={compact ? "(max-width: 760px) 100vw, 480px" : "(max-width: 760px) 100vw, 1024px"} /><p className="product-preview-caption">Illustrative design preview with fictional records. The current workspace interface may differ.</p></section>;
+  return <section className={compact ? "product-shot product-shot-compact" : "product-shot"} aria-label="TakeMoveReturn illustrative product preview"><img src="/images/product-workspace-1024.webp" srcSet="/images/product-workspace-480.webp 480w, /images/product-workspace-768.webp 768w, /images/product-workspace-1024.webp 1024w" alt="Illustrative interface concept with fictional tool records and TAKE, MOVE, and RETURN actions; not a current workspace screenshot" width={1024} height={1536} loading={compact ? "lazy" : "eager"} fetchPriority={compact ? "auto" : "high"} decoding="async" sizes={compact ? "(max-width: 760px) calc(100vw - 40px), 480px" : "(max-width: 760px) calc(100vw - 40px), (max-width: 1280px) calc(100vw - 76px), 1120px"} /><p className="product-preview-caption">Illustrative design preview with fictional records. The current workspace interface may differ.</p></section>;
 }
 
 export function WorkflowSteps() {

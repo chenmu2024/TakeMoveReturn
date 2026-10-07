@@ -29,7 +29,7 @@ test("each existing non-home SEO route has distinct practical editorial content"
     const content = practicalContent[page.path];
     assert.ok(content, page.path);
     assert.equal(content.checklist.length, 3);
-    assert.equal(page.dateModified, practicalContentUpdatedAt);
+    assert.equal(page.dateModified, content.updatedAt ?? practicalContentUpdatedAt);
     assert.ok(page.faqs.some((faq) => faq.question === content.question && faq.answer === content.answer));
   }
   assert.equal(seoPages.filter((page) => page.status === "indexable" && !page.needsUSVerification).length, 10);

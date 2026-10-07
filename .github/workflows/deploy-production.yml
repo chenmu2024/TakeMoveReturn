@@ -119,3 +119,16 @@ jobs:
               throw new Error("Production commit mismatch: expected " + expected + ", got " + version.commit);
             }
           ' "$ready" "$version"
+
+      - name: Verify public SEO after deployment
+        if: steps.current.outputs.is_latest == 'true'
+        run: npm run seo:runtime -- https://takemovereturn.com --baseline seo-production.json
+
+      - name: Save public SEO evidence
+        if: always() && steps.current.outputs.is_latest == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-production-${{ env.DEPLOY_SHA }}
+          path: seo-production.json
+          if-no-files-found: warn
+          retention-days: 90

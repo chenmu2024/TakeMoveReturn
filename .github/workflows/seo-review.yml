@@ -23,7 +23,16 @@ jobs:
         continue-on-error: true
         run: |
           set -o pipefail
-          npm run seo:audit 2>&1 | tee seo-audit.txt
+          { npm run seo:audit && npm run seo:runtime -- https://takemovereturn.com --baseline seo-production.json; } 2>&1 | tee seo-audit.txt
+      - name: Save SEO review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-review-${{ github.run_id }}
+          path: |
+            seo-audit.txt
+            seo-production.json
+          retention-days: 90
       - if: steps.audit.outcome == 'failure'
         uses: actions/github-script@v7
         with:

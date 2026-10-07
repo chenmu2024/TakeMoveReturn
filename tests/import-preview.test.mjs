@@ -1,6 +1,18 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
 import { parseCsv, reviewImport, suggestedMapping } from "../src/lib/import/preview.ts";
+
+test("public fictional CSV works with the real import preview", () => {
+  const rows = parseCsv(readFileSync(new URL("../public/resources/tool-register-example.csv", import.meta.url), "utf8"));
+  const mapping = suggestedMapping(rows[0]);
+  assert.ok(Object.values(mapping).every((column) => column >= 0));
+  const result = reviewImport(rows, mapping);
+  assert.equal(result.total, 6);
+  assert.equal(result.valid, result.total);
+  assert.deepEqual(result.issues, []);
+  assert.equal(new Set(result.normalizedRows.map((row) => row.assetCode)).size, result.total);
+});
 
 test("CSV handles BOM, quoted commas, embedded newlines and doubled quotes", () => {
   assert.deepEqual(parseCsv('\uFEFFAsset Code,Tool Name\r\nA1,"Drill, 18V"\r\nA2,"Saw ""compact""\nkit"\r\n'), [

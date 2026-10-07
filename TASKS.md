@@ -1,5 +1,17 @@
 # TakeMoveReturn delivery tracker
 
+## 2026-10-07 SEO / GEO production optimization — verified locally, awaiting merge/deployment
+
+- Baseline: GitHub main and production `/api/version` both exposed `8dd7160500d1e49a0007cee94745617aa5b3b222` during the audit. Earlier "local, not deployed" notes below describe historical states.
+- Replaced unoptimized public preview requests with static 480/768/1024px WebPs (33,702 / 66,280 / 97,338 bytes), corrected the intrinsic ratio to 1024×1536, and retained illustrative labeling.
+- Added distinct operational tables and help links to three core commercial pages, a six-step inventory article and reconciliation example, and detailed worker/handoff/import instructions. The CSV uses supported columns and passes the real preview parser. Only revised editorial content receives new modification dates.
+- Added visible individual-operator identity, a stable About anchor, Person/AboutPage markup and About sitemap membership. Existing keyword mapping, 10 eligible keyword routes and 20 pending noindex routes remain intact.
+- Expanded public runtime auditing to 45 pages, unique metadata, exact sitemap membership, public/inbound links and responsive image budgets. Deployment and monthly review save dated public snapshots through GitHub Actions artifacts.
+- The required production dependency audit initially found two existing high-severity advisories. Updated source-map-js to 1.2.2 and overrode sharp to compatible patch 0.35.5, including its platform packages; framework and application dependencies are otherwise unchanged. Production dependency audit now reports zero vulnerabilities.
+- Final local checks: typecheck, 45 unit tests, source SEO/legal/release/database audits, Next production build, runtime smoke, OpenNext bundle and Wrangler deployment dry-run pass. Public load smoke: 100/100 successful, local p95 113ms (not production performance evidence). Controlled faults correctly reject duplicate H1, wrong canonical, unavailable help, oversized images and incorrect image MIME.
+- Browser checks cover 10 affected routes at 390/768/1024/1280/1440/1920px: no document overflow or captured page/console errors, decoded responsive images, table focus, article order, CSV download, billing navigation and operator anchor. No authenticated workspace, billing or database behavior changed.
+- Search Console access for this domain, genuine current-workspace screenshots, verified crawler access and field Core Web Vitals still require external evidence. These code changes do not establish indexing, ranking or AI citations.
+
 ## 2026-10-03 SEO / GEO improvements — local, not deployed
 
 - Added distinct practical explanations, checklists and FAQs to all 29 non-home keyword routes, with actual editorial modification dates. Existing 135-keyword mapping and 10 indexable / 20 pending verification split are preserved.
